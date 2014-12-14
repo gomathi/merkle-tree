@@ -26,7 +26,7 @@ public class HashTreeImplTestUtils {
 	private static final Random RANDOM = new Random(System.currentTimeMillis());
 	public static final int ROOT_NODE = 0;
 	public static final int DEFAULT_TREE_ID = 1;
-	public static final int DEFAULT_SEG_DATA_BLOCKS_COUNT = 1 << 10;
+	public static final int DEFAULT_SEG_DATA_BLOCKS_COUNT = 1 << 2;
 	public static final int DEFAULT_HTREE_SERVER_PORT_NO = 11111;
 
 	/**

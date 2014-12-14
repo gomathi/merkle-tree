@@ -31,7 +31,8 @@ import org.iq80.leveldb.Options;
  * 
  * 1) Metadata info [Like when the tree was built fully last time]. Format is
  * ['M'|key] -> [value] 2) SegmentData, format is ['S'|treeId|segId|key] ->
- * [value] 3) SegmentHash, format is ['H'|treeId|nodeId] -> [value]
+ * [value] 3) SegmentHash, format is ['H'|treeId|nodeId] -> [value] 4) TreeId,
+ * format is ['T'|treeId] -> [Dummy-value]
  * 
  */
 
@@ -45,11 +46,12 @@ public class HashTreePersistentStorage implements HashTreeStorage {
 	private static final int SIZE_PREFIX_KEY_TID = 1 + SIZE_TREEID;
 	private static final int SIZE_PREFIX_KEY_TID_AND_SEGID = 1 + SIZE_TREEID
 			+ SIZE_SEGID;
+	private static final byte[] EMPTY_VALUE = new byte[0];
 
 	private static enum KeyMarker {
 
 		META_DATA_MARKER((byte) 'M'), SEG_HASH_MARKER((byte) 'H'), SEG_DATA_MARKER(
-				(byte) 'S');
+				(byte) 'S'), TREEID_MARKER((byte) 'T');
 
 		private final byte keyMarker;
 
@@ -124,6 +126,13 @@ public class HashTreePersistentStorage implements HashTreeStorage {
 		return bb.getLong(1);
 	}
 
+	private static byte[] prepareTreeId(long treeId) {
+		byte[] result = new byte[SIZE_PREFIX_KEY_TID];
+		ByteBuffer bb = ByteBuffer.wrap(result);
+		prepareKeyPrefix(bb, KeyMarker.TREEID_MARKER, treeId);
+		return result;
+	}
+
 	private static void prepareKeyPrefix(ByteBuffer keyToFill,
 			KeyMarker keyMarker, long treeId) {
 		keyToFill.put(keyMarker.getKeyMarker());
@@ -184,6 +193,7 @@ public class HashTreePersistentStorage implements HashTreeStorage {
 
 	@Override
 	public void putSegmentHash(long treeId, int nodeId, ByteBuffer digest) {
+		dbObj.put(prepareTreeId(treeId), EMPTY_VALUE);
 		dbObj.put(prepareSegmentHashKey(treeId, nodeId), digest.array());
 	}
 
@@ -280,6 +290,7 @@ public class HashTreePersistentStorage implements HashTreeStorage {
 	@Override
 	public void putSegmentData(long treeId, int segId, ByteBuffer key,
 			ByteBuffer digest) {
+		dbObj.put(prepareTreeId(treeId), EMPTY_VALUE);
 		byte[] dbKey = prepareSegmentDataKey(treeId, segId, key);
 		dbObj.put(dbKey, digest.array());
 	}
@@ -361,7 +372,7 @@ public class HashTreePersistentStorage implements HashTreeStorage {
 			private void loadNextElement() {
 				if (internalQue.isEmpty()) {
 					ByteBuffer bb = ByteBuffer.wrap(keyToFill);
-					prepareKeyPrefix(bb, KeyMarker.SEG_DATA_MARKER,
+					prepareKeyPrefix(bb, KeyMarker.TREEID_MARKER,
 							lastTreeId + 1);
 					iterator.seek(bb.array());
 					if (iterator.hasNext()) {

@@ -15,7 +15,6 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Observable;
 import java.util.Queue;
 import java.util.Set;
 import java.util.TreeSet;
@@ -52,8 +51,8 @@ import org.slf4j.LoggerFactory;
  * is not updated on every update on a segment. Rather, tree update is happening
  * at regular intervals.Tree can be binary or 4-ary tree.
  * 
- * HashTree can host multiple hash trees. Each hash tree is differentiated by
- * hash tree id.
+ * HashTree can host multiple hash trees. Each hash tree is differentiated by a
+ * tree id.
  * 
  * Uses {@link HashTreeStorage} for storing tree and segments.
  * {@link HashTreeMemStorage} provides in memory implementation of storing
@@ -61,7 +60,7 @@ import org.slf4j.LoggerFactory;
  * 
  */
 @ThreadSafe
-public class HashTreeImpl extends Observable implements HashTree {
+public class HashTreeImpl implements HashTree {
 
 	private final static char COMMA_DELIMETER = ',';
 	private final static char NEW_LINE_DELIMETER = '\n';
@@ -83,7 +82,6 @@ public class HashTreeImpl extends Observable implements HashTree {
 	private final ConcurrentMap<Long, ReentrantLock> treeLocks = new ConcurrentHashMap<Long, ReentrantLock>();
 
 	private final Object nonBlockingCallsLock = new Object();
-
 	@LockedBy("nonBlockingCallsLock")
 	private volatile boolean enabledNonBlockingCalls;
 	@LockedBy("nonBlockingCallsLock")
@@ -102,13 +100,6 @@ public class HashTreeImpl extends Observable implements HashTree {
 		this.segIdProvider = segIdProvider;
 		this.hTStorage = hTStroage;
 		this.storage = storage;
-	}
-
-	// Used by unit test.
-	public HashTreeImpl(int noOfSegments, HashTreeIdProvider treeIdProvider,
-			HashTreeStorage htStorage, Storage storage) {
-		this(noOfSegments, treeIdProvider, new DefaultSegIdProviderImpl(
-				noOfSegments), htStorage, storage);
 	}
 
 	@Override
@@ -594,6 +585,7 @@ public class HashTreeImpl extends Observable implements HashTree {
 					bgDataUpdater = new NonBlockingHashTreeDataUpdater(this);
 				new Thread(bgDataUpdater).start();
 				enabledNonBlockingCalls = true;
+				LOGGER.info("Non blocking calls are enabled.");
 			}
 		}
 		return result;
@@ -607,6 +599,7 @@ public class HashTreeImpl extends Observable implements HashTree {
 			if (!enabledNonBlockingCalls) {
 				LOGGER.info("Non blocking calls are already disabled.");
 			} else {
+				enabledNonBlockingCalls = false;
 				CountDownLatch countDownLatch = new CountDownLatch(1);
 				bgDataUpdater.stop(countDownLatch);
 				try {
@@ -616,7 +609,7 @@ public class HashTreeImpl extends Observable implements HashTree {
 							"Exception occurred while waiting data updater to stop",
 							e);
 				}
-				enabledNonBlockingCalls = false;
+				LOGGER.info("Non blocking calls are disabled.");
 			}
 		}
 		return result;

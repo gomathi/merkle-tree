@@ -11,6 +11,7 @@ import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.commons.io.FileUtils;
+import org.hashtrees.DefaultSegIdProviderImpl;
 import org.hashtrees.HashTree;
 import org.hashtrees.HashTreeIdProvider;
 import org.hashtrees.HashTreeImpl;
@@ -26,7 +27,7 @@ public class HashTreeImplTestUtils {
 	private static final Random RANDOM = new Random(System.currentTimeMillis());
 	public static final int ROOT_NODE = 0;
 	public static final int DEFAULT_TREE_ID = 1;
-	public static final int DEFAULT_SEG_DATA_BLOCKS_COUNT = 1 << 2;
+	public static final int DEFAULT_SEG_DATA_BLOCKS_COUNT = 1 << 10;
 	public static final int DEFAULT_HTREE_SERVER_PORT_NO = 11111;
 
 	/**
@@ -158,8 +159,10 @@ public class HashTreeImplTestUtils {
 			final HashTreeStorage hTStorage) throws Exception {
 		HashTreeIdProvider treeIdProvider = new HashTreeIdProviderTest();
 		StorageImplTest storage = new StorageImplTest();
+		DefaultSegIdProviderImpl segIdProvider = new DefaultSegIdProviderImpl(
+				noOfSegments);
 		HashTree hTree = new HashTreeImpl(noOfSegments, treeIdProvider,
-				hTStorage, storage);
+				segIdProvider, hTStorage, storage);
 		storage.setHashTree(hTree);
 		hTree.rebuildHashTrees(true);
 		return new HTreeComponents(hTStorage, storage, hTree);

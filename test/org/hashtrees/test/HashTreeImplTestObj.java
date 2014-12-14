@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 
+import org.hashtrees.DefaultSegIdProviderImpl;
 import org.hashtrees.HashTree;
 import org.hashtrees.HashTreeIdProvider;
 import org.hashtrees.HashTreeImpl;
@@ -22,7 +23,8 @@ public class HashTreeImplTestObj extends HashTreeImpl {
 	public HashTreeImplTestObj(final int noOfSegments,
 			final HashTreeStorage htStorage, final Storage storage,
 			BlockingQueue<HashTreeImplTestEvent> events) {
-		super(noOfSegments, treeIdProvider, htStorage, storage);
+		super(noOfSegments, treeIdProvider, new DefaultSegIdProviderImpl(
+				noOfSegments), htStorage, storage);
 		this.events = events;
 	}
 

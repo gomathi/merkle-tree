@@ -165,4 +165,25 @@ public class ByteUtils {
 		}
 		return new IllegalArgumentException(reason);
 	}
+
+	/**
+	 * Copy the specified bytes into a new array
+	 * 
+	 * @param array
+	 *            The array to copy from
+	 * @param from
+	 *            The index in the array to begin copying from
+	 * @param to
+	 *            The least index not copied
+	 * @return A new byte[] containing the copied bytes
+	 */
+	public static byte[] copy(byte[] array, int from, int to) {
+		if (to - from < 0) {
+			return new byte[0];
+		} else {
+			byte[] a = new byte[to - from];
+			System.arraycopy(array, from, a, 0, to - from);
+			return a;
+		}
+	}
 }

@@ -78,7 +78,7 @@ public class HashTreeSyncManagerImplTest {
 		syncManager.shutdown();
 	}
 
-	// @Test
+	@Test
 	public void testSynch() throws Exception {
 		HashTreeStorage localHTStorage = generateInMemoryStore(DEFAULT_SEG_DATA_BLOCKS_COUNT);
 		HashTreeStorage remoteHTStorage = generateInMemoryStore(DEFAULT_SEG_DATA_BLOCKS_COUNT);

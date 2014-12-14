@@ -15,7 +15,6 @@ import javax.annotation.concurrent.ThreadSafe;
 
 import org.hashtrees.thrift.generated.SegmentData;
 import org.hashtrees.thrift.generated.SegmentHash;
-import org.hashtrees.util.AtomicBitSet;
 
 /**
  * Hash tree can host multiple similar hash trees. This is mainly used for unit
@@ -27,13 +26,8 @@ class IndHashTreeMemStorage {
 
 	private final ConcurrentMap<Integer, ByteBuffer> segmentHashes = new ConcurrentSkipListMap<Integer, ByteBuffer>();
 	private final ConcurrentMap<Integer, ConcurrentSkipListMap<ByteBuffer, ByteBuffer>> segDataBlocks = new ConcurrentHashMap<Integer, ConcurrentSkipListMap<ByteBuffer, ByteBuffer>>();
-	private final AtomicBitSet dirtySegments;
 	private final AtomicLong fullyRebuiltTreeTs = new AtomicLong(0);
 	private final AtomicLong rebuiltTreeTs = new AtomicLong(0);
-
-	public IndHashTreeMemStorage(int noOfSegDataBlocks) {
-		this.dirtySegments = new AtomicBitSet(noOfSegDataBlocks);
-	}
 
 	public void putSegmentHash(int nodeId, ByteBuffer digest) {
 		segmentHashes.put(nodeId, digest);
@@ -90,18 +84,6 @@ class IndHashTreeMemStorage {
 		if (hash == null)
 			return null;
 		return new SegmentHash(nodeId, hash);
-	}
-
-	public void setDirtySegment(int segId) {
-		dirtySegments.set(segId);
-	}
-
-	public void clearDirtySegments() {
-		dirtySegments.clear();
-	}
-
-	public List<Integer> clearAndGetDirtySegments() {
-		return dirtySegments.clearAndGetAllSetBits();
 	}
 
 	private static void setValueIfNewValueIsGreater(AtomicLong val, long value) {

@@ -18,19 +18,18 @@ import org.hashtrees.thrift.generated.SegmentHash;
  * 
  */
 @ThreadSafe
-public class HashTreeMemStorage implements HashTreeStorage {
+public class HashTreeMemStorage extends HashTreeBaseStorage {
 
-	private final int noOfSegDataBlocks;
 	private final ConcurrentMap<Long, IndHashTreeMemStorage> treeIdAndIndHashTree = new ConcurrentHashMap<Long, IndHashTreeMemStorage>();
 
 	public HashTreeMemStorage(int noOfSegDataBlocks) {
-		this.noOfSegDataBlocks = noOfSegDataBlocks;
+		super(noOfSegDataBlocks);
 	}
 
 	private IndHashTreeMemStorage getIndHTree(long treeId) {
 		if (!treeIdAndIndHashTree.containsKey(treeId))
-			treeIdAndIndHashTree.putIfAbsent(treeId, new IndHashTreeMemStorage(
-					noOfSegDataBlocks));
+			treeIdAndIndHashTree.putIfAbsent(treeId,
+					new IndHashTreeMemStorage());
 		return treeIdAndIndHashTree.get(treeId);
 	}
 
@@ -62,16 +61,6 @@ public class HashTreeMemStorage implements HashTreeStorage {
 	}
 
 	@Override
-	public void setDirtySegment(long treeId, int segId) {
-		getIndHTree(treeId).setDirtySegment(segId);
-	}
-
-	@Override
-	public List<Integer> clearAndGetDirtySegments(long treeId) {
-		return getIndHTree(treeId).clearAndGetDirtySegments();
-	}
-
-	@Override
 	public void deleteTree(long treeId) {
 		treeIdAndIndHashTree.remove(treeId);
 	}
@@ -84,11 +73,6 @@ public class HashTreeMemStorage implements HashTreeStorage {
 	@Override
 	public SegmentHash getSegmentHash(long treeId, int nodeId) {
 		return getIndHTree(treeId).getSegmentHash(nodeId);
-	}
-
-	@Override
-	public void clearAllSegments(long treeId) {
-		getIndHTree(treeId).clearDirtySegments();
 	}
 
 	@Override

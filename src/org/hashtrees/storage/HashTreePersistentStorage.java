@@ -10,14 +10,11 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Queue;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 
 import org.apache.log4j.Logger;
 import org.fusesource.leveldbjni.JniDBFactory;
 import org.hashtrees.thrift.generated.SegmentData;
 import org.hashtrees.thrift.generated.SegmentHash;
-import org.hashtrees.util.AtomicBitSet;
 import org.hashtrees.util.ByteUtils;
 import org.iq80.leveldb.DB;
 import org.iq80.leveldb.DBIterator;
@@ -36,7 +33,7 @@ import org.iq80.leveldb.Options;
  * 
  */
 
-public class HashTreePersistentStorage implements HashTreeStorage {
+public class HashTreePersistentStorage extends HashTreeBaseStorage {
 
 	private static final Logger LOG = Logger
 			.getLogger(HashTreePersistentStorage.class);
@@ -82,14 +79,12 @@ public class HashTreePersistentStorage implements HashTreeStorage {
 
 	private final String dbDir;
 	private final DB dbObj;
-	private final int noOfSegDataBlocks;
-	private final ConcurrentMap<Long, AtomicBitSet> treeIdAndDirtySegmentMap = new ConcurrentHashMap<Long, AtomicBitSet>();
 
 	public HashTreePersistentStorage(String dbDir, int noOfSegDataBlocks)
 			throws Exception {
+		super(noOfSegDataBlocks);
 		this.dbDir = dbDir;
 		this.dbObj = initDatabase(dbDir);
-		this.noOfSegDataBlocks = noOfSegDataBlocks;
 	}
 
 	private static boolean createDir(String dirName) {
@@ -112,13 +107,6 @@ public class HashTreePersistentStorage implements HashTreeStorage {
 		} catch (IOException e) {
 			LOG.warn("Exception occurred while closing leveldb connection.");
 		}
-	}
-
-	private AtomicBitSet getDirtySegmentsHolder(long treeId) {
-		if (!treeIdAndDirtySegmentMap.containsKey(treeId))
-			treeIdAndDirtySegmentMap.putIfAbsent(treeId, new AtomicBitSet(
-					noOfSegDataBlocks));
-		return treeIdAndDirtySegmentMap.get(treeId);
 	}
 
 	private static long getTreeId(byte[] keyPrefix) {
@@ -216,21 +204,6 @@ public class HashTreePersistentStorage implements HashTreeStorage {
 				result.add(temp);
 		}
 		return result;
-	}
-
-	@Override
-	public void setDirtySegment(long treeId, int segId) {
-		getDirtySegmentsHolder(treeId).set(segId);
-	}
-
-	@Override
-	public List<Integer> clearAndGetDirtySegments(long treeId) {
-		return getDirtySegmentsHolder(treeId).clearAndGetAllSetBits();
-	}
-
-	@Override
-	public void clearAllSegments(long treeId) {
-		getDirtySegmentsHolder(treeId).clear();
 	}
 
 	@Override

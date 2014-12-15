@@ -15,7 +15,7 @@ import org.hashtrees.util.Pair;
  * {@link HashTrees} has to be provided with the implementation of this class.
  * 
  */
-public interface Storage {
+public interface Store {
 
 	ByteBuffer get(ByteBuffer key);
 

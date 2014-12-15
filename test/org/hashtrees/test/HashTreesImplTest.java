@@ -17,7 +17,7 @@ import org.apache.commons.codec.binary.Hex;
 import org.hashtrees.HashTrees;
 import org.hashtrees.HashTreesConstants;
 import org.hashtrees.HashTreesImpl;
-import org.hashtrees.storage.HashTreesStorage;
+import org.hashtrees.storage.HashTreesStore;
 import org.hashtrees.synch.HashTreesSyncManagerImpl;
 import org.hashtrees.synch.HashTreesThriftClientProvider;
 import org.hashtrees.test.HashTreesImplTestUtils.HTreeComponents;
@@ -39,10 +39,10 @@ public class HashTreesImplTest {
 	@Test
 	public void testPut() throws Exception {
 
-		HashTreesStorage[] stores = generateInMemoryAndPersistentStores(noOfSegDataBlocks);
+		HashTreesStore[] stores = generateInMemoryAndPersistentStores(noOfSegDataBlocks);
 
 		try {
-			for (HashTreesStorage store : stores) {
+			for (HashTreesStore store : stores) {
 				int treeId = 1;
 				int segId = 1;
 				String stringKey = "1";
@@ -50,7 +50,7 @@ public class HashTreesImplTest {
 				HTreeComponents components = createHashTree(noOfSegDataBlocks,
 						treeIdProvider, segIdProvider, store);
 				HashTrees testTree = components.hTree;
-				HashTreesStorage testTreeStorage = components.hTStorage;
+				HashTreesStore testTreeStorage = components.hTStorage;
 
 				ByteBuffer key = ByteBuffer.wrap(stringKey.getBytes());
 				ByteBuffer value = ByteBuffer.wrap(randomBytes());
@@ -78,14 +78,14 @@ public class HashTreesImplTest {
 	@Test
 	public void testRemove() throws Exception {
 
-		HashTreesStorage[] stores = generateInMemoryAndPersistentStores(noOfSegDataBlocks);
+		HashTreesStore[] stores = generateInMemoryAndPersistentStores(noOfSegDataBlocks);
 
 		try {
-			for (HashTreesStorage store : stores) {
+			for (HashTreesStore store : stores) {
 				HTreeComponents components = createHashTree(noOfSegDataBlocks,
 						treeIdProvider, segIdProvider, store);
 				HashTrees testTree = components.hTree;
-				HashTreesStorage testTreeStorage = components.hTStorage;
+				HashTreesStore testTreeStorage = components.hTStorage;
 
 				ByteBuffer key = ByteBuffer.wrap("2".getBytes());
 				ByteBuffer value = ByteBuffer.wrap(randomBytes());
@@ -109,15 +109,15 @@ public class HashTreesImplTest {
 	public void testUpdateSegmentHashesTest() throws Exception {
 
 		int tesNoOfSegDataBlocks = 2;
-		HashTreesStorage[] stores = generateInMemoryAndPersistentStores(tesNoOfSegDataBlocks);
+		HashTreesStore[] stores = generateInMemoryAndPersistentStores(tesNoOfSegDataBlocks);
 
 		try {
-			for (HashTreesStorage store : stores) {
+			for (HashTreesStore store : stores) {
 				HTreeComponents components = createHashTree(
 						tesNoOfSegDataBlocks, treeIdProvider, segIdProvider,
 						store);
 				HashTrees testTree = components.hTree;
-				HashTreesStorage testTreeStorage = components.hTStorage;
+				HashTreesStore testTreeStorage = components.hTStorage;
 
 				ByteBuffer key = ByteBuffer.wrap("1".getBytes());
 				ByteBuffer value = ByteBuffer.wrap(randomBytes());
@@ -153,8 +153,8 @@ public class HashTreesImplTest {
 
 	@Test
 	public void testUpdateWithEmptyTree() throws Exception {
-		HashTreesStorage[] stores = generateInMemoryAndPersistentStores(DEFAULT_SEG_DATA_BLOCKS_COUNT);
-		HashTreesStorage[] remoteStores = generateInMemoryAndPersistentStores(DEFAULT_SEG_DATA_BLOCKS_COUNT);
+		HashTreesStore[] stores = generateInMemoryAndPersistentStores(DEFAULT_SEG_DATA_BLOCKS_COUNT);
+		HashTreesStore[] remoteStores = generateInMemoryAndPersistentStores(DEFAULT_SEG_DATA_BLOCKS_COUNT);
 
 		try {
 			for (int j = 0; j <= 1; j++) {
@@ -197,8 +197,8 @@ public class HashTreesImplTest {
 	@Test
 	public void testUpdateTreeWithMissingBlocksInLocal() throws Exception {
 
-		HashTreesStorage[] stores = generateInMemoryAndPersistentStores(DEFAULT_SEG_DATA_BLOCKS_COUNT);
-		HashTreesStorage[] remoteStores = generateInMemoryAndPersistentStores(DEFAULT_SEG_DATA_BLOCKS_COUNT);
+		HashTreesStore[] stores = generateInMemoryAndPersistentStores(DEFAULT_SEG_DATA_BLOCKS_COUNT);
+		HashTreesStore[] remoteStores = generateInMemoryAndPersistentStores(DEFAULT_SEG_DATA_BLOCKS_COUNT);
 
 		try {
 			for (int j = 0; j <= 1; j++) {
@@ -251,8 +251,8 @@ public class HashTreesImplTest {
 	@Test
 	public void testUpdateTreeWithMissingBlocksInRemote() throws Exception {
 
-		HashTreesStorage[] stores = generateInMemoryAndPersistentStores(DEFAULT_SEG_DATA_BLOCKS_COUNT);
-		HashTreesStorage[] remoteStores = generateInMemoryAndPersistentStores(DEFAULT_SEG_DATA_BLOCKS_COUNT);
+		HashTreesStore[] stores = generateInMemoryAndPersistentStores(DEFAULT_SEG_DATA_BLOCKS_COUNT);
+		HashTreesStore[] remoteStores = generateInMemoryAndPersistentStores(DEFAULT_SEG_DATA_BLOCKS_COUNT);
 
 		try {
 			for (int j = 0; j <= 1; j++) {
@@ -292,8 +292,8 @@ public class HashTreesImplTest {
 
 	@Test
 	public void testUpdateTreeWithDifferingSegments() throws Exception {
-		HashTreesStorage[] stores = generateInMemoryAndPersistentStores(DEFAULT_SEG_DATA_BLOCKS_COUNT);
-		HashTreesStorage[] remoteStores = generateInMemoryAndPersistentStores(DEFAULT_SEG_DATA_BLOCKS_COUNT);
+		HashTreesStore[] stores = generateInMemoryAndPersistentStores(DEFAULT_SEG_DATA_BLOCKS_COUNT);
+		HashTreesStore[] remoteStores = generateInMemoryAndPersistentStores(DEFAULT_SEG_DATA_BLOCKS_COUNT);
 
 		try {
 			for (int j = 0; j <= 1; j++) {
@@ -335,8 +335,8 @@ public class HashTreesImplTest {
 
 	@Test
 	public void testHashTreeServerAndClient() throws Exception {
-		HashTreesStorage store = generateInMemoryStore(DEFAULT_SEG_DATA_BLOCKS_COUNT);
-		HashTreesStorage remoteStore = generateInMemoryStore(DEFAULT_SEG_DATA_BLOCKS_COUNT);
+		HashTreesStore store = generateInMemoryStore(DEFAULT_SEG_DATA_BLOCKS_COUNT);
+		HashTreesStore remoteStore = generateInMemoryStore(DEFAULT_SEG_DATA_BLOCKS_COUNT);
 
 		try {
 			HTreeComponents localHTreeComp = createHashTree(

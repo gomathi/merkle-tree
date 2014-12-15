@@ -12,7 +12,7 @@ import org.hashtrees.thrift.generated.SegmentHash;
  * Defines storage interface to be used by higher level HTree.
  * 
  */
-public interface HashTreesStorage {
+public interface HashTreesStore {
 
 	/**
 	 * A segment data is the value inside a segment block.

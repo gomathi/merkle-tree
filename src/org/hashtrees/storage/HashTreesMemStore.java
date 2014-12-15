@@ -18,45 +18,44 @@ import org.hashtrees.thrift.generated.SegmentData;
 import org.hashtrees.thrift.generated.SegmentHash;
 
 /**
- * In memory implementation of {@link HashTreesStorage}.
+ * In memory implementation of {@link HashTreesStore}.
  * 
  */
 @ThreadSafe
-public class HashTreesMemStorage extends HashTreesBaseStorage {
+public class HashTreesMemStore extends HashTreesBaseStore {
 
-	private final ConcurrentMap<Long, SinglePartitionHashTreeMemStorage> treeIdAndIndHashTree = new ConcurrentHashMap<>();
+	private final ConcurrentMap<Long, HashTreeMemStore> treeIdAndIndHashTree = new ConcurrentHashMap<>();
 
-	private static class SinglePartitionHashTreeMemStorage {
+	private static class HashTreeMemStore {
 		private final ConcurrentMap<Integer, ByteBuffer> segmentHashes = new ConcurrentSkipListMap<Integer, ByteBuffer>();
 		private final ConcurrentMap<Integer, ConcurrentSkipListMap<ByteBuffer, ByteBuffer>> segDataBlocks = new ConcurrentHashMap<Integer, ConcurrentSkipListMap<ByteBuffer, ByteBuffer>>();
 		private final AtomicLong fullyRebuiltTreeTs = new AtomicLong(0);
 		private final AtomicLong rebuiltTreeTs = new AtomicLong(0);
 	}
 
-	public HashTreesMemStorage(int noOfSegDataBlocks) {
+	public HashTreesMemStore(int noOfSegDataBlocks) {
 		super(noOfSegDataBlocks);
 	}
 
-	private SinglePartitionHashTreeMemStorage getIndHTree(long treeId) {
+	private HashTreeMemStore getIndHTree(long treeId) {
 		if (!treeIdAndIndHashTree.containsKey(treeId))
-			treeIdAndIndHashTree.putIfAbsent(treeId,
-					new SinglePartitionHashTreeMemStorage());
+			treeIdAndIndHashTree.putIfAbsent(treeId, new HashTreeMemStore());
 		return treeIdAndIndHashTree.get(treeId);
 	}
 
 	@Override
 	public void putSegmentData(long treeId, int segId, ByteBuffer key,
 			ByteBuffer digest) {
-		SinglePartitionHashTreeMemStorage indPartition = getIndHTree(treeId);
-		if (!indPartition.segDataBlocks.containsKey(segId))
-			indPartition.segDataBlocks.putIfAbsent(segId,
+		HashTreeMemStore hTreeStore = getIndHTree(treeId);
+		if (!hTreeStore.segDataBlocks.containsKey(segId))
+			hTreeStore.segDataBlocks.putIfAbsent(segId,
 					new ConcurrentSkipListMap<ByteBuffer, ByteBuffer>());
-		indPartition.segDataBlocks.get(segId).put(key, digest);
+		hTreeStore.segDataBlocks.get(segId).put(key, digest);
 	}
 
 	@Override
 	public void deleteSegmentData(long treeId, int segId, ByteBuffer key) {
-		SinglePartitionHashTreeMemStorage indPartition = getIndHTree(treeId);
+		HashTreeMemStore indPartition = getIndHTree(treeId);
 		Map<ByteBuffer, ByteBuffer> segDataBlock = indPartition.segDataBlocks
 				.get(segId);
 		if (segDataBlock != null)
@@ -65,7 +64,7 @@ public class HashTreesMemStorage extends HashTreesBaseStorage {
 
 	@Override
 	public List<SegmentData> getSegment(long treeId, int segId) {
-		SinglePartitionHashTreeMemStorage indPartition = getIndHTree(treeId);
+		HashTreeMemStore indPartition = getIndHTree(treeId);
 		ConcurrentMap<ByteBuffer, ByteBuffer> segDataBlock = indPartition.segDataBlocks
 				.get(segId);
 		if (segDataBlock == null)
@@ -79,7 +78,7 @@ public class HashTreesMemStorage extends HashTreesBaseStorage {
 
 	@Override
 	public void putSegmentHash(long treeId, int nodeId, ByteBuffer digest) {
-		SinglePartitionHashTreeMemStorage indPartition = getIndHTree(treeId);
+		HashTreeMemStore indPartition = getIndHTree(treeId);
 		indPartition.segmentHashes.put(nodeId, digest);
 	}
 
@@ -114,7 +113,7 @@ public class HashTreesMemStorage extends HashTreesBaseStorage {
 
 	@Override
 	public SegmentHash getSegmentHash(long treeId, int nodeId) {
-		SinglePartitionHashTreeMemStorage indPartition = getIndHTree(treeId);
+		HashTreeMemStore indPartition = getIndHTree(treeId);
 		ByteBuffer hash = indPartition.segmentHashes.get(nodeId);
 		if (hash == null)
 			return null;
@@ -123,7 +122,7 @@ public class HashTreesMemStorage extends HashTreesBaseStorage {
 
 	@Override
 	public void setLastFullyTreeBuiltTimestamp(long treeId, long timestamp) {
-		SinglePartitionHashTreeMemStorage indTree = getIndHTree(treeId);
+		HashTreeMemStore indTree = getIndHTree(treeId);
 		setValueIfNewValueIsGreater(indTree.fullyRebuiltTreeTs, timestamp);
 	}
 

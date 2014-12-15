@@ -11,15 +11,15 @@ import junit.framework.Assert;
 
 import org.hashtrees.HashTreesConstants;
 import org.hashtrees.HashTreesIdProvider;
-import org.hashtrees.storage.HashTreesStorage;
-import org.hashtrees.storage.Storage;
+import org.hashtrees.storage.HashTreesStore;
+import org.hashtrees.storage.Store;
 import org.hashtrees.synch.HashTreesSyncManagerImpl;
 import org.hashtrees.test.HashTreesImplTestUtils.HashTreeIdProviderTest;
 import org.hashtrees.test.HashTreesImplTestUtils.StorageImplTest;
 import org.hashtrees.thrift.generated.ServerName;
 import org.junit.Test;
 
-public class HashTreeSyncManagerImplTest {
+public class HashTreesSyncManagerImplTest {
 
 	private static final HashTreesIdProvider treeIdProvider = new HashTreeIdProviderTest();
 
@@ -45,11 +45,11 @@ public class HashTreeSyncManagerImplTest {
 
 	@Test
 	public void testSegmentUpdate() throws InterruptedException {
-		HashTreesStorage htStorage = generateInMemoryStore(DEFAULT_SEG_DATA_BLOCKS_COUNT);
+		HashTreesStore htStorage = generateInMemoryStore(DEFAULT_SEG_DATA_BLOCKS_COUNT);
 		htStorage.setLastFullyTreeBuiltTimestamp(1, System.currentTimeMillis());
 		BlockingQueue<HashTreesImplTestEvent> events = new ArrayBlockingQueue<HashTreesImplTestEvent>(
 				1000);
-		Storage storage = new StorageImplTest();
+		Store storage = new StorageImplTest();
 		HashTreesImplTestObj hTree = new HashTreesImplTestObj(
 				DEFAULT_SEG_DATA_BLOCKS_COUNT, htStorage, storage, events);
 		HashTreesSyncManagerImpl syncManager = new HashTreesSyncManagerImpl(
@@ -63,10 +63,10 @@ public class HashTreeSyncManagerImplTest {
 
 	@Test
 	public void testFullTreeUpdate() throws InterruptedException {
-		HashTreesStorage htStorage = generateInMemoryStore(DEFAULT_SEG_DATA_BLOCKS_COUNT);
+		HashTreesStore htStorage = generateInMemoryStore(DEFAULT_SEG_DATA_BLOCKS_COUNT);
 		BlockingQueue<HashTreesImplTestEvent> events = new ArrayBlockingQueue<HashTreesImplTestEvent>(
 				1000);
-		Storage storage = new StorageImplTest();
+		Store storage = new StorageImplTest();
 		HashTreesImplTestObj hTree = new HashTreesImplTestObj(
 				DEFAULT_SEG_DATA_BLOCKS_COUNT, htStorage, storage, events);
 		HashTreesSyncManagerImpl syncManager = new HashTreesSyncManagerImpl(
@@ -80,8 +80,8 @@ public class HashTreeSyncManagerImplTest {
 
 	@Test
 	public void testSynch() throws Exception {
-		HashTreesStorage localHTStorage = generateInMemoryStore(DEFAULT_SEG_DATA_BLOCKS_COUNT);
-		HashTreesStorage remoteHTStorage = generateInMemoryStore(DEFAULT_SEG_DATA_BLOCKS_COUNT);
+		HashTreesStore localHTStorage = generateInMemoryStore(DEFAULT_SEG_DATA_BLOCKS_COUNT);
+		HashTreesStore remoteHTStorage = generateInMemoryStore(DEFAULT_SEG_DATA_BLOCKS_COUNT);
 		BlockingQueue<HashTreesImplTestEvent> localEvents = new ArrayBlockingQueue<HashTreesImplTestEvent>(
 				1000);
 		BlockingQueue<HashTreesImplTestEvent> remoteEvents = new ArrayBlockingQueue<HashTreesImplTestEvent>(

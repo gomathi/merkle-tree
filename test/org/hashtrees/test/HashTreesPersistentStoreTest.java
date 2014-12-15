@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.Random;
 
 import org.apache.commons.io.FileUtils;
-import org.hashtrees.storage.HashTreesPersistentStorage;
+import org.hashtrees.storage.HashTreesPersistentStore;
 import org.hashtrees.thrift.generated.SegmentData;
 import org.hashtrees.thrift.generated.SegmentHash;
 import org.junit.After;
@@ -16,13 +16,13 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-public class HashTreesPersistentStorageTest {
+public class HashTreesPersistentStoreTest {
 
 	private String dbDir;
 	private static final int defaultTreeId = 1;
 	private static final int defaultSegId = 0;
 	private static final int noOfSegDataBlocks = 1024;
-	private static HashTreesPersistentStorage dbObj;
+	private static HashTreesPersistentStore dbObj;
 	private static final byte[] EMPTY_BYTE_ARRAY = new byte[0];
 	private static final ByteBuffer EMPTY_BYTE_BUFFER = ByteBuffer
 			.wrap(EMPTY_BYTE_ARRAY);
@@ -30,11 +30,11 @@ public class HashTreesPersistentStorageTest {
 	@Before
 	public void init() throws Exception {
 		dbDir = "/tmp/random" + new Random().nextInt();
-		dbObj = new HashTreesPersistentStorage(dbDir, noOfSegDataBlocks);
+		dbObj = new HashTreesPersistentStore(dbDir, noOfSegDataBlocks);
 	}
 
 	public void init(String dbDirName) throws Exception {
-		dbObj = new HashTreesPersistentStorage(dbDirName, noOfSegDataBlocks);
+		dbObj = new HashTreesPersistentStore(dbDirName, noOfSegDataBlocks);
 	}
 
 	@After

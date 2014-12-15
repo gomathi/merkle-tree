@@ -27,9 +27,9 @@ import java.util.concurrent.locks.ReentrantLock;
 import javax.annotation.concurrent.ThreadSafe;
 
 import org.apache.commons.codec.binary.Hex;
-import org.hashtrees.storage.HashTreesMemStorage;
-import org.hashtrees.storage.HashTreesStorage;
-import org.hashtrees.storage.Storage;
+import org.hashtrees.storage.HashTreesMemStore;
+import org.hashtrees.storage.HashTreesStore;
+import org.hashtrees.storage.Store;
 import org.hashtrees.thrift.generated.SegmentData;
 import org.hashtrees.thrift.generated.SegmentHash;
 import org.hashtrees.util.ByteUtils;
@@ -54,8 +54,8 @@ import org.slf4j.LoggerFactory;
  * HashTree can host multiple hash trees. Each hash tree is differentiated by a
  * tree id.
  * 
- * Uses {@link HashTreesStorage} for storing tree and segments.
- * {@link HashTreesMemStorage} provides in memory implementation of storing
+ * Uses {@link HashTreesStore} for storing tree and segments.
+ * {@link HashTreesMemStore} provides in memory implementation of storing
  * entire tree and segments.
  * 
  */
@@ -74,10 +74,10 @@ public class HashTreesImpl implements HashTrees {
 	private final int internalNodesCount;
 	private final int segmentsCount;
 
-	private final HashTreesStorage hTStorage;
+	private final HashTreesStore hTStorage;
 	private final HashTreesIdProvider treeIdProvider;
 	private final SegmentIdProvider segIdProvider;
-	private final Storage storage;
+	private final Store storage;
 
 	private final ConcurrentMap<Long, ReentrantLock> treeLocks = new ConcurrentHashMap<Long, ReentrantLock>();
 
@@ -90,7 +90,7 @@ public class HashTreesImpl implements HashTrees {
 	public HashTreesImpl(int noOfSegments,
 			final HashTreesIdProvider treeIdProvider,
 			final SegmentIdProvider segIdProvider,
-			final HashTreesStorage hTStroage, final Storage storage) {
+			final HashTreesStore hTStroage, final Store storage) {
 		this.noOfChildren = BINARY_TREE;
 		this.segmentsCount = ((noOfSegments > MAX_NO_OF_BUCKETS) || (noOfSegments < 0)) ? MAX_NO_OF_BUCKETS
 				: roundUpToPowerOf2(noOfSegments);

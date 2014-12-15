@@ -5,12 +5,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 
-import org.hashtrees.DefaultSegIdProviderImpl;
+import org.hashtrees.ModuloSegIdProvider;
 import org.hashtrees.HashTrees;
 import org.hashtrees.HashTreesIdProvider;
 import org.hashtrees.HashTreesImpl;
-import org.hashtrees.storage.HashTreesStorage;
-import org.hashtrees.storage.Storage;
+import org.hashtrees.storage.HashTreesStore;
+import org.hashtrees.storage.Store;
 import org.hashtrees.test.HashTreesImplTestUtils.HashTreeIdProviderTest;
 import org.hashtrees.thrift.generated.SegmentData;
 import org.hashtrees.thrift.generated.SegmentHash;
@@ -21,9 +21,9 @@ public class HashTreesImplTestObj extends HashTreesImpl {
 	private final BlockingQueue<HashTreesImplTestEvent> events;
 
 	public HashTreesImplTestObj(final int noOfSegments,
-			final HashTreesStorage htStorage, final Storage storage,
+			final HashTreesStore htStorage, final Store storage,
 			BlockingQueue<HashTreesImplTestEvent> events) {
-		super(noOfSegments, treeIdProvider, new DefaultSegIdProviderImpl(
+		super(noOfSegments, treeIdProvider, new ModuloSegIdProvider(
 				noOfSegments), htStorage, storage);
 		this.events = events;
 	}

@@ -12,7 +12,7 @@ import javax.annotation.concurrent.ThreadSafe;
 /**
  * Default {@link BitSet} provided in java is not thread safe. This class
  * provides a minimalistic thread safe version of BitSet and also dynamically
- * allocates any .
+ * growable.
  * 
  */
 @ThreadSafe

@@ -9,7 +9,7 @@ import org.apache.thrift.server.TServer;
 import org.apache.thrift.server.TThreadPoolServer;
 import org.apache.thrift.transport.TServerSocket;
 import org.apache.thrift.transport.TTransportException;
-import org.hashtrees.HashTree;
+import org.hashtrees.HashTrees;
 import org.hashtrees.thrift.generated.HashTreeSyncInterface;
 import org.hashtrees.thrift.generated.HashTreeSyncInterface.Iface;
 import org.hashtrees.util.StoppableTask;
@@ -20,23 +20,23 @@ import org.hashtrees.util.StoppableTask;
  * 
  */
 @ThreadSafe
-public class HashTreeThriftServerTask extends StoppableTask {
+public class HashTreesThriftServerTask extends StoppableTask {
 
 	private final static Logger LOG = Logger
-			.getLogger(HashTreeThriftServerTask.class.getName());
+			.getLogger(HashTreesThriftServerTask.class.getName());
 	private volatile TServer server;
-	private final HashTree localHashTree;
-	private final HashTreeSyncManagerImpl htSynchMgr;
+	private final HashTrees localHashTree;
+	private final HashTreesSyncManagerImpl htSynchMgr;
 	private final int serverPortNo;
 	private final CountDownLatch initializedLatch;
 
-	public HashTreeThriftServerTask(final HashTree localHashTree,
-			final HashTreeSyncManagerImpl hashTreeMgr, final int serverPortNo) {
+	public HashTreesThriftServerTask(final HashTrees localHashTree,
+			final HashTreesSyncManagerImpl hashTreeMgr, final int serverPortNo) {
 		this(localHashTree, hashTreeMgr, serverPortNo, null);
 	}
 
-	public HashTreeThriftServerTask(final HashTree hTree,
-			final HashTreeSyncManagerImpl htSynchMgr, final int serverPortNo,
+	public HashTreesThriftServerTask(final HashTrees hTree,
+			final HashTreesSyncManagerImpl htSynchMgr, final int serverPortNo,
 			final CountDownLatch initializedLatch) {
 		this.localHashTree = hTree;
 		this.htSynchMgr = htSynchMgr;
@@ -52,7 +52,7 @@ public class HashTreeThriftServerTask extends StoppableTask {
 	}
 
 	private static TServer createServer(int serverPortNo,
-			HashTreeThriftServer hashTreeServer) throws TTransportException {
+			HashTreesThriftServer hashTreeServer) throws TTransportException {
 		TServerSocket serverTransport = new TServerSocket(serverPortNo);
 		HashTreeSyncInterface.Processor<Iface> processor = new HashTreeSyncInterface.Processor<HashTreeSyncInterface.Iface>(
 				hashTreeServer);
@@ -63,7 +63,7 @@ public class HashTreeThriftServerTask extends StoppableTask {
 
 	private void startServer() throws TTransportException {
 		if (server == null) {
-			this.server = createServer(serverPortNo, new HashTreeThriftServer(
+			this.server = createServer(serverPortNo, new HashTreesThriftServer(
 					localHashTree, htSynchMgr));
 			if (initializedLatch != null)
 				initializedLatch.countDown();

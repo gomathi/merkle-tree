@@ -1,7 +1,7 @@
 package org.hashtrees.test;
 
-import static org.hashtrees.test.HashTreeImplTestUtils.DEFAULT_SEG_DATA_BLOCKS_COUNT;
-import static org.hashtrees.test.HashTreeImplTestUtils.generateInMemoryStore;
+import static org.hashtrees.test.HashTreesImplTestUtils.DEFAULT_SEG_DATA_BLOCKS_COUNT;
+import static org.hashtrees.test.HashTreesImplTestUtils.generateInMemoryStore;
 
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
@@ -11,11 +11,11 @@ import junit.framework.Assert;
 
 import org.hashtrees.HashTreeConstants;
 import org.hashtrees.HashTreeIdProvider;
-import org.hashtrees.storage.HashTreeStorage;
+import org.hashtrees.storage.HashTreesStorage;
 import org.hashtrees.storage.Storage;
-import org.hashtrees.synch.HashTreeSyncManagerImpl;
-import org.hashtrees.test.HashTreeImplTestUtils.HashTreeIdProviderTest;
-import org.hashtrees.test.HashTreeImplTestUtils.StorageImplTest;
+import org.hashtrees.synch.HashTreesSyncManagerImpl;
+import org.hashtrees.test.HashTreesImplTestUtils.HashTreeIdProviderTest;
+import org.hashtrees.test.HashTreesImplTestUtils.StorageImplTest;
 import org.hashtrees.thrift.generated.ServerName;
 import org.junit.Test;
 
@@ -24,10 +24,10 @@ public class HashTreeSyncManagerImplTest {
 	private static final HashTreeIdProvider treeIdProvider = new HashTreeIdProviderTest();
 
 	private static void waitForTheEvent(
-			BlockingQueue<HashTreeImplTestEvent> events,
-			HashTreeImplTestEvent expectedEvent, long maxWaitTime)
+			BlockingQueue<HashTreesImplTestEvent> events,
+			HashTreesImplTestEvent expectedEvent, long maxWaitTime)
 			throws InterruptedException {
-		HashTreeImplTestEvent event = null;
+		HashTreesImplTestEvent event = null;
 		long cntr = System.currentTimeMillis();
 		while (true) {
 			event = events.poll(1000, TimeUnit.MILLISECONDS);
@@ -45,74 +45,74 @@ public class HashTreeSyncManagerImplTest {
 
 	@Test
 	public void testSegmentUpdate() throws InterruptedException {
-		HashTreeStorage htStorage = generateInMemoryStore(DEFAULT_SEG_DATA_BLOCKS_COUNT);
+		HashTreesStorage htStorage = generateInMemoryStore(DEFAULT_SEG_DATA_BLOCKS_COUNT);
 		htStorage.setLastFullyTreeBuiltTimestamp(1, System.currentTimeMillis());
-		BlockingQueue<HashTreeImplTestEvent> events = new ArrayBlockingQueue<HashTreeImplTestEvent>(
+		BlockingQueue<HashTreesImplTestEvent> events = new ArrayBlockingQueue<HashTreesImplTestEvent>(
 				1000);
 		Storage storage = new StorageImplTest();
-		HashTreeImplTestObj hTree = new HashTreeImplTestObj(
+		HashTreesImplTestObj hTree = new HashTreesImplTestObj(
 				DEFAULT_SEG_DATA_BLOCKS_COUNT, htStorage, storage, events);
-		HashTreeSyncManagerImpl syncManager = new HashTreeSyncManagerImpl(
+		HashTreesSyncManagerImpl syncManager = new HashTreesSyncManagerImpl(
 				hTree, treeIdProvider, "localhost",
 				HashTreeConstants.DEFAULT_HASH_TREE_SERVER_PORT_NO, 30 * 1000,
 				3000000, 10);
 		syncManager.init();
-		waitForTheEvent(events, HashTreeImplTestEvent.UPDATE_SEGMENT, 30000);
+		waitForTheEvent(events, HashTreesImplTestEvent.UPDATE_SEGMENT, 30000);
 		syncManager.shutdown();
 	}
 
 	@Test
 	public void testFullTreeUpdate() throws InterruptedException {
-		HashTreeStorage htStorage = generateInMemoryStore(DEFAULT_SEG_DATA_BLOCKS_COUNT);
-		BlockingQueue<HashTreeImplTestEvent> events = new ArrayBlockingQueue<HashTreeImplTestEvent>(
+		HashTreesStorage htStorage = generateInMemoryStore(DEFAULT_SEG_DATA_BLOCKS_COUNT);
+		BlockingQueue<HashTreesImplTestEvent> events = new ArrayBlockingQueue<HashTreesImplTestEvent>(
 				1000);
 		Storage storage = new StorageImplTest();
-		HashTreeImplTestObj hTree = new HashTreeImplTestObj(
+		HashTreesImplTestObj hTree = new HashTreesImplTestObj(
 				DEFAULT_SEG_DATA_BLOCKS_COUNT, htStorage, storage, events);
-		HashTreeSyncManagerImpl syncManager = new HashTreeSyncManagerImpl(
+		HashTreesSyncManagerImpl syncManager = new HashTreesSyncManagerImpl(
 				hTree, treeIdProvider, "localhost",
 				HashTreeConstants.DEFAULT_HASH_TREE_SERVER_PORT_NO, 30 * 1000,
 				30000000, 10);
 		syncManager.init();
-		waitForTheEvent(events, HashTreeImplTestEvent.UPDATE_FULL_TREE, 10000);
+		waitForTheEvent(events, HashTreesImplTestEvent.UPDATE_FULL_TREE, 10000);
 		syncManager.shutdown();
 	}
 
 	@Test
 	public void testSynch() throws Exception {
-		HashTreeStorage localHTStorage = generateInMemoryStore(DEFAULT_SEG_DATA_BLOCKS_COUNT);
-		HashTreeStorage remoteHTStorage = generateInMemoryStore(DEFAULT_SEG_DATA_BLOCKS_COUNT);
-		BlockingQueue<HashTreeImplTestEvent> localEvents = new ArrayBlockingQueue<HashTreeImplTestEvent>(
+		HashTreesStorage localHTStorage = generateInMemoryStore(DEFAULT_SEG_DATA_BLOCKS_COUNT);
+		HashTreesStorage remoteHTStorage = generateInMemoryStore(DEFAULT_SEG_DATA_BLOCKS_COUNT);
+		BlockingQueue<HashTreesImplTestEvent> localEvents = new ArrayBlockingQueue<HashTreesImplTestEvent>(
 				1000);
-		BlockingQueue<HashTreeImplTestEvent> remoteEvents = new ArrayBlockingQueue<HashTreeImplTestEvent>(
+		BlockingQueue<HashTreesImplTestEvent> remoteEvents = new ArrayBlockingQueue<HashTreesImplTestEvent>(
 				1000);
 		StorageImplTest localStorage = new StorageImplTest();
-		HashTreeImplTestObj localHTree = new HashTreeImplTestObj(
+		HashTreesImplTestObj localHTree = new HashTreesImplTestObj(
 				DEFAULT_SEG_DATA_BLOCKS_COUNT, localHTStorage, localStorage,
 				localEvents);
 		localStorage.setHashTree(localHTree);
 		StorageImplTest remoteStorage = new StorageImplTest();
-		HashTreeImplTestObj remoteHTree = new HashTreeImplTestObj(
+		HashTreesImplTestObj remoteHTree = new HashTreesImplTestObj(
 				DEFAULT_SEG_DATA_BLOCKS_COUNT, remoteHTStorage, remoteStorage,
 				remoteEvents);
 		remoteStorage.setHashTree(remoteHTree);
-		localStorage.put(HashTreeImplTestUtils.randomByteBuffer(),
-				HashTreeImplTestUtils.randomByteBuffer());
-		HashTreeSyncManagerImpl localSyncManager = new HashTreeSyncManagerImpl(
+		localStorage.put(HashTreesImplTestUtils.randomByteBuffer(),
+				HashTreesImplTestUtils.randomByteBuffer());
+		HashTreesSyncManagerImpl localSyncManager = new HashTreesSyncManagerImpl(
 				localHTree, treeIdProvider, "localhost",
 				HashTreeConstants.DEFAULT_HASH_TREE_SERVER_PORT_NO, 3000, 300,
 				10);
 
-		HashTreeSyncManagerImpl remoteSyncManager = new HashTreeSyncManagerImpl(
+		HashTreesSyncManagerImpl remoteSyncManager = new HashTreesSyncManagerImpl(
 				remoteHTree, treeIdProvider, "localhost", 8999, 3000, 300, 10);
 
 		remoteSyncManager.init();
 		localSyncManager.addServerToSyncList(new ServerName("localhost", 8999));
 		localSyncManager.init();
 
-		waitForTheEvent(localEvents, HashTreeImplTestEvent.SYNCH,
+		waitForTheEvent(localEvents, HashTreesImplTestEvent.SYNCH,
 				10000000000000L);
-		waitForTheEvent(remoteEvents, HashTreeImplTestEvent.SYNCH_INITIATED,
+		waitForTheEvent(remoteEvents, HashTreesImplTestEvent.SYNCH_INITIATED,
 				10000);
 		localSyncManager.shutdown();
 		remoteSyncManager.shutdown();

@@ -27,8 +27,8 @@ import java.util.concurrent.locks.ReentrantLock;
 import javax.annotation.concurrent.ThreadSafe;
 
 import org.apache.commons.codec.binary.Hex;
-import org.hashtrees.storage.HashTreeMemStorage;
-import org.hashtrees.storage.HashTreeStorage;
+import org.hashtrees.storage.HashTreesMemStorage;
+import org.hashtrees.storage.HashTreesStorage;
 import org.hashtrees.storage.Storage;
 import org.hashtrees.thrift.generated.SegmentData;
 import org.hashtrees.thrift.generated.SegmentHash;
@@ -40,7 +40,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * HashTree has segment blocks and segment trees.
+ * HashTrees has segment blocks and segment trees.
  * 
  * 1) Segment blocks, where the (key, hash of value) pairs are stored. All the
  * pairs are stored in sorted order. Whenever a key addition/removal happens on
@@ -54,13 +54,13 @@ import org.slf4j.LoggerFactory;
  * HashTree can host multiple hash trees. Each hash tree is differentiated by a
  * tree id.
  * 
- * Uses {@link HashTreeStorage} for storing tree and segments.
- * {@link HashTreeMemStorage} provides in memory implementation of storing
+ * Uses {@link HashTreesStorage} for storing tree and segments.
+ * {@link HashTreesMemStorage} provides in memory implementation of storing
  * entire tree and segments.
  * 
  */
 @ThreadSafe
-public class HashTreeImpl implements HashTree {
+public class HashTreesImpl implements HashTrees {
 
 	private final static char COMMA_DELIMETER = ',';
 	private final static char NEW_LINE_DELIMETER = '\n';
@@ -68,13 +68,13 @@ public class HashTreeImpl implements HashTree {
 	private final static int MAX_NO_OF_BUCKETS = 1 << 30;
 	private final static int BINARY_TREE = 2;
 	private final static Logger LOGGER = LoggerFactory
-			.getLogger(HashTreeImpl.class.getName());
+			.getLogger(HashTreesImpl.class.getName());
 
 	private final int noOfChildren;
 	private final int internalNodesCount;
 	private final int segmentsCount;
 
-	private final HashTreeStorage hTStorage;
+	private final HashTreesStorage hTStorage;
 	private final HashTreeIdProvider treeIdProvider;
 	private final SegmentIdProvider segIdProvider;
 	private final Storage storage;
@@ -85,12 +85,12 @@ public class HashTreeImpl implements HashTree {
 	@LockedBy("nonBlockingCallsLock")
 	private volatile boolean enabledNonBlockingCalls;
 	@LockedBy("nonBlockingCallsLock")
-	private volatile NonBlockingHashTreeDataUpdater bgDataUpdater;
+	private volatile NonBlockingHashTreesDataUpdater bgDataUpdater;
 
-	public HashTreeImpl(int noOfSegments,
+	public HashTreesImpl(int noOfSegments,
 			final HashTreeIdProvider treeIdProvider,
 			final SegmentIdProvider segIdProvider,
-			final HashTreeStorage hTStroage, final Storage storage) {
+			final HashTreesStorage hTStroage, final Storage storage) {
 		this.noOfChildren = BINARY_TREE;
 		this.segmentsCount = ((noOfSegments > MAX_NO_OF_BUCKETS) || (noOfSegments < 0)) ? MAX_NO_OF_BUCKETS
 				: roundUpToPowerOf2(noOfSegments);
@@ -140,7 +140,7 @@ public class HashTreeImpl implements HashTree {
 	}
 
 	@Override
-	public boolean synch(long treeId, final HashTree remoteTree)
+	public boolean synch(long treeId, final HashTrees remoteTree)
 			throws Exception {
 
 		Collection<Integer> leafNodesToCheck = new ArrayList<Integer>();
@@ -165,7 +165,7 @@ public class HashTreeImpl implements HashTree {
 		return true;
 	}
 
-	private void findDifferences(long treeId, HashTree remoteTree,
+	private void findDifferences(long treeId, HashTrees remoteTree,
 			Collection<Integer> nodesToCheck,
 			Collection<Integer> missingNodesInRemote,
 			Collection<Integer> missingNodesInLocal) throws Exception {
@@ -214,12 +214,12 @@ public class HashTreeImpl implements HashTree {
 	}
 
 	private void syncSegments(long treeId, Collection<Integer> segIds,
-			HashTree remoteTree) throws Exception {
+			HashTrees remoteTree) throws Exception {
 		for (int segId : segIds)
 			syncSegment(treeId, segId, remoteTree);
 	}
 
-	private void syncSegment(long treeId, int segId, HashTree remoteTree)
+	private void syncSegment(long treeId, int segId, HashTrees remoteTree)
 			throws Exception {
 		CollectionPeekingIterator<SegmentData> localDataItr = new CollectionPeekingIterator<SegmentData>(
 				getSegment(treeId, segId));
@@ -265,7 +265,7 @@ public class HashTreeImpl implements HashTree {
 	}
 
 	private void updateRemoteTreeWithMissingSegments(long treeId,
-			Collection<Integer> segIds, HashTree remoteTree) throws Exception {
+			Collection<Integer> segIds, HashTrees remoteTree) throws Exception {
 		for (int segId : segIds) {
 			final Map<ByteBuffer, ByteBuffer> keyValuePairs = new HashMap<ByteBuffer, ByteBuffer>();
 			List<SegmentData> sdValues = getSegment(treeId, segId);
@@ -582,7 +582,7 @@ public class HashTreeImpl implements HashTree {
 				LOGGER.info("Non blocking calls are already enabled.");
 			} else {
 				if (bgDataUpdater == null)
-					bgDataUpdater = new NonBlockingHashTreeDataUpdater(this);
+					bgDataUpdater = new NonBlockingHashTreesDataUpdater(this);
 				new Thread(bgDataUpdater).start();
 				enabledNonBlockingCalls = true;
 				LOGGER.info("Non blocking calls are enabled.");

@@ -5,23 +5,23 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.thrift.TException;
-import org.hashtrees.HashTree;
+import org.hashtrees.HashTrees;
 import org.hashtrees.thrift.generated.HashTreeSyncInterface;
 import org.hashtrees.thrift.generated.SegmentData;
 import org.hashtrees.thrift.generated.SegmentHash;
 
 /**
- * A {@link HashTree} implementation that wraps up
+ * A {@link HashTrees} implementation that wraps up
  * {@link HashTreeSyncInterface.Iface} client and forwards the calls to the
  * remote tree. Clients who use this class will assume that they talk to a local
  * Java object, but in fact they are talking to a remote Java object.
  * 
  */
-public class HashTreeRemoteClient implements HashTree {
+public class HashTreesRemoteClient implements HashTrees {
 
 	private final HashTreeSyncInterface.Iface remoteTree;
 
-	public HashTreeRemoteClient(final HashTreeSyncInterface.Iface remoteTree) {
+	public HashTreesRemoteClient(final HashTreeSyncInterface.Iface remoteTree) {
 		this.remoteTree = remoteTree;
 	}
 
@@ -79,7 +79,7 @@ public class HashTreeRemoteClient implements HashTree {
 	}
 
 	@Override
-	public boolean synch(long treeId, HashTree remoteTree) throws TException {
+	public boolean synch(long treeId, HashTrees remoteTree) throws TException {
 		throw new UnsupportedOperationException(
 				"Remote tree does not support this operation.");
 	}

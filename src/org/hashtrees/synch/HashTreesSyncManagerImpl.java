@@ -18,9 +18,9 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import org.apache.log4j.Logger;
 import org.apache.thrift.TException;
 import org.apache.thrift.transport.TTransportException;
-import org.hashtrees.HashTree;
+import org.hashtrees.HashTrees;
 import org.hashtrees.HashTreeIdProvider;
-import org.hashtrees.HashTreeImpl;
+import org.hashtrees.HashTreesImpl;
 import org.hashtrees.thrift.generated.HashTreeSyncInterface;
 import org.hashtrees.thrift.generated.ServerName;
 import org.hashtrees.util.CustomThreadFactory;
@@ -52,20 +52,20 @@ import com.google.common.collect.Collections2;
  * 
  * At any time, the manager can be asked to shutdown, by requesting stop.
  * 
- * {@link HashTreeImpl} is a stand alone class, it does not do automatically
+ * {@link HashTreesImpl} is a stand alone class, it does not do automatically
  * build segments or any additional synch functionalities, this class provides
  * those functions.
  * 
  */
-public class HashTreeSyncManagerImpl extends StoppableTask implements
-		HashTreeSyncManager {
+public class HashTreesSyncManagerImpl extends StoppableTask implements
+		HashTreesSyncManager {
 
 	private enum STATE {
 		START, REBUILD, SYNCH
 	}
 
 	private final static Logger LOG = Logger
-			.getLogger(HashTreeSyncManagerImpl.class);
+			.getLogger(HashTreesSyncManagerImpl.class);
 	private final static String HT_THREAD_NAME = "HTSyncManagerThreads";
 	private final static String HT_SM_THREAD = "HTStateMachineExecThread";
 
@@ -80,7 +80,7 @@ public class HashTreeSyncManagerImpl extends StoppableTask implements
 	// lapse between these two events.
 	public final static long DEFAULT_INTERVAL_BW_SYNCH_AND_REBUILD = 5 * 60 * 1000;
 
-	private final HashTree hashTree;
+	private final HashTrees hashTree;
 	private final HashTreeIdProvider treeIdProvider;
 	private final ServerName localServer;
 	private final int noOfThreads;
@@ -98,7 +98,7 @@ public class HashTreeSyncManagerImpl extends StoppableTask implements
 
 	private volatile ExecutorService fixedExecutors;
 	private volatile STATE currState = STATE.START;
-	private volatile HashTreeThriftServerTask htThriftServer;
+	private volatile HashTreesThriftServerTask htThriftServer;
 
 	private static class ServerRemovedFromSyncList extends Exception {
 
@@ -109,14 +109,14 @@ public class HashTreeSyncManagerImpl extends StoppableTask implements
 		}
 	}
 
-	public HashTreeSyncManagerImpl(String thisHostName, HashTree hashTree,
+	public HashTreesSyncManagerImpl(String thisHostName, HashTrees hashTree,
 			HashTreeIdProvider treeIdProvider, int serverPortNo) {
 		this(hashTree, treeIdProvider, thisHostName, serverPortNo,
 				DEFAULT_FULL_REBUILD_TIME_INTERVAL,
 				DEFAULT_INTERVAL_BW_SYNCH_AND_REBUILD, DEFAULT_NO_OF_THREADS);
 	}
 
-	public HashTreeSyncManagerImpl(HashTree hashTree,
+	public HashTreesSyncManagerImpl(HashTrees hashTree,
 			HashTreeIdProvider treeIdProvider, String localHostName,
 			int localServerPortNo, long fullRebuildTimeInterval,
 			long intBWSynchAndRebuild, int noOfBGThreads) {
@@ -307,7 +307,7 @@ public class HashTreeSyncManagerImpl extends StoppableTask implements
 		try {
 			LOG.info("Syncing " + hostNameAndTreeId);
 			HashTreeSyncInterface.Iface remoteSyncClient = getHashTreeSyncClient(sn);
-			hashTree.synch(treeId, new HashTreeRemoteClient(remoteSyncClient));
+			hashTree.synch(treeId, new HashTreesRemoteClient(remoteSyncClient));
 			LOG.info("Syncing " + hostNameAndTreeId + " complete.");
 		} catch (TException | ServerRemovedFromSyncList e) {
 			LOG.warn("Unable to synch remote hash tree server : "
@@ -323,7 +323,7 @@ public class HashTreeSyncManagerImpl extends StoppableTask implements
 				wrappedObj = serversToSync.get(sn);
 				if (wrappedObj != null && wrappedObj.getData() == null)
 					serversToSync.put(sn, Single
-							.create(HashTreeThriftClientProvider
+							.create(HashTreesThriftClientProvider
 									.getThriftHashTreeClient(sn)));
 			}
 		}
@@ -337,7 +337,7 @@ public class HashTreeSyncManagerImpl extends StoppableTask implements
 			this.fixedExecutors = Executors.newFixedThreadPool(noOfThreads,
 					new CustomThreadFactory(HT_THREAD_NAME));
 			CountDownLatch initializedLatch = new CountDownLatch(1);
-			htThriftServer = new HashTreeThriftServerTask(hashTree, this,
+			htThriftServer = new HashTreesThriftServerTask(hashTree, this,
 					localServer.getPortNo(), initializedLatch);
 			new Thread(htThriftServer).start();
 			try {
@@ -411,7 +411,7 @@ public class HashTreeSyncManagerImpl extends StoppableTask implements
 			if (!serversToSync.containsKey(sn)) {
 				try {
 					serversToSync.put(sn, Single
-							.create(HashTreeThriftClientProvider
+							.create(HashTreesThriftClientProvider
 									.getThriftHashTreeClient(sn)));
 				} catch (TTransportException e) {
 					HashTreeSyncInterface.Iface dummy = null;

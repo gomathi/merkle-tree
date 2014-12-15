@@ -12,17 +12,17 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.commons.io.FileUtils;
 import org.hashtrees.DefaultSegIdProviderImpl;
-import org.hashtrees.HashTree;
+import org.hashtrees.HashTrees;
 import org.hashtrees.HashTreeIdProvider;
-import org.hashtrees.HashTreeImpl;
+import org.hashtrees.HashTreesImpl;
 import org.hashtrees.SegmentIdProvider;
-import org.hashtrees.storage.HashTreeMemStorage;
-import org.hashtrees.storage.HashTreePersistentStorage;
-import org.hashtrees.storage.HashTreeStorage;
+import org.hashtrees.storage.HashTreesMemStorage;
+import org.hashtrees.storage.HashTreesPersistentStorage;
+import org.hashtrees.storage.HashTreesStorage;
 import org.hashtrees.storage.Storage;
 import org.hashtrees.util.Pair;
 
-public class HashTreeImplTestUtils {
+public class HashTreesImplTestUtils {
 
 	private static final Random RANDOM = new Random(System.currentTimeMillis());
 	public static final int ROOT_NODE = 0;
@@ -75,9 +75,9 @@ public class HashTreeImplTestUtils {
 	public static class StorageImplTest implements Storage {
 
 		final ConcurrentHashMap<ByteBuffer, ByteBuffer> localStorage = new ConcurrentHashMap<ByteBuffer, ByteBuffer>();
-		volatile HashTree hashTree;
+		volatile HashTrees hashTree;
 
-		public void setHashTree(final HashTree hashTree) {
+		public void setHashTree(final HashTrees hashTree) {
 			this.hashTree = hashTree;
 		}
 
@@ -116,12 +116,12 @@ public class HashTreeImplTestUtils {
 
 	public static class HTreeComponents {
 
-		public final HashTreeStorage hTStorage;
+		public final HashTreesStorage hTStorage;
 		public final StorageImplTest storage;
-		public final HashTree hTree;
+		public final HashTrees hTree;
 
-		public HTreeComponents(final HashTreeStorage hTStorage,
-				final StorageImplTest storage, final HashTree hTree) {
+		public HTreeComponents(final HashTreesStorage hTStorage,
+				final StorageImplTest storage, final HashTrees hTree) {
 			this.hTStorage = hTStorage;
 			this.storage = storage;
 			this.hTree = hTree;
@@ -146,49 +146,49 @@ public class HashTreeImplTestUtils {
 
 	public static HTreeComponents createHashTree(int noOfSegDataBlocks,
 			final HashTreeIdProvider treeIdProv,
-			final SegmentIdProvider segIdPro, final HashTreeStorage hTStorage)
+			final SegmentIdProvider segIdPro, final HashTreesStorage hTStorage)
 			throws Exception {
 		StorageImplTest storage = new StorageImplTest();
-		HashTree hTree = new HashTreeImpl(noOfSegDataBlocks, treeIdProv,
+		HashTrees hTree = new HashTreesImpl(noOfSegDataBlocks, treeIdProv,
 				segIdPro, hTStorage, storage);
 		hTree.rebuildHashTrees(true);
 		return new HTreeComponents(hTStorage, storage, hTree);
 	}
 
 	public static HTreeComponents createHashTree(int noOfSegments,
-			final HashTreeStorage hTStorage) throws Exception {
+			final HashTreesStorage hTStorage) throws Exception {
 		HashTreeIdProvider treeIdProvider = new HashTreeIdProviderTest();
 		StorageImplTest storage = new StorageImplTest();
 		DefaultSegIdProviderImpl segIdProvider = new DefaultSegIdProviderImpl(
 				noOfSegments);
-		HashTree hTree = new HashTreeImpl(noOfSegments, treeIdProvider,
+		HashTrees hTree = new HashTreesImpl(noOfSegments, treeIdProvider,
 				segIdProvider, hTStorage, storage);
 		storage.setHashTree(hTree);
 		hTree.rebuildHashTrees(true);
 		return new HTreeComponents(hTStorage, storage, hTree);
 	}
 
-	public static HashTreeStorage generateInMemoryStore(int noOfSegDataBlocks) {
-		return new HashTreeMemStorage(noOfSegDataBlocks);
+	public static HashTreesStorage generateInMemoryStore(int noOfSegDataBlocks) {
+		return new HashTreesMemStorage(noOfSegDataBlocks);
 	}
 
-	private static HashTreeStorage generatePersistentStore(int noOfSegDataBlocks)
+	private static HashTreesStorage generatePersistentStore(int noOfSegDataBlocks)
 			throws Exception {
-		return new HashTreePersistentStorage(randomDirName(), noOfSegDataBlocks);
+		return new HashTreesPersistentStorage(randomDirName(), noOfSegDataBlocks);
 	}
 
-	public static HashTreeStorage[] generateInMemoryAndPersistentStores(
+	public static HashTreesStorage[] generateInMemoryAndPersistentStores(
 			int noOfSegDataBlocks) throws Exception {
-		HashTreeStorage[] stores = new HashTreeStorage[2];
+		HashTreesStorage[] stores = new HashTreesStorage[2];
 		stores[0] = generateInMemoryStore(noOfSegDataBlocks);
 		stores[1] = generatePersistentStore(noOfSegDataBlocks);
 		return stores;
 	}
 
-	public static void closeStores(HashTreeStorage... stores) {
-		for (HashTreeStorage store : stores) {
-			if (store instanceof HashTreePersistentStorage) {
-				HashTreePersistentStorage pStore = (HashTreePersistentStorage) store;
+	public static void closeStores(HashTreesStorage... stores) {
+		for (HashTreesStorage store : stores) {
+			if (store instanceof HashTreesPersistentStorage) {
+				HashTreesPersistentStorage pStore = (HashTreesPersistentStorage) store;
 				FileUtils.deleteQuietly(new File(pStore.getDbDir()));
 			}
 		}

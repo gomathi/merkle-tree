@@ -33,10 +33,10 @@ import org.iq80.leveldb.Options;
  * 
  */
 
-public class HashTreePersistentStorage extends HashTreeBaseStorage {
+public class HashTreesPersistentStorage extends HashTreesBaseStorage {
 
 	private static final Logger LOG = Logger
-			.getLogger(HashTreePersistentStorage.class);
+			.getLogger(HashTreesPersistentStorage.class);
 
 	private static final int SIZE_TREEID = ByteUtils.SIZEOF_LONG;
 	private static final int SIZE_SEGID = ByteUtils.SIZEOF_INT;
@@ -80,7 +80,7 @@ public class HashTreePersistentStorage extends HashTreeBaseStorage {
 	private final String dbDir;
 	private final DB dbObj;
 
-	public HashTreePersistentStorage(String dbDir, int noOfSegDataBlocks)
+	public HashTreesPersistentStorage(String dbDir, int noOfSegDataBlocks)
 			throws Exception {
 		super(noOfSegDataBlocks);
 		this.dbDir = dbDir;

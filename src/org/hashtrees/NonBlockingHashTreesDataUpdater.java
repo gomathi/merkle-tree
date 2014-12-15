@@ -10,20 +10,20 @@ import org.hashtrees.util.Pair;
 
 /**
  * A task to enable non blocking calls on all
- * {@link HashTreeImpl#hPut(ByteArray, ByteArray)} and
- * {@link HashTreeImpl#hRemove(ByteArray)} operation.
+ * {@link HashTreesImpl#hPut(ByteArray, ByteArray)} and
+ * {@link HashTreesImpl#hRemove(ByteArray)} operation.
  * 
  */
 @ThreadSafe
-class NonBlockingHashTreeDataUpdater extends
+class NonBlockingHashTreesDataUpdater extends
 		NonBlockingQueuingTask<Pair<HTOperation, List<ByteBuffer>>> {
 
 	private static final int DEFAULT_QUE_SIZE = 10000;
 	private static final Pair<HTOperation, List<ByteBuffer>> STOP_MARKER = new Pair<HTOperation, List<ByteBuffer>>(
 			HTOperation.PUT, null);
-	private final HashTreeImpl hTree;
+	private final HashTreesImpl hTree;
 
-	public NonBlockingHashTreeDataUpdater(final HashTreeImpl hTree) {
+	public NonBlockingHashTreesDataUpdater(final HashTreesImpl hTree) {
 		super(STOP_MARKER, DEFAULT_QUE_SIZE);
 		this.hTree = hTree;
 	}

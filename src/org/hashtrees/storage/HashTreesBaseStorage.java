@@ -6,12 +6,12 @@ import java.util.concurrent.ConcurrentMap;
 
 import org.hashtrees.util.AtomicBitSet;
 
-public abstract class HashTreeBaseStorage implements HashTreeStorage {
+public abstract class HashTreesBaseStorage implements HashTreesStorage {
 
 	private final ConcurrentMap<Long, AtomicBitSet> treeIdAndDirtySegmentMap = new ConcurrentHashMap<Long, AtomicBitSet>();
 	private final int noOfSegDataBlocks;
 
-	public HashTreeBaseStorage(int noOfSegDataBlocks) {
+	public HashTreesBaseStorage(int noOfSegDataBlocks) {
 		this.noOfSegDataBlocks = noOfSegDataBlocks;
 	}
 

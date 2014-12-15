@@ -12,7 +12,7 @@ import org.hashtrees.thrift.generated.SegmentHash;
  * quickly by exchanging very little information.
  * 
  */
-public interface HashTree {
+public interface HashTrees {
 
 	/**
 	 * Adds the (key,value) pair to the original storage. Intended to be used
@@ -117,7 +117,7 @@ public interface HashTree {
 	 * @return, true indicates some modifications made to the remote tree, false
 	 *          means two trees were already in synch status.
 	 */
-	boolean synch(long treeId, HashTree remoteTree) throws Exception;
+	boolean synch(long treeId, HashTrees remoteTree) throws Exception;
 
 	/**
 	 * Hash tree implementations do not update the segment hashes tree on every

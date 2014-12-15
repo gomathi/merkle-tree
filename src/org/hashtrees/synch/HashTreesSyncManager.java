@@ -3,7 +3,7 @@ package org.hashtrees.synch;
 import org.hashtrees.thrift.generated.HashTreeSyncInterface;
 import org.hashtrees.thrift.generated.ServerName;
 
-public interface HashTreeSyncManager {
+public interface HashTreesSyncManager {
 
 	/**
 	 * Adds server to sync list. Hashtrees on the local server will be synched

@@ -6,23 +6,23 @@ import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 
 import org.hashtrees.DefaultSegIdProviderImpl;
-import org.hashtrees.HashTree;
+import org.hashtrees.HashTrees;
 import org.hashtrees.HashTreeIdProvider;
-import org.hashtrees.HashTreeImpl;
-import org.hashtrees.storage.HashTreeStorage;
+import org.hashtrees.HashTreesImpl;
+import org.hashtrees.storage.HashTreesStorage;
 import org.hashtrees.storage.Storage;
-import org.hashtrees.test.HashTreeImplTestUtils.HashTreeIdProviderTest;
+import org.hashtrees.test.HashTreesImplTestUtils.HashTreeIdProviderTest;
 import org.hashtrees.thrift.generated.SegmentData;
 import org.hashtrees.thrift.generated.SegmentHash;
 
-public class HashTreeImplTestObj extends HashTreeImpl {
+public class HashTreesImplTestObj extends HashTreesImpl {
 
 	private static final HashTreeIdProvider treeIdProvider = new HashTreeIdProviderTest();
-	private final BlockingQueue<HashTreeImplTestEvent> events;
+	private final BlockingQueue<HashTreesImplTestEvent> events;
 
-	public HashTreeImplTestObj(final int noOfSegments,
-			final HashTreeStorage htStorage, final Storage storage,
-			BlockingQueue<HashTreeImplTestEvent> events) {
+	public HashTreesImplTestObj(final int noOfSegments,
+			final HashTreesStorage htStorage, final Storage storage,
+			BlockingQueue<HashTreesImplTestEvent> events) {
 		super(noOfSegments, treeIdProvider, new DefaultSegIdProviderImpl(
 				noOfSegments), htStorage, storage);
 		this.events = events;
@@ -32,13 +32,13 @@ public class HashTreeImplTestObj extends HashTreeImpl {
 	public void sPut(Map<ByteBuffer, ByteBuffer> keyValuePairs)
 			throws Exception {
 		super.sPut(keyValuePairs);
-		events.put(HashTreeImplTestEvent.SYNCH_INITIATED);
+		events.put(HashTreesImplTestEvent.SYNCH_INITIATED);
 	}
 
 	@Override
 	public void sRemove(List<ByteBuffer> keys) throws Exception {
 		super.sRemove(keys);
-		events.put(HashTreeImplTestEvent.SYNCH_INITIATED);
+		events.put(HashTreesImplTestEvent.SYNCH_INITIATED);
 	}
 
 	@Override
@@ -78,9 +78,9 @@ public class HashTreeImplTestObj extends HashTreeImpl {
 	}
 
 	@Override
-	public boolean synch(long treeId, HashTree remoteTree) throws Exception {
+	public boolean synch(long treeId, HashTrees remoteTree) throws Exception {
 		boolean result = super.synch(treeId, remoteTree);
-		events.add(HashTreeImplTestEvent.SYNCH);
+		events.add(HashTreesImplTestEvent.SYNCH);
 		return result;
 	}
 
@@ -93,9 +93,9 @@ public class HashTreeImplTestObj extends HashTreeImpl {
 	public void rebuildHashTree(long treeId, boolean fullRebuild) {
 		super.rebuildHashTree(treeId, fullRebuild);
 		if (!fullRebuild)
-			events.add(HashTreeImplTestEvent.UPDATE_SEGMENT);
+			events.add(HashTreesImplTestEvent.UPDATE_SEGMENT);
 		else
-			events.add(HashTreeImplTestEvent.UPDATE_FULL_TREE);
+			events.add(HashTreesImplTestEvent.UPDATE_FULL_TREE);
 	}
 
 }

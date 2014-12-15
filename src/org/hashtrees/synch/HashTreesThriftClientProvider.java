@@ -5,7 +5,7 @@ import org.apache.thrift.protocol.TProtocol;
 import org.apache.thrift.transport.TSocket;
 import org.apache.thrift.transport.TTransport;
 import org.apache.thrift.transport.TTransportException;
-import org.hashtrees.HashTree;
+import org.hashtrees.HashTrees;
 import org.hashtrees.thrift.generated.HashTreeSyncInterface;
 import org.hashtrees.thrift.generated.ServerName;
 
@@ -15,7 +15,7 @@ import org.hashtrees.thrift.generated.ServerName;
  * 
  */
 
-public class HashTreeThriftClientProvider {
+public class HashTreesThriftClientProvider {
 
 	public static HashTreeSyncInterface.Iface getThriftHashTreeClient(
 			ServerName sn) throws TTransportException {
@@ -25,8 +25,8 @@ public class HashTreeThriftClientProvider {
 		return new HashTreeSyncInterface.Client(protocol);
 	}
 
-	public static HashTree getHashTreeRemoteClient(ServerName sn)
+	public static HashTrees getHashTreeRemoteClient(ServerName sn)
 			throws TTransportException {
-		return new HashTreeRemoteClient(getThriftHashTreeClient(sn));
+		return new HashTreesRemoteClient(getThriftHashTreeClient(sn));
 	}
 }

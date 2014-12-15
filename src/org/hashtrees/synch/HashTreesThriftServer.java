@@ -5,24 +5,24 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.thrift.TException;
-import org.hashtrees.HashTree;
+import org.hashtrees.HashTrees;
 import org.hashtrees.thrift.generated.HashTreeSyncInterface;
 import org.hashtrees.thrift.generated.SegmentData;
 import org.hashtrees.thrift.generated.SegmentHash;
 import org.hashtrees.thrift.generated.ServerName;
 
 /**
- * Just wraps up {@link HashTree} and provides a view as
+ * Just wraps up {@link HashTrees} and provides a view as
  * {@link HashTreeSyncInterface.Iface}. This is used by Thrift server.
  * 
  */
-public class HashTreeThriftServer implements HashTreeSyncInterface.Iface {
+public class HashTreesThriftServer implements HashTreeSyncInterface.Iface {
 
-	private final HashTree hashTree;
-	private final HashTreeSyncManagerImpl htSyncManager;
+	private final HashTrees hashTree;
+	private final HashTreesSyncManagerImpl htSyncManager;
 
-	public HashTreeThriftServer(final HashTree hashTree,
-			final HashTreeSyncManagerImpl htSyncManager) {
+	public HashTreesThriftServer(final HashTrees hashTree,
+			final HashTreesSyncManagerImpl htSyncManager) {
 		this.hashTree = hashTree;
 		this.htSyncManager = htSyncManager;
 	}

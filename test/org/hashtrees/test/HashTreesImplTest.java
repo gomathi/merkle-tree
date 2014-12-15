@@ -34,7 +34,7 @@ public class HashTreesImplTest {
 
 	private static final SegIdProviderTest segIdProvider = new SegIdProviderTest();
 	private static final HashTreeIdProviderTest treeIdProvider = new HashTreeIdProviderTest();
-	private static final int noOfSegDataBlocks = 1024;
+	private static final int noOfSegDataBlocks = 1 << 10;
 
 	@Test
 	public void testPut() throws Exception {

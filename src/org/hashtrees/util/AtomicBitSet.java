@@ -12,7 +12,7 @@ import javax.annotation.concurrent.ThreadSafe;
 /**
  * Default {@link BitSet} provided in java is not thread safe. This class
  * provides a minimalistic thread safe version of BitSet and also dynamically
- * growable.
+ * grows as needed.
  * 
  */
 @ThreadSafe
@@ -82,7 +82,8 @@ public class AtomicBitSet {
 				long oldValue = bitsHolder.get(i);
 				while (!bitsHolder.compareAndSet(i, oldValue, 0))
 					oldValue = bitsHolder.get(i);
-				for (int j = offset + (i * BITS_PER_WORD); oldValue != 0; j++) {
+				for (int j = offset + (i * BITS_PER_WORD), max = j
+						+ (BITS_PER_WORD); oldValue != 0 && j < max; j++) {
 					if ((oldValue & 1) == 1)
 						result.add(j);
 					oldValue = oldValue >> 1;

@@ -14,7 +14,7 @@ import java.util.Iterator;
  * class. The implementation has to be thread safe.
  * 
  */
-public interface HashTreeIdProvider {
+public interface HashTreesIdProvider {
 
 	/**
 	 * Returned treeId should be >= 0.

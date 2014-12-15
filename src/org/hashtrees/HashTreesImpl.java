@@ -75,7 +75,7 @@ public class HashTreesImpl implements HashTrees {
 	private final int segmentsCount;
 
 	private final HashTreesStorage hTStorage;
-	private final HashTreeIdProvider treeIdProvider;
+	private final HashTreesIdProvider treeIdProvider;
 	private final SegmentIdProvider segIdProvider;
 	private final Storage storage;
 
@@ -88,7 +88,7 @@ public class HashTreesImpl implements HashTrees {
 	private volatile NonBlockingHashTreesDataUpdater bgDataUpdater;
 
 	public HashTreesImpl(int noOfSegments,
-			final HashTreeIdProvider treeIdProvider,
+			final HashTreesIdProvider treeIdProvider,
 			final SegmentIdProvider segIdProvider,
 			final HashTreesStorage hTStroage, final Storage storage) {
 		this.noOfChildren = BINARY_TREE;

@@ -7,7 +7,7 @@ import java.util.concurrent.BlockingQueue;
 
 import org.hashtrees.DefaultSegIdProviderImpl;
 import org.hashtrees.HashTrees;
-import org.hashtrees.HashTreeIdProvider;
+import org.hashtrees.HashTreesIdProvider;
 import org.hashtrees.HashTreesImpl;
 import org.hashtrees.storage.HashTreesStorage;
 import org.hashtrees.storage.Storage;
@@ -17,7 +17,7 @@ import org.hashtrees.thrift.generated.SegmentHash;
 
 public class HashTreesImplTestObj extends HashTreesImpl {
 
-	private static final HashTreeIdProvider treeIdProvider = new HashTreeIdProviderTest();
+	private static final HashTreesIdProvider treeIdProvider = new HashTreeIdProviderTest();
 	private final BlockingQueue<HashTreesImplTestEvent> events;
 
 	public HashTreesImplTestObj(final int noOfSegments,

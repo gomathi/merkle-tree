@@ -13,7 +13,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.apache.commons.io.FileUtils;
 import org.hashtrees.DefaultSegIdProviderImpl;
 import org.hashtrees.HashTrees;
-import org.hashtrees.HashTreeIdProvider;
+import org.hashtrees.HashTreesIdProvider;
 import org.hashtrees.HashTreesImpl;
 import org.hashtrees.SegmentIdProvider;
 import org.hashtrees.storage.HashTreesMemStorage;
@@ -53,7 +53,7 @@ public class HashTreesImplTestUtils {
 	 * Default HashTreeIdProvider which always returns treeId as 1.
 	 * 
 	 */
-	public static class HashTreeIdProviderTest implements HashTreeIdProvider {
+	public static class HashTreeIdProviderTest implements HashTreesIdProvider {
 
 		private final List<Long> treeIds = new ArrayList<Long>();
 
@@ -145,7 +145,7 @@ public class HashTreesImplTestUtils {
 	}
 
 	public static HTreeComponents createHashTree(int noOfSegDataBlocks,
-			final HashTreeIdProvider treeIdProv,
+			final HashTreesIdProvider treeIdProv,
 			final SegmentIdProvider segIdPro, final HashTreesStorage hTStorage)
 			throws Exception {
 		StorageImplTest storage = new StorageImplTest();
@@ -157,7 +157,7 @@ public class HashTreesImplTestUtils {
 
 	public static HTreeComponents createHashTree(int noOfSegments,
 			final HashTreesStorage hTStorage) throws Exception {
-		HashTreeIdProvider treeIdProvider = new HashTreeIdProviderTest();
+		HashTreesIdProvider treeIdProvider = new HashTreeIdProviderTest();
 		StorageImplTest storage = new StorageImplTest();
 		DefaultSegIdProviderImpl segIdProvider = new DefaultSegIdProviderImpl(
 				noOfSegments);

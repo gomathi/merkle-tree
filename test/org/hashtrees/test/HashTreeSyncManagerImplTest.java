@@ -9,8 +9,8 @@ import java.util.concurrent.TimeUnit;
 
 import junit.framework.Assert;
 
-import org.hashtrees.HashTreeConstants;
-import org.hashtrees.HashTreeIdProvider;
+import org.hashtrees.HashTreesConstants;
+import org.hashtrees.HashTreesIdProvider;
 import org.hashtrees.storage.HashTreesStorage;
 import org.hashtrees.storage.Storage;
 import org.hashtrees.synch.HashTreesSyncManagerImpl;
@@ -21,7 +21,7 @@ import org.junit.Test;
 
 public class HashTreeSyncManagerImplTest {
 
-	private static final HashTreeIdProvider treeIdProvider = new HashTreeIdProviderTest();
+	private static final HashTreesIdProvider treeIdProvider = new HashTreeIdProviderTest();
 
 	private static void waitForTheEvent(
 			BlockingQueue<HashTreesImplTestEvent> events,
@@ -54,7 +54,7 @@ public class HashTreeSyncManagerImplTest {
 				DEFAULT_SEG_DATA_BLOCKS_COUNT, htStorage, storage, events);
 		HashTreesSyncManagerImpl syncManager = new HashTreesSyncManagerImpl(
 				hTree, treeIdProvider, "localhost",
-				HashTreeConstants.DEFAULT_HASH_TREE_SERVER_PORT_NO, 30 * 1000,
+				HashTreesConstants.DEFAULT_HASH_TREE_SERVER_PORT_NO, 30 * 1000,
 				3000000, 10);
 		syncManager.init();
 		waitForTheEvent(events, HashTreesImplTestEvent.UPDATE_SEGMENT, 30000);
@@ -71,7 +71,7 @@ public class HashTreeSyncManagerImplTest {
 				DEFAULT_SEG_DATA_BLOCKS_COUNT, htStorage, storage, events);
 		HashTreesSyncManagerImpl syncManager = new HashTreesSyncManagerImpl(
 				hTree, treeIdProvider, "localhost",
-				HashTreeConstants.DEFAULT_HASH_TREE_SERVER_PORT_NO, 30 * 1000,
+				HashTreesConstants.DEFAULT_HASH_TREE_SERVER_PORT_NO, 30 * 1000,
 				30000000, 10);
 		syncManager.init();
 		waitForTheEvent(events, HashTreesImplTestEvent.UPDATE_FULL_TREE, 10000);
@@ -100,7 +100,7 @@ public class HashTreeSyncManagerImplTest {
 				HashTreesImplTestUtils.randomByteBuffer());
 		HashTreesSyncManagerImpl localSyncManager = new HashTreesSyncManagerImpl(
 				localHTree, treeIdProvider, "localhost",
-				HashTreeConstants.DEFAULT_HASH_TREE_SERVER_PORT_NO, 3000, 300,
+				HashTreesConstants.DEFAULT_HASH_TREE_SERVER_PORT_NO, 3000, 300,
 				10);
 
 		HashTreesSyncManagerImpl remoteSyncManager = new HashTreesSyncManagerImpl(

@@ -15,7 +15,7 @@ import java.util.List;
 
 import org.apache.commons.codec.binary.Hex;
 import org.hashtrees.HashTrees;
-import org.hashtrees.HashTreeConstants;
+import org.hashtrees.HashTreesConstants;
 import org.hashtrees.HashTreesImpl;
 import org.hashtrees.storage.HashTreesStorage;
 import org.hashtrees.synch.HashTreesSyncManagerImpl;
@@ -345,13 +345,13 @@ public class HashTreesImplTest {
 					DEFAULT_SEG_DATA_BLOCKS_COUNT, remoteStore);
 			HashTreesSyncManagerImpl hTreeManager = new HashTreesSyncManagerImpl(
 					"test", remoteHTreeComp.hTree, treeIdProvider,
-					HashTreeConstants.DEFAULT_HASH_TREE_SERVER_PORT_NO);
+					HashTreesConstants.DEFAULT_HASH_TREE_SERVER_PORT_NO);
 
 			hTreeManager.init();
 			Thread.sleep(100);
 			HashTrees thriftClient = HashTreesThriftClientProvider
 					.getHashTreeRemoteClient(new ServerName("localhost",
-							HashTreeConstants.DEFAULT_HASH_TREE_SERVER_PORT_NO));
+							HashTreesConstants.DEFAULT_HASH_TREE_SERVER_PORT_NO));
 
 			for (int i = 1; i <= DEFAULT_SEG_DATA_BLOCKS_COUNT; i++) {
 				localHTreeComp.storage.put(randomByteBuffer(),

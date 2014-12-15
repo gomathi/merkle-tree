@@ -19,7 +19,7 @@ import org.apache.log4j.Logger;
 import org.apache.thrift.TException;
 import org.apache.thrift.transport.TTransportException;
 import org.hashtrees.HashTrees;
-import org.hashtrees.HashTreeIdProvider;
+import org.hashtrees.HashTreesIdProvider;
 import org.hashtrees.HashTreesImpl;
 import org.hashtrees.thrift.generated.HashTreeSyncInterface;
 import org.hashtrees.thrift.generated.ServerName;
@@ -81,7 +81,7 @@ public class HashTreesSyncManagerImpl extends StoppableTask implements
 	public final static long DEFAULT_INTERVAL_BW_SYNCH_AND_REBUILD = 5 * 60 * 1000;
 
 	private final HashTrees hashTree;
-	private final HashTreeIdProvider treeIdProvider;
+	private final HashTreesIdProvider treeIdProvider;
 	private final ServerName localServer;
 	private final int noOfThreads;
 	private final long fullRebuildTimeInterval;
@@ -110,14 +110,14 @@ public class HashTreesSyncManagerImpl extends StoppableTask implements
 	}
 
 	public HashTreesSyncManagerImpl(String thisHostName, HashTrees hashTree,
-			HashTreeIdProvider treeIdProvider, int serverPortNo) {
+			HashTreesIdProvider treeIdProvider, int serverPortNo) {
 		this(hashTree, treeIdProvider, thisHostName, serverPortNo,
 				DEFAULT_FULL_REBUILD_TIME_INTERVAL,
 				DEFAULT_INTERVAL_BW_SYNCH_AND_REBUILD, DEFAULT_NO_OF_THREADS);
 	}
 
 	public HashTreesSyncManagerImpl(HashTrees hashTree,
-			HashTreeIdProvider treeIdProvider, String localHostName,
+			HashTreesIdProvider treeIdProvider, String localHostName,
 			int localServerPortNo, long fullRebuildTimeInterval,
 			long intBWSynchAndRebuild, int noOfBGThreads) {
 		this.localServer = new ServerName(localHostName, localServerPortNo);

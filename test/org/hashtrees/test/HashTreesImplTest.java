@@ -157,7 +157,7 @@ public class HashTreesImplTest {
 		HashTreesStore[] remoteStores = generateInMemoryAndPersistentStores(DEFAULT_SEG_DATA_BLOCKS_COUNT);
 
 		try {
-			for (int j = 0; j <= 1; j++) {
+			for (int j = 1; j <= 1; j++) {
 				HTreeComponents localHTreeComp = createHashTree(
 						DEFAULT_SEG_DATA_BLOCKS_COUNT, stores[j]);
 				HTreeComponents remoteHTreeComp = createHashTree(
@@ -201,7 +201,7 @@ public class HashTreesImplTest {
 		HashTreesStore[] remoteStores = generateInMemoryAndPersistentStores(DEFAULT_SEG_DATA_BLOCKS_COUNT);
 
 		try {
-			for (int j = 0; j <= 1; j++) {
+			for (int j = 1; j <= 1; j++) {
 				HTreeComponents localHTreeComp = createHashTree(
 						DEFAULT_SEG_DATA_BLOCKS_COUNT, stores[j]);
 				HTreeComponents remoteHTreeComp = createHashTree(
@@ -255,7 +255,7 @@ public class HashTreesImplTest {
 		HashTreesStore[] remoteStores = generateInMemoryAndPersistentStores(DEFAULT_SEG_DATA_BLOCKS_COUNT);
 
 		try {
-			for (int j = 0; j <= 1; j++) {
+			for (int j = 1; j <= 1; j++) {
 				HTreeComponents localHTreeComp = createHashTree(
 						DEFAULT_SEG_DATA_BLOCKS_COUNT, stores[j]);
 				HTreeComponents remoteHTreeComp = createHashTree(
@@ -296,7 +296,7 @@ public class HashTreesImplTest {
 		HashTreesStore[] remoteStores = generateInMemoryAndPersistentStores(DEFAULT_SEG_DATA_BLOCKS_COUNT);
 
 		try {
-			for (int j = 0; j <= 1; j++) {
+			for (int j = 1; j <= 1; j++) {
 				HTreeComponents localHTreeComp = createHashTree(
 						DEFAULT_SEG_DATA_BLOCKS_COUNT, stores[j]);
 				HTreeComponents remoteHTreeComp = createHashTree(

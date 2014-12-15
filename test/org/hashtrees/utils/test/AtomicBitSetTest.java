@@ -66,4 +66,16 @@ public class AtomicBitSetTest {
 		List<Integer> setBits = obj.clearAndGetAllSetBits();
 		Assert.assertEquals(0, setBits.size());
 	}
+
+	@Test
+	public void testClearAndGetAllSetBits() {
+		AtomicBitSet obj = new AtomicBitSet();
+		for (int i = 0; i < 10000; i++)
+			obj.set(i);
+
+		List<Integer> setBits = obj.clearAndGetAllSetBits();
+		Assert.assertEquals(10000, setBits.size());
+		for (int i = 0; i < 1000; i++)
+			Assert.assertEquals(i, setBits.get(i).intValue());
+	}
 }

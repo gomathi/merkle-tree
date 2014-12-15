@@ -33,10 +33,6 @@ public class HashTreesMemStore extends HashTreesBaseStore {
 		private final AtomicLong rebuiltTreeTs = new AtomicLong(0);
 	}
 
-	public HashTreesMemStore(int noOfSegDataBlocks) {
-		super(noOfSegDataBlocks);
-	}
-
 	private HashTreeMemStore getIndHTree(long treeId) {
 		if (!treeIdAndIndHashTree.containsKey(treeId))
 			treeIdAndIndHashTree.putIfAbsent(treeId, new HashTreeMemStore());

@@ -15,7 +15,7 @@ import org.hashtrees.util.Pair;
  * 
  */
 @ThreadSafe
-class NonBlockingHashTreesDataUpdater extends
+class NonBlockingHTDataUpdater extends
 		NonBlockingQueuingTask<Pair<HTOperation, List<ByteBuffer>>> {
 
 	private static final int DEFAULT_QUE_SIZE = 10000;
@@ -23,7 +23,7 @@ class NonBlockingHashTreesDataUpdater extends
 			HTOperation.PUT, null);
 	private final HashTreesImpl hTree;
 
-	public NonBlockingHashTreesDataUpdater(final HashTreesImpl hTree) {
+	public NonBlockingHTDataUpdater(final HashTreesImpl hTree) {
 		super(STOP_MARKER, DEFAULT_QUE_SIZE);
 		this.hTree = hTree;
 	}

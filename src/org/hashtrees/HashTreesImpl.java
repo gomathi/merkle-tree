@@ -85,7 +85,7 @@ public class HashTreesImpl implements HashTrees {
 	@LockedBy("nonBlockingCallsLock")
 	private volatile boolean enabledNonBlockingCalls;
 	@LockedBy("nonBlockingCallsLock")
-	private volatile NonBlockingHashTreesDataUpdater bgDataUpdater;
+	private volatile NonBlockingHTDataUpdater bgDataUpdater;
 
 	public HashTreesImpl(int noOfSegments,
 			final HashTreesIdProvider treeIdProvider,
@@ -582,7 +582,7 @@ public class HashTreesImpl implements HashTrees {
 				LOGGER.info("Non blocking calls are already enabled.");
 			} else {
 				if (bgDataUpdater == null)
-					bgDataUpdater = new NonBlockingHashTreesDataUpdater(this);
+					bgDataUpdater = new NonBlockingHTDataUpdater(this);
 				new Thread(bgDataUpdater).start();
 				enabledNonBlockingCalls = true;
 				LOGGER.info("Non blocking calls are enabled.");

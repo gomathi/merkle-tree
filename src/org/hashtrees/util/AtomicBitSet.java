@@ -3,13 +3,14 @@ package org.hashtrees.util;
 import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLongArray;
 
 import javax.annotation.concurrent.ThreadSafe;
 
 /**
  * Default {@link BitSet} provided in java is not thread safe. This class
- * provides a minimalistic thread safe version of BitSet.
+ * provides a minimalistic thread safe version of BitSet also growable.
  * 
  */
 @ThreadSafe
@@ -18,21 +19,16 @@ public class AtomicBitSet {
 	private final static int ADDRESS_BITS_PER_WORD = 6;
 	private final static int BITS_PER_WORD = 1 << ADDRESS_BITS_PER_WORD;
 
-	private final int totBits;
-	private final AtomicLongArray bitsHolder;
+	private final static int ADDRESS_BITS_PER_WORD_ATOMIC_ARRAY = 10;
+	private final static int ATOMIC_LONG_ARRAY_SIZE = 1 << ADDRESS_BITS_PER_WORD_ATOMIC_ARRAY;
+	private final ConcurrentHashMap<Integer, AtomicLongArray> bitsHolderMap = new ConcurrentHashMap<>();
 
-	public AtomicBitSet(int totBits) {
-		if (totBits < 0)
-			throw new IllegalArgumentException("totBits can not be less than 0");
-		this.totBits = totBits;
-		int length = getWordIndex(totBits - 1) + 1;
-		this.bitsHolder = new AtomicLongArray(length);
-	}
-
-	private void validateArgument(int bitIndex) {
-		if (bitIndex >= totBits || bitIndex < 0)
-			throw new ArrayIndexOutOfBoundsException(
-					"Given index is invalid : " + bitIndex);
+	private AtomicLongArray getBitsHolderFromMap(int bitIndex) {
+		int wordPos = bitIndex >> ADDRESS_BITS_PER_WORD_ATOMIC_ARRAY;
+		if (!bitsHolderMap.containsKey(wordPos))
+			bitsHolderMap.put(wordPos, new AtomicLongArray(
+					ATOMIC_LONG_ARRAY_SIZE));
+		return bitsHolderMap.get(wordPos);
 	}
 
 	/**
@@ -51,12 +47,10 @@ public class AtomicBitSet {
 	 * Sets given bitIndex.
 	 * 
 	 * @param bitIndex
-	 *            , can not be negative or larger than or equal to the length of
-	 *            the bitSet.
+	 *            , can not be negative.
 	 */
 	public void set(int bitIndex) {
-		validateArgument(bitIndex);
-
+		AtomicLongArray bitsHolder = getBitsHolderFromMap(bitIndex);
 		int arrIndex = getWordIndex(bitIndex);
 		while (true) {
 			long oldValue = bitsHolder.get(arrIndex);
@@ -70,13 +64,11 @@ public class AtomicBitSet {
 	 * Gets the value of bitIndex.
 	 * 
 	 * @param bitIndex
-	 *            , can not be negative or larger than or equal to the length of
-	 *            the bitSet.
+	 *            , can not be negative.
 	 * @return, true corresponds to setBit and false corresponds to clearBit
 	 */
 	public boolean get(int bitIndex) {
-		validateArgument(bitIndex);
-
+		AtomicLongArray bitsHolder = getBitsHolderFromMap(bitIndex);
 		int arrIndex = getWordIndex(bitIndex);
 		long value = (bitsHolder.get(arrIndex) >> bitIndex);
 		return (value & 1) == 1;
@@ -84,15 +76,17 @@ public class AtomicBitSet {
 
 	public List<Integer> clearAndGetAllSetBits() {
 		List<Integer> result = new ArrayList<Integer>();
-		for (int i = 0; i < bitsHolder.length(); i++) {
-			long oldValue = bitsHolder.get(i);
-			while (!bitsHolder.compareAndSet(i, oldValue, 0))
-				oldValue = bitsHolder.get(i);
-			for (int j = i * BITS_PER_WORD, max = (j + BITS_PER_WORD); j < max
-					&& j < totBits && oldValue != 0; j++) {
-				if ((oldValue & 1) == 1)
-					result.add(j);
-				oldValue = oldValue >> 1;
+		for (AtomicLongArray bitsHolder : bitsHolderMap.values()) {
+			for (int i = 0; i < bitsHolder.length(); i++) {
+				long oldValue = bitsHolder.get(i);
+				while (!bitsHolder.compareAndSet(i, oldValue, 0))
+					oldValue = bitsHolder.get(i);
+				for (int j = i * BITS_PER_WORD, max = (j + BITS_PER_WORD); j < max
+						&& oldValue != 0; j++) {
+					if ((oldValue & 1) == 1)
+						result.add(j);
+					oldValue = oldValue >> 1;
+				}
 			}
 		}
 		return result;
@@ -103,20 +97,19 @@ public class AtomicBitSet {
 	 * 
 	 */
 	public void clear() {
-		for (int i = 0; i < bitsHolder.length(); i++)
-			bitsHolder.set(i, 0);
+		for (AtomicLongArray bitsHolder : bitsHolderMap.values())
+			for (int i = 0; i < bitsHolder.length(); i++)
+				bitsHolder.set(i, 0);
 	}
 
 	/**
 	 * Clears the given bitIndex.
 	 * 
 	 * @param bitIndex
-	 *            , can not be negative or larger than or equal to the length of
-	 *            the bitSet.
+	 *            , can not be negative.
 	 */
 	public void clear(int bitIndex) {
-		validateArgument(bitIndex);
-
+		AtomicLongArray bitsHolder = getBitsHolderFromMap(bitIndex);
 		int arrIndex = getWordIndex(bitIndex);
 		while (true) {
 			long oldValue = bitsHolder.get(arrIndex);

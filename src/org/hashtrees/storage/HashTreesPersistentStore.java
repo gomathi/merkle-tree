@@ -82,7 +82,6 @@ public class HashTreesPersistentStore extends HashTreesBaseStore {
 
 	public HashTreesPersistentStore(String dbDir, int noOfSegDataBlocks)
 			throws Exception {
-		super(noOfSegDataBlocks);
 		this.dbDir = dbDir;
 		this.dbObj = initDatabase(dbDir);
 	}

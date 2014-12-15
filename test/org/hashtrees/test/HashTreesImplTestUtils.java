@@ -11,10 +11,10 @@ import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.commons.io.FileUtils;
-import org.hashtrees.ModuloSegIdProvider;
 import org.hashtrees.HashTrees;
 import org.hashtrees.HashTreesIdProvider;
 import org.hashtrees.HashTreesImpl;
+import org.hashtrees.ModuloSegIdProvider;
 import org.hashtrees.SegmentIdProvider;
 import org.hashtrees.storage.HashTreesMemStore;
 import org.hashtrees.storage.HashTreesPersistentStore;
@@ -169,7 +169,7 @@ public class HashTreesImplTestUtils {
 	}
 
 	public static HashTreesStore generateInMemoryStore(int noOfSegDataBlocks) {
-		return new HashTreesMemStore(noOfSegDataBlocks);
+		return new HashTreesMemStore();
 	}
 
 	private static HashTreesStore generatePersistentStore(int noOfSegDataBlocks)

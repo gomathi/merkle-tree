@@ -3,8 +3,6 @@ package org.hashtrees.util;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
-import sun.misc.Unsafe;
-
 public class ByteUtils {
 
 	/**
@@ -187,9 +185,5 @@ public class ByteUtils {
 			System.arraycopy(array, from, a, 0, to - from);
 			return a;
 		}
-	}
-
-	public static void main(String[] args) {
-		Unsafe.getUnsafe();
 	}
 }

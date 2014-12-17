@@ -103,13 +103,6 @@ public interface HashTreesStore {
 	List<Integer> clearAndGetDirtySegments(long treeId);
 
 	/**
-	 * Unsets all dirty segments. Used during the tree rebuild.
-	 * 
-	 * @param treeId
-	 */
-	void clearAllSegments(long treeId);
-
-	/**
 	 * Deletes the segment hashes, and segment data for the given treeId.
 	 * 
 	 * @param treeId

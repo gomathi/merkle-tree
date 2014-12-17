@@ -18,13 +18,13 @@ import org.hashtrees.util.Pair;
 class NonBlockingHTDataUpdater extends
 		NonBlockingQueuingTask<Pair<HTOperation, List<ByteBuffer>>> {
 
-	private static final int DEFAULT_QUE_SIZE = 10000;
 	private static final Pair<HTOperation, List<ByteBuffer>> STOP_MARKER = new Pair<HTOperation, List<ByteBuffer>>(
 			HTOperation.PUT, null);
 	private final HashTreesImpl hTree;
 
-	public NonBlockingHTDataUpdater(final HashTreesImpl hTree) {
-		super(STOP_MARKER, DEFAULT_QUE_SIZE);
+	public NonBlockingHTDataUpdater(final HashTreesImpl hTree,
+			int maxElementsToQue) {
+		super(STOP_MARKER, maxElementsToQue);
 		this.hTree = hTree;
 	}
 

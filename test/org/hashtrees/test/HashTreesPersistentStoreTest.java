@@ -30,11 +30,11 @@ public class HashTreesPersistentStoreTest {
 	@Before
 	public void init() throws Exception {
 		dbDir = "/tmp/random" + new Random().nextInt();
-		dbObj = new HashTreesPersistentStore(dbDir, noOfSegDataBlocks);
+		dbObj = new HashTreesPersistentStore(dbDir);
 	}
 
 	public void init(String dbDirName) throws Exception {
-		dbObj = new HashTreesPersistentStore(dbDirName, noOfSegDataBlocks);
+		dbObj = new HashTreesPersistentStore(dbDirName);
 	}
 
 	@After

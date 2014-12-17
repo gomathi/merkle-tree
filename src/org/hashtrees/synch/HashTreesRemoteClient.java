@@ -126,4 +126,11 @@ public class HashTreesRemoteClient implements HashTrees {
 				"Remote tree does not support this operation.");
 	}
 
+	@Override
+	public boolean enableNonblockingOperations(int maxElementsToQue) {
+		throw new UnsupportedOperationException(
+				"Remote tree does not support this operation.");
+
+	}
+
 }

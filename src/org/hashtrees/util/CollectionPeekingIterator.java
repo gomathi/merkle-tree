@@ -36,9 +36,7 @@ public class CollectionPeekingIterator<T> implements PeekingIterator<T> {
 
 	@Override
 	public T peek() {
-		if (pQueue.isEmpty())
-			addElement();
-		if (pQueue.size() == 0)
+		if (!hasNext())
 			throw new NoSuchElementException(
 					"No elements availale to be peeked.");
 		return pQueue.peek();
@@ -46,7 +44,7 @@ public class CollectionPeekingIterator<T> implements PeekingIterator<T> {
 
 	@Override
 	public T next() {
-		if (pQueue.size() == 0)
+		if (!hasNext())
 			throw new NoSuchElementException(
 					"No elements availale to be returned.");
 		return pQueue.remove();

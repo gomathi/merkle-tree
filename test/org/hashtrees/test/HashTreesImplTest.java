@@ -12,17 +12,21 @@ import static org.hashtrees.test.HashTreesImplTestUtils.randomBytes;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.codec.binary.Hex;
 import org.hashtrees.HashTrees;
 import org.hashtrees.HashTreesConstants;
 import org.hashtrees.HashTreesImpl;
+import org.hashtrees.storage.HashTreesMemStore;
 import org.hashtrees.storage.HashTreesStore;
 import org.hashtrees.synch.HashTreesSyncManagerImpl;
 import org.hashtrees.synch.HashTreesThriftClientProvider;
 import org.hashtrees.test.HashTreesImplTestUtils.HTreeComponents;
 import org.hashtrees.test.HashTreesImplTestUtils.HashTreeIdProviderTest;
 import org.hashtrees.test.HashTreesImplTestUtils.SegIdProviderTest;
+import org.hashtrees.test.HashTreesImplTestUtils.StorageImplTest;
 import org.hashtrees.thrift.generated.SegmentData;
 import org.hashtrees.thrift.generated.SegmentHash;
 import org.hashtrees.thrift.generated.ServerName;
@@ -226,13 +230,6 @@ public class HashTreesImplTest {
 					remoteHTreeComp.hTree.rebuildHashTrees(false);
 					localHTreeComp.hTree.synch(1, remoteHTreeComp.hTree);
 
-					if (!localHTreeComp.storage.localStorage
-							.equals(remoteHTreeComp.storage.localStorage)) {
-						System.out.println(localHTreeComp.storage.localStorage);
-						System.out
-								.println(remoteHTreeComp.storage.localStorage);
-					}
-
 					Assert.assertEquals(localHTreeComp.storage.localStorage,
 							remoteHTreeComp.storage.localStorage);
 				}
@@ -335,8 +332,8 @@ public class HashTreesImplTest {
 
 	@Test
 	public void testHashTreeServerAndClient() throws Exception {
-		HashTreesStore store = generateInMemoryStore(DEFAULT_SEG_DATA_BLOCKS_COUNT);
-		HashTreesStore remoteStore = generateInMemoryStore(DEFAULT_SEG_DATA_BLOCKS_COUNT);
+		HashTreesStore store = generateInMemoryStore();
+		HashTreesStore remoteStore = generateInMemoryStore();
 
 		try {
 			HTreeComponents localHTreeComp = createHashTree(
@@ -381,5 +378,63 @@ public class HashTreesImplTest {
 			HashTreesImplTestUtils.closeStores(store);
 			HashTreesImplTestUtils.closeStores(remoteStore);
 		}
+	}
+
+	@Test
+	public void testIfNonBlockingCallsEnabled() {
+		HashTreesStore htStore = generateInMemoryStore();
+		StorageImplTest store = new StorageImplTest();
+		HashTrees hTrees = new HashTreesImpl(DEFAULT_SEG_DATA_BLOCKS_COUNT,
+				treeIdProvider, segIdProvider, htStore, store);
+		Assert.assertFalse(hTrees.enableNonblockingOperations());
+		Assert.assertTrue(hTrees.isNonBlockingCallsEnabled());
+
+		Assert.assertFalse(hTrees.disableNonblockingOperations());
+		Assert.assertFalse(hTrees.isNonBlockingCallsEnabled());
+
+		Assert.assertFalse(hTrees.enableNonblockingOperations());
+		Assert.assertTrue(hTrees.isNonBlockingCallsEnabled());
+	}
+
+	@Test
+	public void testNonBlockingCalls() throws Exception {
+		final CountDownLatch putArrivedEventLatch = new CountDownLatch(1);
+		final CountDownLatch deleteArrivedEventLatch = new CountDownLatch(1);
+
+		HashTreesStore htStore = new HashTreesMemStore() {
+
+			@Override
+			public void putSegmentData(long treeId, int segId, ByteBuffer key,
+					ByteBuffer digest) {
+				super.putSegmentData(treeId, segId, key, digest);
+				putArrivedEventLatch.countDown();
+			}
+
+			@Override
+			public void deleteSegmentData(long treeId, int segId, ByteBuffer key) {
+				super.deleteSegmentData(treeId, segId, key);
+				deleteArrivedEventLatch.countDown();
+			}
+		};
+		StorageImplTest store = new StorageImplTest();
+		HashTrees hTrees = new HashTreesImpl(DEFAULT_SEG_DATA_BLOCKS_COUNT,
+				treeIdProvider, segIdProvider, htStore, store);
+		hTrees.enableNonblockingOperations(10);
+
+		ByteBuffer key = ByteBuffer.wrap("1".getBytes());
+		ByteBuffer plainValue = ByteBuffer.wrap(randomBytes());
+		ByteBuffer digestedValue = ByteBuffer.wrap(ByteUtils.sha1(plainValue
+				.array()));
+
+		hTrees.hPut(key, plainValue);
+		putArrivedEventLatch.await(10000, TimeUnit.MILLISECONDS);
+		SegmentData sd = htStore.getSegmentData(1, 1, key);
+		Assert.assertNotNull(sd);
+		Assert.assertEquals(digestedValue, sd.digest);
+
+		hTrees.hRemove(key);
+		deleteArrivedEventLatch.await(10000, TimeUnit.MILLISECONDS);
+		sd = htStore.getSegmentData(1, 1, key);
+		Assert.assertNull(sd);
 	}
 }

@@ -55,20 +55,27 @@ import org.slf4j.LoggerFactory;
  * tree id.
  * 
  * Uses {@link HashTreesStore} for storing tree and segments.
- * {@link HashTreesMemStore} provides in memory implementation of storing
- * entire tree and segments.
+ * {@link HashTreesMemStore} provides in memory implementation of storing entire
+ * tree and segments.
  * 
  */
 @ThreadSafe
 public class HashTreesImpl implements HashTrees {
 
+	/**
+	 * Specifies how much element can be queued when hashtree is backed by a non
+	 * blocking queue. When the queue is full, the new puts or removes are
+	 * rejected.
+	 */
+	public static final int DEFAULT_NB_QUE_SIZE = 10000;
+
+	private final static Logger LOGGER = LoggerFactory
+			.getLogger(HashTreesImpl.class.getName());
 	private final static char COMMA_DELIMETER = ',';
 	private final static char NEW_LINE_DELIMETER = '\n';
 	private final static int ROOT_NODE = 0;
 	private final static int MAX_NO_OF_BUCKETS = 1 << 30;
 	private final static int BINARY_TREE = 2;
-	private final static Logger LOGGER = LoggerFactory
-			.getLogger(HashTreesImpl.class.getName());
 
 	private final int noOfChildren;
 	private final int internalNodesCount;
@@ -117,8 +124,8 @@ public class HashTreesImpl implements HashTrees {
 		long treeId = treeIdProvider.getTreeId(key);
 		int segId = segIdProvider.getSegmentId(key);
 		ByteBuffer digest = ByteBuffer.wrap(sha1(value.array()));
-		hTStorage.putSegmentData(treeId, segId, key, digest);
 		hTStorage.setDirtySegment(treeId, segId);
+		hTStorage.putSegmentData(treeId, segId, key, digest);
 	}
 
 	@Override
@@ -135,8 +142,8 @@ public class HashTreesImpl implements HashTrees {
 	void hRemoveInternal(final ByteBuffer key) {
 		long treeId = treeIdProvider.getTreeId(key);
 		int segId = segIdProvider.getSegmentId(key);
-		hTStorage.deleteSegmentData(treeId, segId, key);
 		hTStorage.setDirtySegment(treeId, segId);
+		hTStorage.deleteSegmentData(treeId, segId, key);
 	}
 
 	@Override
@@ -573,8 +580,7 @@ public class HashTreesImpl implements HashTrees {
 		return hTStorage.getLastFullyTreeReBuiltTimestamp(treeId);
 	}
 
-	@Override
-	public boolean enableNonblockingOperations() {
+	private boolean enableNonBlockingOperationsInternal(int maxElementsToQue) {
 		boolean result;
 		synchronized (nonBlockingCallsLock) {
 			result = enabledNonBlockingCalls;
@@ -582,7 +588,8 @@ public class HashTreesImpl implements HashTrees {
 				LOGGER.info("Non blocking calls are already enabled.");
 			} else {
 				if (bgDataUpdater == null)
-					bgDataUpdater = new NonBlockingHTDataUpdater(this);
+					bgDataUpdater = new NonBlockingHTDataUpdater(this,
+							maxElementsToQue);
 				new Thread(bgDataUpdater).start();
 				enabledNonBlockingCalls = true;
 				LOGGER.info("Non blocking calls are enabled.");
@@ -592,10 +599,20 @@ public class HashTreesImpl implements HashTrees {
 	}
 
 	@Override
+	public boolean enableNonblockingOperations(int maxElementsToQue) {
+		return enableNonBlockingOperationsInternal(maxElementsToQue);
+	}
+
+	@Override
+	public boolean enableNonblockingOperations() {
+		return enableNonBlockingOperationsInternal(DEFAULT_NB_QUE_SIZE);
+	}
+
+	@Override
 	public boolean disableNonblockingOperations() {
 		boolean result;
 		synchronized (nonBlockingCallsLock) {
-			result = enabledNonBlockingCalls;
+			result = !enabledNonBlockingCalls;
 			if (!enabledNonBlockingCalls) {
 				LOGGER.info("Non blocking calls are already disabled.");
 			} else {
@@ -609,15 +626,11 @@ public class HashTreesImpl implements HashTrees {
 							"Exception occurred while waiting data updater to stop",
 							e);
 				}
+				bgDataUpdater = null;
 				LOGGER.info("Non blocking calls are disabled.");
 			}
 		}
 		return result;
-	}
-
-	@Override
-	public void stop() {
-		disableNonblockingOperations();
 	}
 
 	@Override
@@ -627,5 +640,10 @@ public class HashTreesImpl implements HashTrees {
 			result = enabledNonBlockingCalls;
 		}
 		return result;
+	}
+
+	@Override
+	public void stop() {
+		disableNonblockingOperations();
 	}
 }

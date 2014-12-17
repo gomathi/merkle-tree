@@ -80,8 +80,7 @@ public class HashTreesPersistentStore extends HashTreesBaseStore {
 	private final String dbDir;
 	private final DB dbObj;
 
-	public HashTreesPersistentStore(String dbDir, int noOfSegDataBlocks)
-			throws Exception {
+	public HashTreesPersistentStore(String dbDir) throws Exception {
 		this.dbDir = dbDir;
 		this.dbObj = initDatabase(dbDir);
 	}

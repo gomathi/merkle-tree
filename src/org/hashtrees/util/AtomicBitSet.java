@@ -76,9 +76,9 @@ public class AtomicBitSet {
 		List<Integer> result = new ArrayList<Integer>();
 		for (Entry<Integer, AtomicLongArray> bitsHolderEntry : bitsHolderMap
 				.entrySet()) {
-			int offset = bitsHolderEntry.getKey() * ATOMIC_LONG_ARRAY_SIZE;
 			AtomicLongArray bitsHolder = bitsHolderEntry.getValue();
 			for (int i = 0; i < bitsHolder.length(); i++) {
+				int offset = bitsHolderEntry.getKey() * ATOMIC_LONG_ARRAY_SIZE;
 				long oldValue = bitsHolder.get(i);
 				while (!bitsHolder.compareAndSet(i, oldValue, 0))
 					oldValue = bitsHolder.get(i);

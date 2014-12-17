@@ -168,19 +168,19 @@ public class HashTreesImplTestUtils {
 		return new HTreeComponents(hTStorage, storage, hTree);
 	}
 
-	public static HashTreesStore generateInMemoryStore(int noOfSegDataBlocks) {
+	public static HashTreesStore generateInMemoryStore() {
 		return new HashTreesMemStore();
 	}
 
 	private static HashTreesStore generatePersistentStore(int noOfSegDataBlocks)
 			throws Exception {
-		return new HashTreesPersistentStore(randomDirName(), noOfSegDataBlocks);
+		return new HashTreesPersistentStore(randomDirName());
 	}
 
 	public static HashTreesStore[] generateInMemoryAndPersistentStores(
 			int noOfSegDataBlocks) throws Exception {
 		HashTreesStore[] stores = new HashTreesStore[2];
-		stores[0] = generateInMemoryStore(noOfSegDataBlocks);
+		stores[0] = generateInMemoryStore();
 		stores[1] = generatePersistentStore(noOfSegDataBlocks);
 		return stores;
 	}

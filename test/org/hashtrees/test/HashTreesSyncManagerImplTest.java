@@ -45,7 +45,7 @@ public class HashTreesSyncManagerImplTest {
 
 	@Test
 	public void testSegmentUpdate() throws InterruptedException {
-		HashTreesStore htStorage = generateInMemoryStore(DEFAULT_SEG_DATA_BLOCKS_COUNT);
+		HashTreesStore htStorage = generateInMemoryStore();
 		htStorage.setLastFullyTreeBuiltTimestamp(1, System.currentTimeMillis());
 		BlockingQueue<HashTreesImplTestEvent> events = new ArrayBlockingQueue<HashTreesImplTestEvent>(
 				1000);
@@ -63,7 +63,7 @@ public class HashTreesSyncManagerImplTest {
 
 	@Test
 	public void testFullTreeUpdate() throws InterruptedException {
-		HashTreesStore htStorage = generateInMemoryStore(DEFAULT_SEG_DATA_BLOCKS_COUNT);
+		HashTreesStore htStorage = generateInMemoryStore();
 		BlockingQueue<HashTreesImplTestEvent> events = new ArrayBlockingQueue<HashTreesImplTestEvent>(
 				1000);
 		Store storage = new StorageImplTest();
@@ -80,8 +80,8 @@ public class HashTreesSyncManagerImplTest {
 
 	@Test
 	public void testSynch() throws Exception {
-		HashTreesStore localHTStorage = generateInMemoryStore(DEFAULT_SEG_DATA_BLOCKS_COUNT);
-		HashTreesStore remoteHTStorage = generateInMemoryStore(DEFAULT_SEG_DATA_BLOCKS_COUNT);
+		HashTreesStore localHTStorage = generateInMemoryStore();
+		HashTreesStore remoteHTStorage = generateInMemoryStore();
 		BlockingQueue<HashTreesImplTestEvent> localEvents = new ArrayBlockingQueue<HashTreesImplTestEvent>(
 				1000);
 		BlockingQueue<HashTreesImplTestEvent> remoteEvents = new ArrayBlockingQueue<HashTreesImplTestEvent>(

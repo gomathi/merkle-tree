@@ -43,7 +43,7 @@ public abstract class NonBlockingQueuingTask<T> extends StoppableTask {
 		}
 		boolean status = que.offer(element);
 		if (!status)
-			throw new RuntimeException(
+			throw new IllegalStateException(
 					"Queue is full. Unable to add element to the queue.");
 	}
 

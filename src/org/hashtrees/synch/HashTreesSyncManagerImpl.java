@@ -39,11 +39,11 @@ import com.google.common.collect.Collections2;
  * 
  * HashTrees updates tree hashes at regular intervals, not on every update of
  * the key. Hence if two hash trees are continuously updating their hashes at
- * different intervals, the synch will always cause a mismatch even though
- * underlying data is same. We should avoid unnecessary network transfers. Thus
- * a state machine based approach is used where whenever the primary hash tree
- * rebuilds its hash tree, it requests the remote hash tree to rebuild the hash
- * tree as well.
+ * different intervals, synch operation between these trees will always cause a
+ * mismatch even though underlying data is same. We should avoid unnecessary
+ * network transfers. Thus a state machine based approach is used where whenever
+ * the primary hash tree rebuilds its hash tree, it requests the remote hash
+ * tree to rebuild the hash tree as well.
  * 
  * HashTreeManager goes through the following states.
  * 

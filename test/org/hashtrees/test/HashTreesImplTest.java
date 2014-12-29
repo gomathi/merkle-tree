@@ -37,9 +37,9 @@ import org.junit.Test;
 
 public class HashTreesImplTest {
 
-	private static final SegIdProviderTest segIdProvider = new SegIdProviderTest();
-	private static final HashTreeIdProviderTest treeIdProvider = new HashTreeIdProviderTest();
-	private static final int noOfSegDataBlocks = 1 << 10;
+	private static final SegIdProviderTest SEG_ID_PROVIDER = new SegIdProviderTest();
+	private static final HashTreeIdProviderTest TREE_ID_PROVIDER = new HashTreeIdProviderTest();
+	private static final int NO_OF_SEG_DATA_BLOCKS = 1 << 10;
 
 	@Test
 	public void testPut() throws Exception {
@@ -52,8 +52,8 @@ public class HashTreesImplTest {
 				int segId = 1;
 				String stringKey = "1";
 
-				HTreeComponents components = createHashTree(noOfSegDataBlocks,
-						treeIdProvider, segIdProvider, store);
+				HTreeComponents components = createHashTree(NO_OF_SEG_DATA_BLOCKS,
+						TREE_ID_PROVIDER, SEG_ID_PROVIDER, store);
 				HashTrees testTree = components.hTree;
 				HashTreesStore testTreeStorage = components.hTStorage;
 
@@ -87,8 +87,8 @@ public class HashTreesImplTest {
 
 		try {
 			for (HashTreesStore store : stores) {
-				HTreeComponents components = createHashTree(noOfSegDataBlocks,
-						treeIdProvider, segIdProvider, store);
+				HTreeComponents components = createHashTree(NO_OF_SEG_DATA_BLOCKS,
+						TREE_ID_PROVIDER, SEG_ID_PROVIDER, store);
 				HashTrees testTree = components.hTree;
 				HashTreesStore testTreeStorage = components.hTStorage;
 
@@ -119,7 +119,7 @@ public class HashTreesImplTest {
 		try {
 			for (HashTreesStore store : stores) {
 				HTreeComponents components = createHashTree(
-						tesNoOfSegDataBlocks, treeIdProvider, segIdProvider,
+						tesNoOfSegDataBlocks, TREE_ID_PROVIDER, SEG_ID_PROVIDER,
 						store);
 				HashTrees testTree = components.hTree;
 				HashTreesStore testTreeStorage = components.hTStorage;
@@ -343,7 +343,7 @@ public class HashTreesImplTest {
 			HTreeComponents remoteHTreeComp = createHashTree(
 					DEFAULT_SEG_DATA_BLOCKS_COUNT, remoteStore);
 			HashTreesSyncManagerImpl hTreeManager = new HashTreesSyncManagerImpl(
-					"test", remoteHTreeComp.hTree, treeIdProvider,
+					"test", remoteHTreeComp.hTree, TREE_ID_PROVIDER,
 					syncMgrStore,
 					HashTreesConstants.DEFAULT_HASH_TREE_SERVER_PORT_NO);
 
@@ -388,7 +388,7 @@ public class HashTreesImplTest {
 		HashTreesStore htStore = generateInMemoryStore();
 		StorageImplTest store = new StorageImplTest();
 		HashTrees hTrees = new HashTreesImpl(DEFAULT_SEG_DATA_BLOCKS_COUNT,
-				treeIdProvider, segIdProvider, htStore, store);
+				TREE_ID_PROVIDER, SEG_ID_PROVIDER, htStore, store);
 		Assert.assertFalse(hTrees.enableNonblockingOperations());
 		Assert.assertTrue(hTrees.isNonBlockingCallsEnabled());
 		Assert.assertTrue(hTrees.enableNonblockingOperations());
@@ -399,7 +399,7 @@ public class HashTreesImplTest {
 		HashTreesStore htStore = generateInMemoryStore();
 		StorageImplTest store = new StorageImplTest();
 		HashTrees hTrees = new HashTreesImpl(DEFAULT_SEG_DATA_BLOCKS_COUNT,
-				treeIdProvider, segIdProvider, htStore, store);
+				TREE_ID_PROVIDER, SEG_ID_PROVIDER, htStore, store);
 		hTrees.enableNonblockingOperations();
 		Assert.assertTrue(hTrees.isNonBlockingCallsEnabled());
 		hTrees.stop();
@@ -411,7 +411,7 @@ public class HashTreesImplTest {
 		HashTreesStore htStore = generateInMemoryStore();
 		StorageImplTest store = new StorageImplTest();
 		HashTrees hTrees = new HashTreesImpl(DEFAULT_SEG_DATA_BLOCKS_COUNT,
-				treeIdProvider, segIdProvider, htStore, store);
+				TREE_ID_PROVIDER, SEG_ID_PROVIDER, htStore, store);
 		Assert.assertTrue(hTrees.disableNonblockingOperations());
 		Assert.assertFalse(hTrees.isNonBlockingCallsEnabled());
 		hTrees.enableNonblockingOperations();
@@ -440,7 +440,7 @@ public class HashTreesImplTest {
 		};
 		StorageImplTest store = new StorageImplTest();
 		HashTrees hTrees = new HashTreesImpl(DEFAULT_SEG_DATA_BLOCKS_COUNT,
-				treeIdProvider, segIdProvider, htStore, store);
+				TREE_ID_PROVIDER, SEG_ID_PROVIDER, htStore, store);
 		hTrees.enableNonblockingOperations(10);
 
 		ByteBuffer key = ByteBuffer.wrap("1".getBytes());

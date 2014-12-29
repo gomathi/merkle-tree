@@ -18,9 +18,9 @@ import org.junit.Test;
 
 public class HashTreesPersistentStoreTest {
 
-	private static final int defaultTreeId = 1;
-	private static final int defaultSegId = 0;
-	private String dbDir;
+	private static final int DEF_TREE_ID = 1;
+	private static final int DEF_SEG_ID = 0;
+	private static String dbDir;
 	private static HashTreesPersistentStore dbObj;
 	private static final byte[] EMPTY_BYTE_ARRAY = new byte[0];
 	private static final ByteBuffer EMPTY_BYTE_BUFFER = ByteBuffer
@@ -46,17 +46,17 @@ public class HashTreesPersistentStoreTest {
 		ByteBuffer key = ByteBuffer.wrap("key1".getBytes());
 		ByteBuffer digest = ByteBuffer.wrap("digest1".getBytes());
 
-		dbObj.putSegmentData(defaultTreeId, defaultSegId, key, digest);
+		dbObj.putSegmentData(DEF_TREE_ID, DEF_SEG_ID, key, digest);
 
-		SegmentData sd = dbObj.getSegmentData(defaultTreeId, defaultSegId, key);
+		SegmentData sd = dbObj.getSegmentData(DEF_TREE_ID, DEF_SEG_ID, key);
 		Assert.assertNotNull(sd);
 		Assert.assertEquals(digest, sd.digest);
 
-		dbObj.deleteSegmentData(defaultTreeId, defaultSegId, key);
-		sd = dbObj.getSegmentData(defaultTreeId, defaultSegId, key);
+		dbObj.deleteSegmentData(DEF_TREE_ID, DEF_SEG_ID, key);
+		sd = dbObj.getSegmentData(DEF_TREE_ID, DEF_SEG_ID, key);
 		Assert.assertNull(sd);
 
-		dbObj.deleteTree(defaultTreeId);
+		dbObj.deleteTree(DEF_TREE_ID);
 	}
 
 	@Test
@@ -67,24 +67,24 @@ public class HashTreesPersistentStoreTest {
 			sd = new SegmentData(ByteBuffer.wrap(("test" + i).getBytes()),
 					ByteBuffer.wrap(("value" + i).getBytes()));
 			list.add(sd);
-			dbObj.putSegmentData(defaultTreeId, defaultSegId, sd.key, sd.digest);
+			dbObj.putSegmentData(DEF_TREE_ID, DEF_SEG_ID, sd.key, sd.digest);
 		}
 
-		List<SegmentData> actualResult = dbObj.getSegment(defaultTreeId,
-				defaultSegId);
+		List<SegmentData> actualResult = dbObj.getSegment(DEF_TREE_ID,
+				DEF_SEG_ID);
 		Assert.assertNotNull(actualResult);
 		Assert.assertTrue(actualResult.size() != 0);
 		Assert.assertEquals(list, actualResult);
 
-		dbObj.deleteTree(defaultTreeId);
+		dbObj.deleteTree(DEF_TREE_ID);
 	}
 
 	@Test
 	public void testPutSegmentHash() {
 		ByteBuffer digest = ByteBuffer.wrap("digest1".getBytes());
-		dbObj.putSegmentHash(defaultTreeId, defaultSegId, digest);
+		dbObj.putSegmentHash(DEF_TREE_ID, DEF_SEG_ID, digest);
 
-		SegmentHash sh = dbObj.getSegmentHash(defaultTreeId, defaultSegId);
+		SegmentHash sh = dbObj.getSegmentHash(DEF_TREE_ID, DEF_SEG_ID);
 		Assert.assertNotNull(sh);
 		Assert.assertEquals(digest, sh.hash);
 
@@ -92,14 +92,13 @@ public class HashTreesPersistentStoreTest {
 		expected.add(sh);
 
 		List<Integer> nodeIds = new ArrayList<Integer>();
-		nodeIds.add(defaultSegId);
+		nodeIds.add(DEF_SEG_ID);
 
-		List<SegmentHash> actual = dbObj.getSegmentHashes(defaultTreeId,
-				nodeIds);
+		List<SegmentHash> actual = dbObj.getSegmentHashes(DEF_TREE_ID, nodeIds);
 		Assert.assertNotNull(actual);
 
 		Assert.assertEquals(expected, actual);
-		dbObj.deleteTree(defaultTreeId);
+		dbObj.deleteTree(DEF_TREE_ID);
 	}
 
 	@Test
@@ -107,26 +106,26 @@ public class HashTreesPersistentStoreTest {
 		ByteBuffer key = ByteBuffer.wrap("key1".getBytes());
 		ByteBuffer digest = ByteBuffer.wrap("digest1".getBytes());
 
-		dbObj.putSegmentData(defaultTreeId, defaultSegId, key, digest);
-		dbObj.deleteTree(defaultTreeId);
+		dbObj.putSegmentData(DEF_TREE_ID, DEF_SEG_ID, key, digest);
+		dbObj.deleteTree(DEF_TREE_ID);
 
-		SegmentData sd = dbObj.getSegmentData(defaultTreeId, defaultSegId, key);
+		SegmentData sd = dbObj.getSegmentData(DEF_TREE_ID, DEF_SEG_ID, key);
 		Assert.assertNull(sd);
 	}
 
 	@Test
 	public void testSetLastFullyTreeBuiltTimestamp() {
 		long exTs = System.currentTimeMillis();
-		dbObj.setLastFullyTreeBuiltTimestamp(defaultTreeId, exTs);
-		long dbTs = dbObj.getLastFullyTreeReBuiltTimestamp(defaultTreeId);
+		dbObj.setLastFullyTreeBuiltTimestamp(DEF_TREE_ID, exTs);
+		long dbTs = dbObj.getLastFullyTreeReBuiltTimestamp(DEF_TREE_ID);
 		Assert.assertEquals(exTs, dbTs);
 	}
 
 	@Test
 	public void testLastHashTreeUpdatedTimestamp() {
 		long exTs = System.currentTimeMillis();
-		dbObj.setLastHashTreeUpdatedTimestamp(defaultTreeId, exTs);
-		long dbTs = dbObj.getLastHashTreeUpdatedTimestamp(defaultTreeId);
+		dbObj.setLastHashTreeUpdatedTimestamp(DEF_TREE_ID, exTs);
+		long dbTs = dbObj.getLastHashTreeUpdatedTimestamp(DEF_TREE_ID);
 		Assert.assertEquals(exTs, dbTs);
 	}
 
@@ -134,7 +133,7 @@ public class HashTreesPersistentStoreTest {
 	public void testGetAllTreeIds() {
 		int totTreeIdsCounter = 20;
 		for (long treeId = 1; treeId <= totTreeIdsCounter; treeId++)
-			dbObj.putSegmentData(treeId, defaultSegId, EMPTY_BYTE_BUFFER,
+			dbObj.putSegmentData(treeId, DEF_SEG_ID, EMPTY_BYTE_BUFFER,
 					EMPTY_BYTE_BUFFER);
 		Iterator<Long> treeIdItr = dbObj.getAllTreeIds();
 		int actualTreeIdCount = 0;

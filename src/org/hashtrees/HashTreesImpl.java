@@ -81,10 +81,10 @@ public class HashTreesImpl implements HashTrees {
 	private final int internalNodesCount;
 	private final int segmentsCount;
 
-	private final HashTreesStore hTStorage;
+	private final HashTreesStore hTStore;
 	private final HashTreesIdProvider treeIdProvider;
 	private final SegmentIdProvider segIdProvider;
-	private final Store storage;
+	private final Store store;
 
 	private final ConcurrentMap<Long, ReentrantLock> treeLocks = new ConcurrentHashMap<Long, ReentrantLock>();
 
@@ -105,8 +105,8 @@ public class HashTreesImpl implements HashTrees {
 				(height(this.segmentsCount, noOfChildren) - 1), noOfChildren);
 		this.treeIdProvider = treeIdProvider;
 		this.segIdProvider = segIdProvider;
-		this.hTStorage = hTStroage;
-		this.storage = storage;
+		this.hTStore = hTStroage;
+		this.store = storage;
 	}
 
 	@Override
@@ -124,8 +124,8 @@ public class HashTreesImpl implements HashTrees {
 		long treeId = treeIdProvider.getTreeId(key);
 		int segId = segIdProvider.getSegmentId(key);
 		ByteBuffer digest = ByteBuffer.wrap(sha1(value.array()));
-		hTStorage.setDirtySegment(treeId, segId);
-		hTStorage.putSegmentData(treeId, segId, key, digest);
+		hTStore.setDirtySegment(treeId, segId);
+		hTStore.putSegmentData(treeId, segId, key, digest);
 	}
 
 	@Override
@@ -142,8 +142,8 @@ public class HashTreesImpl implements HashTrees {
 	void hRemoveInternal(final ByteBuffer key) {
 		long treeId = treeIdProvider.getTreeId(key);
 		int segId = segIdProvider.getSegmentId(key);
-		hTStorage.setDirtySegment(treeId, segId);
-		hTStorage.deleteSegmentData(treeId, segId, key);
+		hTStore.setDirtySegment(treeId, segId);
+		hTStore.deleteSegmentData(treeId, segId, key);
 	}
 
 	@Override
@@ -245,12 +245,12 @@ public class HashTreesImpl implements HashTrees {
 			if (compRes == 0) {
 				if (!Arrays.equals(local.getDigest(), remote.getDigest()))
 					kvsForAddition.put(ByteBuffer.wrap(local.getKey()),
-							storage.get(ByteBuffer.wrap(local.getKey())));
+							store.get(ByteBuffer.wrap(local.getKey())));
 				localDataItr.next();
 				remoteDataItr.next();
 			} else if (compRes < 0) {
 				kvsForAddition.put(ByteBuffer.wrap(local.getKey()),
-						storage.get(ByteBuffer.wrap(local.getKey())));
+						store.get(ByteBuffer.wrap(local.getKey())));
 				localDataItr.next();
 			} else {
 				keysForeRemoval.add(ByteBuffer.wrap(remote.getKey()));
@@ -260,7 +260,7 @@ public class HashTreesImpl implements HashTrees {
 		while (localDataItr.hasNext()) {
 			local = localDataItr.next();
 			kvsForAddition.put(ByteBuffer.wrap(local.getKey()),
-					storage.get(ByteBuffer.wrap(local.getKey())));
+					store.get(ByteBuffer.wrap(local.getKey())));
 		}
 		while (remoteDataItr.hasNext())
 			keysForeRemoval.add(ByteBuffer.wrap(remoteDataItr.next().getKey()));
@@ -278,7 +278,7 @@ public class HashTreesImpl implements HashTrees {
 			List<SegmentData> sdValues = getSegment(treeId, segId);
 			for (SegmentData sd : sdValues)
 				keyValuePairs.put(ByteBuffer.wrap(sd.getKey()),
-						storage.get(ByteBuffer.wrap(sd.getKey())));
+						store.get(ByteBuffer.wrap(sd.getKey())));
 			if (sdValues.size() > 0)
 				remoteTree.sPut(keyValuePairs);
 		}
@@ -286,23 +286,23 @@ public class HashTreesImpl implements HashTrees {
 
 	@Override
 	public SegmentHash getSegmentHash(long treeId, int nodeId) {
-		return hTStorage.getSegmentHash(treeId, nodeId);
+		return hTStore.getSegmentHash(treeId, nodeId);
 	}
 
 	@Override
 	public List<SegmentHash> getSegmentHashes(long treeId,
 			final List<Integer> nodeIds) {
-		return hTStorage.getSegmentHashes(treeId, nodeIds);
+		return hTStore.getSegmentHashes(treeId, nodeIds);
 	}
 
 	@Override
 	public SegmentData getSegmentData(long treeId, int segId, ByteBuffer key) {
-		return hTStorage.getSegmentData(treeId, segId, key);
+		return hTStore.getSegmentData(treeId, segId, key);
 	}
 
 	@Override
 	public List<SegmentData> getSegment(long treeId, int segId) {
-		return hTStorage.getSegment(treeId, segId);
+		return hTStore.getSegment(treeId, segId);
 	}
 
 	private boolean acquireTreeLock(long treeId, boolean waitForLock) {
@@ -324,7 +324,7 @@ public class HashTreesImpl implements HashTrees {
 
 	@Override
 	public void rebuildHashTrees(boolean fullRebuild) {
-		Iterator<Long> treeIdItr = hTStorage.getAllTreeIds();
+		Iterator<Long> treeIdItr = hTStore.getAllTreeIds();
 		while (treeIdItr.hasNext())
 			rebuildHashTree(treeIdItr.next(), fullRebuild);
 	}
@@ -336,7 +336,7 @@ public class HashTreesImpl implements HashTrees {
 		if (acquiredLock) {
 			try {
 				long currentTs = System.currentTimeMillis();
-				List<Integer> dirtySegmentBuckets = hTStorage
+				List<Integer> dirtySegmentBuckets = hTStore
 						.clearAndGetDirtySegments(treeId);
 
 				Map<Integer, ByteBuffer> dirtyNodeAndDigestMap = rebuildLeaves(
@@ -344,12 +344,11 @@ public class HashTreesImpl implements HashTrees {
 				rebuildInternalNodes(treeId, dirtyNodeAndDigestMap);
 				for (Map.Entry<Integer, ByteBuffer> dirtyNodeAndDigest : dirtyNodeAndDigestMap
 						.entrySet())
-					hTStorage.putSegmentHash(treeId,
-							dirtyNodeAndDigest.getKey(),
+					hTStore.putSegmentHash(treeId, dirtyNodeAndDigest.getKey(),
 							dirtyNodeAndDigest.getValue());
 				if (fullRebuild)
-					hTStorage.setLastFullyTreeBuiltTimestamp(treeId, currentTs);
-				hTStorage.setLastHashTreeUpdatedTimestamp(treeId, currentTs);
+					hTStore.setLastFullyTreeBuiltTimestamp(treeId, currentTs);
+				hTStore.setLastHashTreeUpdatedTimestamp(treeId, currentTs);
 			} finally {
 				releaseTreeLock(treeId);
 			}
@@ -361,13 +360,13 @@ public class HashTreesImpl implements HashTrees {
 			throws Exception {
 		for (Map.Entry<ByteBuffer, ByteBuffer> keyValuePair : keyValuePairs
 				.entrySet())
-			storage.put(keyValuePair.getKey(), keyValuePair.getValue());
+			store.put(keyValuePair.getKey(), keyValuePair.getValue());
 	}
 
 	@Override
 	public void sRemove(final List<ByteBuffer> keys) throws Exception {
 		for (ByteBuffer key : keys)
-			storage.remove(key);
+			store.remove(key);
 	}
 
 	@Override
@@ -378,7 +377,7 @@ public class HashTreesImpl implements HashTrees {
 			Iterator<SegmentData> segDataItr = getSegment(treeId, segId)
 					.iterator();
 			while (segDataItr.hasNext()) {
-				storage.remove(ByteBuffer.wrap(segDataItr.next().getKey()));
+				store.remove(ByteBuffer.wrap(segDataItr.next().getKey()));
 			}
 		}
 	}
@@ -419,8 +418,7 @@ public class HashTreesImpl implements HashTrees {
 	}
 
 	private ByteBuffer digestSegmentData(long treeId, int segId) {
-		List<SegmentData> dirtySegmentData = hTStorage
-				.getSegment(treeId, segId);
+		List<SegmentData> dirtySegmentData = hTStore.getSegment(treeId, segId);
 		List<String> hexStrings = new ArrayList<String>();
 
 		for (SegmentData sd : dirtySegmentData)
@@ -494,7 +492,7 @@ public class HashTreesImpl implements HashTrees {
 				if (nodeIdAndDigestMap.containsKey(child))
 					segHashBB = nodeIdAndDigestMap.get(child);
 				else {
-					segHash = hTStorage.getSegmentHash(treeId, child);
+					segHash = hTStore.getSegmentHash(treeId, child);
 					segHashBB = (segHash == null) ? null : segHash.hash;
 				}
 				if (segHashBB != null)
@@ -577,7 +575,7 @@ public class HashTreesImpl implements HashTrees {
 
 	@Override
 	public long getLastFullyRebuiltTimeStamp(long treeId) {
-		return hTStorage.getLastFullyTreeReBuiltTimestamp(treeId);
+		return hTStore.getLastFullyTreeReBuiltTimestamp(treeId);
 	}
 
 	private boolean enableNonBlockingOperationsInternal(int maxElementsToQue) {

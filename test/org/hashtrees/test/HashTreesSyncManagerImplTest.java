@@ -23,7 +23,7 @@ import org.junit.Test;
 
 public class HashTreesSyncManagerImplTest {
 
-	private static final HashTreesIdProvider treeIdProvider = new HashTreeIdProviderTest();
+	private static final HashTreesIdProvider TREE_ID_PROVIDER = new HashTreeIdProviderTest();
 
 	private static void waitForTheEvent(
 			BlockingQueue<HashTreesImplTestEvent> events,
@@ -57,7 +57,7 @@ public class HashTreesSyncManagerImplTest {
 		HashTreesImplTestObj hTree = new HashTreesImplTestObj(
 				DEFAULT_SEG_DATA_BLOCKS_COUNT, htStorage, storage, events);
 		HashTreesSyncManagerImpl syncManager = new HashTreesSyncManagerImpl(
-				hTree, treeIdProvider, syncMgrStore, "localhost",
+				hTree, TREE_ID_PROVIDER, syncMgrStore, "localhost",
 				HashTreesConstants.DEFAULT_HASH_TREE_SERVER_PORT_NO, 30 * 1000,
 				3000000, 10);
 		syncManager.init();
@@ -76,7 +76,7 @@ public class HashTreesSyncManagerImplTest {
 		HashTreesImplTestObj hTree = new HashTreesImplTestObj(
 				DEFAULT_SEG_DATA_BLOCKS_COUNT, htStorage, storage, events);
 		HashTreesSyncManagerImpl syncManager = new HashTreesSyncManagerImpl(
-				hTree, treeIdProvider, syncMgrStore, "localhost",
+				hTree, TREE_ID_PROVIDER, syncMgrStore, "localhost",
 				HashTreesConstants.DEFAULT_HASH_TREE_SERVER_PORT_NO, 30 * 1000,
 				30000000, 10);
 		syncManager.init();
@@ -111,12 +111,12 @@ public class HashTreesSyncManagerImplTest {
 		localStorage.put(HashTreesImplTestUtils.randomByteBuffer(),
 				HashTreesImplTestUtils.randomByteBuffer());
 		HashTreesSyncManagerImpl localSyncManager = new HashTreesSyncManagerImpl(
-				localHTree, treeIdProvider, localSyncMgrStore, "localhost",
+				localHTree, TREE_ID_PROVIDER, localSyncMgrStore, "localhost",
 				HashTreesConstants.DEFAULT_HASH_TREE_SERVER_PORT_NO, 3000, 300,
 				10);
 
 		HashTreesSyncManagerImpl remoteSyncManager = new HashTreesSyncManagerImpl(
-				remoteHTree, treeIdProvider, remoteSyncMgrStore, "localhost",
+				remoteHTree, TREE_ID_PROVIDER, remoteSyncMgrStore, "localhost",
 				8999, 3000, 300, 10);
 
 		remoteSyncManager.init();

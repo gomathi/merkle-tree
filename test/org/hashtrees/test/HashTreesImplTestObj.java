@@ -17,13 +17,13 @@ import org.hashtrees.thrift.generated.SegmentHash;
 
 public class HashTreesImplTestObj extends HashTreesImpl {
 
-	private static final HashTreesIdProvider treeIdProvider = new HashTreeIdProviderTest();
+	private static final HashTreesIdProvider TREE_ID_PROVIDER = new HashTreeIdProviderTest();
 	private final BlockingQueue<HashTreesImplTestEvent> events;
 
 	public HashTreesImplTestObj(final int noOfSegments,
 			final HashTreesStore htStorage, final Store storage,
 			BlockingQueue<HashTreesImplTestEvent> events) {
-		super(noOfSegments, treeIdProvider, new ModuloSegIdProvider(
+		super(noOfSegments, TREE_ID_PROVIDER, new ModuloSegIdProvider(
 				noOfSegments), htStorage, storage);
 		this.events = events;
 	}

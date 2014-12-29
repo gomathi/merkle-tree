@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.Random;
 
 import org.apache.commons.io.FileUtils;
-import org.hashtrees.storage.HashTreesPersistentStore;
+import org.hashtrees.store.HashTreesPersistentStore;
 import org.hashtrees.thrift.generated.SegmentData;
 import org.hashtrees.thrift.generated.SegmentHash;
 import org.junit.After;
@@ -18,10 +18,9 @@ import org.junit.Test;
 
 public class HashTreesPersistentStoreTest {
 
-	private String dbDir;
 	private static final int defaultTreeId = 1;
 	private static final int defaultSegId = 0;
-	private static final int noOfSegDataBlocks = 1024;
+	private String dbDir;
 	private static HashTreesPersistentStore dbObj;
 	private static final byte[] EMPTY_BYTE_ARRAY = new byte[0];
 	private static final ByteBuffer EMPTY_BYTE_BUFFER = ByteBuffer
@@ -31,10 +30,6 @@ public class HashTreesPersistentStoreTest {
 	public void init() throws Exception {
 		dbDir = "/tmp/random" + new Random().nextInt();
 		dbObj = new HashTreesPersistentStore(dbDir);
-	}
-
-	public void init(String dbDirName) throws Exception {
-		dbObj = new HashTreesPersistentStore(dbDirName);
 	}
 
 	@After

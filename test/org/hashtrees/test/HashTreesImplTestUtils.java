@@ -16,10 +16,11 @@ import org.hashtrees.HashTreesIdProvider;
 import org.hashtrees.HashTreesImpl;
 import org.hashtrees.ModuloSegIdProvider;
 import org.hashtrees.SegmentIdProvider;
-import org.hashtrees.storage.HashTreesMemStore;
-import org.hashtrees.storage.HashTreesPersistentStore;
-import org.hashtrees.storage.HashTreesStore;
-import org.hashtrees.storage.Store;
+import org.hashtrees.store.HashTreesMemStore;
+import org.hashtrees.store.HashTreesPersistentStore;
+import org.hashtrees.store.HashTreesStore;
+import org.hashtrees.store.Store;
+import org.hashtrees.synch.HashTreeSyncManagerStore;
 import org.hashtrees.util.Pair;
 
 public class HashTreesImplTestUtils {
@@ -168,21 +169,38 @@ public class HashTreesImplTestUtils {
 		return new HTreeComponents(hTStorage, storage, hTree);
 	}
 
-	public static HashTreesStore generateInMemoryStore() {
+	public static HashTreesMemStore generateInMemoryStore() {
 		return new HashTreesMemStore();
 	}
 
-	private static HashTreesStore generatePersistentStore(int noOfSegDataBlocks)
+	public static HashTreesPersistentStore generatePersistentStore()
 			throws Exception {
 		return new HashTreesPersistentStore(randomDirName());
 	}
 
-	public static HashTreesStore[] generateInMemoryAndPersistentStores(
-			int noOfSegDataBlocks) throws Exception {
+	public static HashTreeSyncManagerStore[] generateInMemoryAndPersistentSyncMgrStores()
+			throws Exception {
+		HashTreeSyncManagerStore[] stores = new HashTreeSyncManagerStore[2];
+		stores[0] = generateInMemoryStore();
+		stores[1] = generatePersistentStore();
+		return stores;
+	}
+
+	public static HashTreesStore[] generateInMemoryAndPersistentStores()
+			throws Exception {
 		HashTreesStore[] stores = new HashTreesStore[2];
 		stores[0] = generateInMemoryStore();
-		stores[1] = generatePersistentStore(noOfSegDataBlocks);
+		stores[1] = generatePersistentStore();
 		return stores;
+	}
+
+	public static void closeStores(HashTreeSyncManagerStore... stores) {
+		for (HashTreeSyncManagerStore store : stores) {
+			if (store instanceof HashTreesPersistentStore) {
+				HashTreesPersistentStore pStore = (HashTreesPersistentStore) store;
+				FileUtils.deleteQuietly(new File(pStore.getDbDir()));
+			}
+		}
 	}
 
 	public static void closeStores(HashTreesStore... stores) {

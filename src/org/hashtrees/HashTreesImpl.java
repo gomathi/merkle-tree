@@ -27,9 +27,9 @@ import java.util.concurrent.locks.ReentrantLock;
 import javax.annotation.concurrent.ThreadSafe;
 
 import org.apache.commons.codec.binary.Hex;
-import org.hashtrees.storage.HashTreesMemStore;
-import org.hashtrees.storage.HashTreesStore;
-import org.hashtrees.storage.Store;
+import org.hashtrees.store.HashTreesMemStore;
+import org.hashtrees.store.HashTreesStore;
+import org.hashtrees.store.Store;
 import org.hashtrees.thrift.generated.SegmentData;
 import org.hashtrees.thrift.generated.SegmentHash;
 import org.hashtrees.util.ByteUtils;

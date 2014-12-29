@@ -1,4 +1,4 @@
-package org.hashtrees.storage;
+package org.hashtrees.store;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
@@ -10,21 +10,26 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ConcurrentSkipListMap;
+import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.atomic.AtomicLong;
 
 import javax.annotation.concurrent.ThreadSafe;
 
+import org.hashtrees.synch.HashTreeSyncManagerStore;
 import org.hashtrees.thrift.generated.SegmentData;
 import org.hashtrees.thrift.generated.SegmentHash;
+import org.hashtrees.thrift.generated.ServerName;
 
 /**
  * In memory implementation of {@link HashTreesStore}.
  * 
  */
 @ThreadSafe
-public class HashTreesMemStore extends HashTreesBaseStore {
+public class HashTreesMemStore extends HashTreesBaseStore implements
+		HashTreeSyncManagerStore {
 
 	private final ConcurrentMap<Long, HashTreeMemStore> treeIdAndIndHashTree = new ConcurrentHashMap<>();
+	private final ConcurrentSkipListSet<ServerName> servers = new ConcurrentSkipListSet<>();
 
 	private static class HashTreeMemStore {
 		private final ConcurrentMap<Integer, ByteBuffer> segmentHashes = new ConcurrentSkipListMap<Integer, ByteBuffer>();
@@ -151,5 +156,20 @@ public class HashTreesMemStore extends HashTreesBaseStore {
 				break;
 			oldValue = val.get();
 		}
+	}
+
+	@Override
+	public void addServerToSyncList(ServerName sn) {
+		servers.add(sn);
+	}
+
+	@Override
+	public void removeServerFromSyncList(ServerName sn) {
+		servers.remove(sn);
+	}
+
+	@Override
+	public List<ServerName> getAllServers() {
+		return new ArrayList<>(servers);
 	}
 }

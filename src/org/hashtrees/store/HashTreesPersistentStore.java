@@ -1,4 +1,4 @@
-package org.hashtrees.storage;
+package org.hashtrees.store;
 
 import java.io.File;
 import java.io.IOException;
@@ -8,13 +8,16 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map.Entry;
 import java.util.NoSuchElementException;
 import java.util.Queue;
 
 import org.apache.log4j.Logger;
 import org.fusesource.leveldbjni.JniDBFactory;
+import org.hashtrees.synch.HashTreeSyncManagerStore;
 import org.hashtrees.thrift.generated.SegmentData;
 import org.hashtrees.thrift.generated.SegmentHash;
+import org.hashtrees.thrift.generated.ServerName;
 import org.hashtrees.util.ByteUtils;
 import org.iq80.leveldb.DB;
 import org.iq80.leveldb.DBIterator;
@@ -33,7 +36,8 @@ import org.iq80.leveldb.Options;
  * 
  */
 
-public class HashTreesPersistentStore extends HashTreesBaseStore {
+public class HashTreesPersistentStore extends HashTreesBaseStore implements
+		HashTreeSyncManagerStore {
 
 	private static final Logger LOG = Logger
 			.getLogger(HashTreesPersistentStore.class);
@@ -64,7 +68,7 @@ public class HashTreesPersistentStore extends HashTreesBaseStore {
 	private static enum MetaDataKey {
 
 		KEY_LAST_FULLY_TREE_BUILT_TS("ltfbTs".getBytes()), KEY_LAST_TREE_BUILT_TS(
-				"ltbTs".getBytes());
+				"ltbTs".getBytes()), KEY_SERVERNAME_KEY_PREFIX("sn".getBytes());
 
 		private final byte[] key;
 
@@ -178,6 +182,16 @@ public class HashTreesPersistentStore extends HashTreesBaseStore {
 	}
 
 	@Override
+	public void setDirtySegment(long treeId, int segId) {
+		super.setDirtySegment(treeId, segId);
+	}
+
+	@Override
+	public List<Integer> clearAndGetDirtySegments(long treeId) {
+		return super.clearAndGetDirtySegments(treeId);
+	}
+
+	@Override
 	public void putSegmentHash(long treeId, int nodeId, ByteBuffer digest) {
 		dbObj.put(prepareTreeId(treeId), EMPTY_VALUE);
 		dbObj.put(prepareSegmentHashKey(treeId, nodeId), digest.array());
@@ -238,6 +252,58 @@ public class HashTreesPersistentStore extends HashTreesBaseStore {
 		if (value != null)
 			return ByteUtils.toLong(value, 0);
 		return 0;
+	}
+
+	private static byte[] prepareServerName(ServerName sn) {
+		byte[] serverNameInBytes = sn.hostName.getBytes();
+		byte[] key = new byte[MetaDataKey.KEY_SERVERNAME_KEY_PREFIX.key.length
+				+ serverNameInBytes.length];
+		ByteBuffer keyBB = ByteBuffer.wrap(key);
+		keyBB.put(MetaDataKey.KEY_SERVERNAME_KEY_PREFIX.key);
+		keyBB.put(sn.hostName.getBytes());
+		return keyBB.array();
+	}
+
+	private static ServerName getServerName(byte[] key, byte[] value) {
+		int offset = MetaDataKey.KEY_SERVERNAME_KEY_PREFIX.key.length;
+		byte[] snInBytes = ByteUtils.copy(key, offset, key.length);
+		String hostName = new String(snInBytes);
+
+		ByteBuffer bb = ByteBuffer.wrap(value);
+		int portNo = bb.getInt();
+		return new ServerName(hostName, portNo);
+	}
+
+	@Override
+	public void addServerToSyncList(ServerName sn) {
+		byte[] value = new byte[ByteUtils.SIZEOF_INT];
+		ByteBuffer bb = ByteBuffer.wrap(value);
+		bb.putInt(sn.getPortNo());
+		dbObj.put(prepareServerName(sn), value);
+	}
+
+	@Override
+	public void removeServerFromSyncList(ServerName sn) {
+		dbObj.delete(prepareServerName(sn));
+	}
+
+	@Override
+	public List<ServerName> getAllServers() {
+		DBIterator itr = dbObj.iterator();
+		byte[] startKey = MetaDataKey.KEY_SERVERNAME_KEY_PREFIX.getKey();
+		itr.seek(startKey);
+
+		List<ServerName> result = new ArrayList<>();
+		while (itr.hasNext()) {
+			Entry<byte[], byte[]> entry = itr.next();
+			byte[] key = entry.getKey();
+			byte[] value = entry.getValue();
+			if (ByteUtils.compareTo(startKey, 0, startKey.length, key, 0,
+					startKey.length) != 0)
+				break;
+			result.add(getServerName(key, value));
+		}
+		return result;
 	}
 
 	@Override

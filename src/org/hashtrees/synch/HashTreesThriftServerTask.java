@@ -30,11 +30,6 @@ public class HashTreesThriftServerTask extends StoppableTask {
 	private final int serverPortNo;
 	private final CountDownLatch initializedLatch;
 
-	public HashTreesThriftServerTask(final HashTrees localHashTree,
-			final HashTreesSyncManagerImpl hashTreeMgr, final int serverPortNo) {
-		this(localHashTree, hashTreeMgr, serverPortNo, null);
-	}
-
 	public HashTreesThriftServerTask(final HashTrees hTree,
 			final HashTreesSyncManagerImpl htSynchMgr, final int serverPortNo,
 			final CountDownLatch initializedLatch) {

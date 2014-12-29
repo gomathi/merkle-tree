@@ -1,4 +1,4 @@
-package org.hashtrees.storage;
+package org.hashtrees.store;
 
 import java.nio.ByteBuffer;
 import java.util.Iterator;

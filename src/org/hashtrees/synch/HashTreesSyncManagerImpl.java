@@ -82,6 +82,7 @@ public class HashTreesSyncManagerImpl extends StoppableTask implements
 
 	private final HashTrees hashTree;
 	private final HashTreesIdProvider treeIdProvider;
+	private final HashTreeSyncManagerStore syncManagerStore;
 	private final ServerName localServer;
 	private final int noOfThreads;
 	private final long fullRebuildTimeInterval;
@@ -110,22 +111,28 @@ public class HashTreesSyncManagerImpl extends StoppableTask implements
 	}
 
 	public HashTreesSyncManagerImpl(String thisHostName, HashTrees hashTree,
-			HashTreesIdProvider treeIdProvider, int serverPortNo) {
-		this(hashTree, treeIdProvider, thisHostName, serverPortNo,
-				DEFAULT_FULL_REBUILD_TIME_INTERVAL,
+			HashTreesIdProvider treeIdProvider,
+			HashTreeSyncManagerStore syncMgrStore, int serverPortNo) {
+		this(hashTree, treeIdProvider, syncMgrStore, thisHostName,
+				serverPortNo, DEFAULT_FULL_REBUILD_TIME_INTERVAL,
 				DEFAULT_INTERVAL_BW_SYNCH_AND_REBUILD, DEFAULT_NO_OF_THREADS);
 	}
 
 	public HashTreesSyncManagerImpl(HashTrees hashTree,
-			HashTreesIdProvider treeIdProvider, String localHostName,
+			HashTreesIdProvider treeIdProvider,
+			HashTreeSyncManagerStore syncMgrStore, String localHostName,
 			int localServerPortNo, long fullRebuildTimeInterval,
 			long intBWSynchAndRebuild, int noOfBGThreads) {
 		this.localServer = new ServerName(localHostName, localServerPortNo);
 		this.hashTree = hashTree;
+		this.syncManagerStore = syncMgrStore;
 		this.treeIdProvider = treeIdProvider;
 		this.fullRebuildTimeInterval = fullRebuildTimeInterval;
 		this.noOfThreads = noOfBGThreads;
 		this.intBetweenSynchAndRebuild = intBWSynchAndRebuild;
+		List<ServerName> serversToSyncInStore = syncMgrStore.getAllServers();
+		for (ServerName sn : serversToSyncInStore)
+			addServerToSyncList(sn);
 	}
 
 	@Override
@@ -410,6 +417,7 @@ public class HashTreesSyncManagerImpl extends StoppableTask implements
 		synchronized (serversToSync) {
 			if (!serversToSync.containsKey(sn)) {
 				try {
+					syncManagerStore.addServerToSyncList(sn);
 					serversToSync.put(sn, Single
 							.create(HashTreesThriftClientProvider
 									.getThriftHashTreeClient(sn)));
@@ -427,6 +435,7 @@ public class HashTreesSyncManagerImpl extends StoppableTask implements
 	public void removeServerFromSyncList(ServerName sn) {
 		boolean removed;
 		synchronized (serversToSync) {
+			syncManagerStore.removeServerFromSyncList(sn);
 			removed = (serversToSync.remove(sn) != null) ? true : false;
 		}
 		if (removed)

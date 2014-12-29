@@ -47,14 +47,15 @@ public class AtomicBitSet {
 	 * @param bitIndex
 	 *            , can not be negative.
 	 */
-	public void set(int bitIndex) {
+	public boolean set(int bitIndex) {
 		AtomicLongArray bitsHolder = getBitsHolderFromMap(bitIndex);
 		int arrIndex = getWordIndex(bitIndex);
 		while (true) {
 			long oldValue = bitsHolder.get(arrIndex);
 			long newValue = oldValue | (1L << bitIndex);
-			if (bitsHolder.compareAndSet(arrIndex, oldValue, newValue))
-				return;
+			if (bitsHolder.compareAndSet(arrIndex, oldValue, newValue)) {
+				return ((oldValue >> bitIndex) & 1) == 1;
+			}
 		}
 	}
 
@@ -99,14 +100,14 @@ public class AtomicBitSet {
 	 * @param bitIndex
 	 *            , can not be negative.
 	 */
-	public void clear(int bitIndex) {
+	public boolean clear(int bitIndex) {
 		AtomicLongArray bitsHolder = getBitsHolderFromMap(bitIndex);
 		int arrIndex = getWordIndex(bitIndex);
 		while (true) {
 			long oldValue = bitsHolder.get(arrIndex);
 			long newValue = oldValue & ~(1L << bitIndex);
 			if (bitsHolder.compareAndSet(arrIndex, oldValue, newValue))
-				return;
+				return ((oldValue >> bitIndex) & 1) == 1;
 		}
 	}
 

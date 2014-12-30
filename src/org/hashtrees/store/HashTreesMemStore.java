@@ -71,16 +71,16 @@ public class HashTreesMemStore extends HashTreesBaseStore implements
 		if (segDataBlock == null)
 			return Collections.emptyList();
 		List<SegmentData> result = new ArrayList<SegmentData>();
-		for (Map.Entry<ByteBuffer, ByteBuffer> entry : segDataBlock.entrySet()) {
+		for (Map.Entry<ByteBuffer, ByteBuffer> entry : segDataBlock.entrySet())
 			result.add(new SegmentData(entry.getKey(), entry.getValue()));
-		}
 		return result;
 	}
 
 	@Override
 	public void putSegmentHash(long treeId, int nodeId, ByteBuffer digest) {
 		HashTreeMemStore indPartition = getIndHTree(treeId);
-		indPartition.segmentHashes.put(nodeId, digest);
+		ByteBuffer intDigest = ByteBuffer.wrap(digest.array());
+		indPartition.segmentHashes.put(nodeId, intDigest);
 	}
 
 	@Override
@@ -106,8 +106,10 @@ public class HashTreesMemStore extends HashTreesBaseStore implements
 				.get(segId);
 		if (segDataBlock != null) {
 			ByteBuffer value = segDataBlock.get(key);
-			if (value != null)
-				return new SegmentData(key, value);
+			if (value != null) {
+				ByteBuffer intKey = ByteBuffer.wrap(key.array());
+				return new SegmentData(intKey, value);
+			}
 		}
 		return null;
 	}

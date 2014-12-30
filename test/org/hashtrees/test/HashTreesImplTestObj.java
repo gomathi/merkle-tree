@@ -1,23 +1,22 @@
 package org.hashtrees.test;
 
+import static org.hashtrees.test.HashTreesImplTestUtils.TREE_ID_PROVIDER;
+
 import java.nio.ByteBuffer;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 
-import org.hashtrees.ModuloSegIdProvider;
 import org.hashtrees.HashTrees;
-import org.hashtrees.HashTreesIdProvider;
 import org.hashtrees.HashTreesImpl;
+import org.hashtrees.ModuloSegIdProvider;
 import org.hashtrees.store.HashTreesStore;
 import org.hashtrees.store.Store;
-import org.hashtrees.test.HashTreesImplTestUtils.HashTreeIdProviderTest;
 import org.hashtrees.thrift.generated.SegmentData;
 import org.hashtrees.thrift.generated.SegmentHash;
 
 public class HashTreesImplTestObj extends HashTreesImpl {
 
-	private static final HashTreesIdProvider TREE_ID_PROVIDER = new HashTreeIdProviderTest();
 	private final BlockingQueue<HashTreesImplTestEvent> events;
 
 	public HashTreesImplTestObj(final int noOfSegments,

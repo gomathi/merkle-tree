@@ -49,7 +49,8 @@ import org.slf4j.LoggerFactory;
  * 
  * 2) Segment trees, where the segments' hashes are updated and maintained. Tree
  * is not updated on every update on a segment. Rather, tree update is happening
- * at regular intervals.Tree can be binary or 4-ary tree.
+ * at regular intervals. Binary tree is used currently. It should be easier to
+ * extend to support higher no of children.
  * 
  * HashTree can host multiple hash trees. Each hash tree is differentiated by a
  * tree id.
@@ -506,7 +507,7 @@ public class HashTreesImpl implements HashTrees {
 
 	/**
 	 * Segment block id starts with 0. Each leaf node corresponds to a segment
-	 * block. This function does the mapping from leaf node id to segment block
+	 * block. This function does the mapping from segment block id to leaf node
 	 * id.
 	 * 
 	 * @param segId

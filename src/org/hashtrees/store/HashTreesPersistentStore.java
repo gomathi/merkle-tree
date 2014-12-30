@@ -336,8 +336,11 @@ public class HashTreesPersistentStore extends HashTreesBaseStore implements
 	public SegmentData getSegmentData(long treeId, int segId, ByteBuffer key) {
 		byte[] dbKey = prepareSegmentDataKey(treeId, segId, key);
 		byte[] value = dbObj.get(dbKey);
-		if (value != null)
-			return new SegmentData(key, ByteBuffer.wrap(value));
+		if (value != null) {
+			ByteBuffer intKeyBB = ByteBuffer.wrap(key.array());
+			ByteBuffer valueBB = ByteBuffer.wrap(value);
+			return new SegmentData(intKeyBB, valueBB);
+		}
 		return null;
 	}
 
@@ -357,11 +360,12 @@ public class HashTreesPersistentStore extends HashTreesBaseStore implements
 				if (ByteUtils.compareTo(startKey, 0, startKey.length, iterator
 						.peekNext().getKey(), 0, startKey.length) != 0)
 					break;
-				ByteBuffer key = ByteBuffer.wrap(readSegmentDataKey(iterator
-						.peekNext().getKey()));
-				ByteBuffer digest = ByteBuffer.wrap(iterator.peekNext()
-						.getValue());
-				result.add(new SegmentData(key, digest));
+				SegmentData sd = new SegmentData();
+				byte[] key = readSegmentDataKey(iterator.peekNext().getKey());
+				byte[] digest = iterator.peekNext().getValue();
+				sd.setKey(key);
+				sd.setDigest(digest);
+				result.add(sd);
 			}
 		} finally {
 			try {

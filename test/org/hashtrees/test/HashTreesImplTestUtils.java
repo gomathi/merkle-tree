@@ -1,7 +1,6 @@
 package org.hashtrees.test;
 
 import java.io.File;
-import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -28,8 +27,10 @@ public class HashTreesImplTestUtils {
 	private static final Random RANDOM = new Random(System.currentTimeMillis());
 	public static final int ROOT_NODE = 0;
 	public static final int DEFAULT_TREE_ID = 1;
-	public static final int DEFAULT_SEG_DATA_BLOCKS_COUNT = 1 << 10;
+	public static final int DEFAULT_SEG_DATA_BLOCKS_COUNT = 1 << 5;
 	public static final int DEFAULT_HTREE_SERVER_PORT_NO = 11111;
+	public static final SegIdProviderTest SEG_ID_PROVIDER = new SegIdProviderTest();
+	public static final HashTreeIdProviderTest TREE_ID_PROVIDER = new HashTreeIdProviderTest();
 
 	/**
 	 * Default SegId provider which expects the key to be an integer wrapped as
@@ -41,8 +42,9 @@ public class HashTreesImplTestUtils {
 		@Override
 		public int getSegmentId(ByteBuffer key) {
 			try {
-				return Integer.parseInt(new String(key.array(), "UTF-8"));
-			} catch (NumberFormatException | UnsupportedEncodingException e) {
+				ByteBuffer bb = ByteBuffer.wrap(key.array());
+				return bb.getInt();
+			} catch (NumberFormatException e) {
 				throw new IllegalArgumentException(
 						"Exception occurred while converting the string");
 			}
@@ -56,15 +58,16 @@ public class HashTreesImplTestUtils {
 	 */
 	public static class HashTreeIdProviderTest implements HashTreesIdProvider {
 
+		public static final long TREE_ID = 1;
 		private final List<Long> treeIds = new ArrayList<Long>();
 
 		public HashTreeIdProviderTest() {
-			treeIds.add(1l);
+			treeIds.add(TREE_ID);
 		}
 
 		@Override
 		public long getTreeId(ByteBuffer key) {
-			return 1;
+			return TREE_ID;
 		}
 
 		@Override
@@ -158,11 +161,10 @@ public class HashTreesImplTestUtils {
 
 	public static HTreeComponents createHashTree(int noOfSegments,
 			final HashTreesStore hTStorage) throws Exception {
-		HashTreesIdProvider treeIdProvider = new HashTreeIdProviderTest();
 		StorageImplTest storage = new StorageImplTest();
 		ModuloSegIdProvider segIdProvider = new ModuloSegIdProvider(
 				noOfSegments);
-		HashTrees hTree = new HashTreesImpl(noOfSegments, treeIdProvider,
+		HashTrees hTree = new HashTreesImpl(noOfSegments, TREE_ID_PROVIDER,
 				segIdProvider, hTStorage, storage);
 		storage.setHashTree(hTree);
 		hTree.rebuildHashTrees(true);

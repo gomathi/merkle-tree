@@ -38,13 +38,11 @@ public abstract class NonBlockingQueuingTask<T> extends StoppableTask {
 
 	public void enque(T element) {
 		if (hasStopRequested() && element != stopMarker) {
-			throw new IllegalStateException(
-					"Shut down is initiated. Unable to add the element to the queue.");
+			throw new QueuingTaskIsStoppedException();
 		}
 		boolean status = que.offer(element);
 		if (!status)
-			throw new IllegalStateException(
-					"Queue is full. Unable to add element to the queue.");
+			throw new QueueReachedMaxCapacityException();
 	}
 
 	@Override
@@ -81,4 +79,32 @@ public abstract class NonBlockingQueuingTask<T> extends StoppableTask {
 
 	protected abstract void handleElement(T element);
 
+	public static class QueueReachedMaxCapacityException extends
+			RuntimeException {
+
+		private static final long serialVersionUID = 1L;
+		private static final String EXCEPTION_MSG = "Queue is full. Can not add more elements to the queue.";
+
+		public QueueReachedMaxCapacityException() {
+			super(EXCEPTION_MSG);
+		}
+
+		public QueueReachedMaxCapacityException(Throwable cause) {
+			super(EXCEPTION_MSG, cause);
+		}
+	}
+
+	public static class QueuingTaskIsStoppedException extends RuntimeException {
+
+		private static final long serialVersionUID = 1L;
+		private static final String EXCEPTION_MSG = "Queuing task is stopped. Can not add elements to the queue.";
+
+		public QueuingTaskIsStoppedException() {
+			super(EXCEPTION_MSG);
+		}
+
+		public QueuingTaskIsStoppedException(Throwable cause) {
+			super(EXCEPTION_MSG, cause);
+		}
+	}
 }

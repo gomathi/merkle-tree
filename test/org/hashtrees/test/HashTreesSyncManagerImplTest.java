@@ -1,6 +1,7 @@
 package org.hashtrees.test;
 
 import static org.hashtrees.test.HashTreesImplTestUtils.DEFAULT_SEG_DATA_BLOCKS_COUNT;
+import static org.hashtrees.test.HashTreesImplTestUtils.TREE_ID_PROVIDER;
 import static org.hashtrees.test.HashTreesImplTestUtils.generateInMemoryStore;
 
 import java.util.concurrent.ArrayBlockingQueue;
@@ -10,20 +11,16 @@ import java.util.concurrent.TimeUnit;
 import junit.framework.Assert;
 
 import org.hashtrees.HashTreesConstants;
-import org.hashtrees.HashTreesIdProvider;
 import org.hashtrees.store.HashTreesMemStore;
 import org.hashtrees.store.HashTreesStore;
 import org.hashtrees.store.Store;
 import org.hashtrees.synch.HashTreeSyncManagerStore;
 import org.hashtrees.synch.HashTreesSyncManagerImpl;
-import org.hashtrees.test.HashTreesImplTestUtils.HashTreeIdProviderTest;
 import org.hashtrees.test.HashTreesImplTestUtils.StorageImplTest;
 import org.hashtrees.thrift.generated.ServerName;
 import org.junit.Test;
 
 public class HashTreesSyncManagerImplTest {
-
-	private static final HashTreesIdProvider TREE_ID_PROVIDER = new HashTreeIdProviderTest();
 
 	private static void waitForTheEvent(
 			BlockingQueue<HashTreesImplTestEvent> events,

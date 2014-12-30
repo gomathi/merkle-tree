@@ -8,6 +8,7 @@ import java.util.concurrent.TimeUnit;
 import junit.framework.Assert;
 
 import org.hashtrees.util.NonBlockingQueuingTask;
+import org.hashtrees.util.NonBlockingQueuingTask.QueuingTaskIsStoppedException;
 import org.junit.Test;
 
 public class NonBlockingQueuingTaskTest {
@@ -36,7 +37,7 @@ public class NonBlockingQueuingTaskTest {
 			Assert.assertEquals(i, queuedElements.get(i).intValue());
 	}
 
-	@Test(expected = IllegalStateException.class)
+	@Test(expected = QueuingTaskIsStoppedException.class)
 	public void testEnqueOperationsOnStop() throws InterruptedException {
 		Integer marker = new Integer(0);
 		NonBlockingQueuingTask<Integer> nbqTask = new NonBlockingQueuingTask<Integer>(

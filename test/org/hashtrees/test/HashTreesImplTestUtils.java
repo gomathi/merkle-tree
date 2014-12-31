@@ -87,21 +87,25 @@ public class HashTreesImplTestUtils {
 
 		@Override
 		public ByteBuffer get(ByteBuffer key) {
-			return localStorage.get(key);
+			ByteBuffer intKey = ByteBuffer.wrap(key.array());
+			return localStorage.get(intKey);
 		}
 
 		@Override
 		public void put(ByteBuffer key, ByteBuffer value) throws Exception {
-			localStorage.put(key, value);
+			ByteBuffer intKey = ByteBuffer.wrap(key.array());
+			ByteBuffer intValue = ByteBuffer.wrap(value.array());
+			localStorage.put(intKey, intValue);
 			if (hashTree != null)
-				hashTree.hPut(key, value);
+				hashTree.hPut(intKey, intValue);
 		}
 
 		@Override
 		public ByteBuffer remove(ByteBuffer key) throws Exception {
-			ByteBuffer value = localStorage.remove(key);
+			ByteBuffer intKey = ByteBuffer.wrap(key.array());
+			ByteBuffer value = localStorage.remove(intKey);
 			if (hashTree != null) {
-				hashTree.hRemove(key);
+				hashTree.hRemove(intKey);
 				return value;
 			}
 			return null;
@@ -155,6 +159,7 @@ public class HashTreesImplTestUtils {
 		StorageImplTest storage = new StorageImplTest();
 		HashTrees hTree = new HashTreesImpl(noOfSegDataBlocks, treeIdProv,
 				segIdPro, hTStorage, storage);
+		storage.setHashTree(hTree);
 		hTree.rebuildHashTrees(true);
 		return new HTreeComponents(hTStorage, storage, hTree);
 	}

@@ -38,7 +38,15 @@ import org.junit.Test;
 
 public class HashTreesImplTest {
 
-	private final ByteBuffer generateRandomKeyWithPrefix(int prefixValue) {
+	private static ByteBuffer generateBytesFrom(int... values) {
+		byte[] result = new byte[values.length * ByteUtils.SIZEOF_INT];
+		ByteBuffer bb = ByteBuffer.wrap(result);
+		for (int value : values)
+			bb.putInt(value);
+		return bb;
+	}
+
+	private static ByteBuffer generateRandomKeyWithPrefix(int prefixValue) {
 		byte[] randomBytes = randomBytes();
 		byte[] key = new byte[ByteUtils.SIZEOF_INT + randomBytes.length];
 		ByteBuffer bb = ByteBuffer.wrap(key);
@@ -167,7 +175,7 @@ public class HashTreesImplTest {
 	}
 
 	@Test
-	public void testUpdateWithEmptyTree() throws Exception {
+	public void testSynchWithEmptyTree() throws Exception {
 		HashTreesStore[] stores = generateInMemoryAndPersistentStores();
 		HashTreesStore[] remoteStores = generateInMemoryAndPersistentStores();
 
@@ -210,7 +218,7 @@ public class HashTreesImplTest {
 	}
 
 	@Test
-	public void testUpdateTreeWithMissingBlocksInLocal() throws Exception {
+	public void testSynchWithMissingBlocksInLocal() throws Exception {
 
 		HashTreesStore[] stores = generateInMemoryAndPersistentStores();
 		HashTreesStore[] remoteStores = generateInMemoryAndPersistentStores();
@@ -245,7 +253,7 @@ public class HashTreesImplTest {
 	}
 
 	@Test
-	public void testUpdateTreeWithMissingBlocksInRemote() throws Exception {
+	public void testSynchWithMissingBlocksInRemote() throws Exception {
 
 		HashTreesStore[] stores = generateInMemoryAndPersistentStores();
 		HashTreesStore[] remoteStores = generateInMemoryAndPersistentStores();
@@ -276,9 +284,10 @@ public class HashTreesImplTest {
 	}
 
 	@Test
-	public void testUpdateTreeWithDifferingSegments() throws Exception {
+	public void testSynchTreeWithDifferingSegmentData() throws Exception {
 		HashTreesStore[] stores = generateInMemoryAndPersistentStores();
 		HashTreesStore[] remoteStores = generateInMemoryAndPersistentStores();
+		int segId = 1;
 
 		try {
 			for (int j = 0; j <= 1; j++) {
@@ -288,6 +297,16 @@ public class HashTreesImplTest {
 				HTreeComponents remoteHTreeComp = createHashTree(
 						DEFAULT_SEG_DATA_BLOCKS_COUNT, TREE_ID_PROVIDER,
 						SEG_ID_PROVIDER, remoteStores[j]);
+
+				for (int k = 0; k <= 1; k++) {
+					ByteBuffer key = generateBytesFrom(segId, k);
+					remoteHTreeComp.storage.put(key, randomByteBuffer());
+				}
+
+				for (int k = 1; k <= 2; k++) {
+					ByteBuffer key = generateBytesFrom(segId, k);
+					localHTreeComp.storage.put(key, randomByteBuffer());
+				}
 
 				localHTreeComp.hTree.rebuildHashTrees(false);
 				remoteHTreeComp.hTree.rebuildHashTrees(false);

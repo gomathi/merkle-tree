@@ -235,7 +235,7 @@ public class HashTreesImpl implements HashTrees {
 				remoteTree.getSegment(treeId, segId));
 
 		Map<ByteBuffer, ByteBuffer> kvsForAddition = new HashMap<ByteBuffer, ByteBuffer>();
-		List<ByteBuffer> keysForeRemoval = new ArrayList<ByteBuffer>();
+		List<ByteBuffer> keysForRemoval = new ArrayList<ByteBuffer>();
 
 		SegmentData local, remote;
 		while (localDataItr.hasNext() && remoteDataItr.hasNext()) {
@@ -254,7 +254,7 @@ public class HashTreesImpl implements HashTrees {
 						store.get(ByteBuffer.wrap(local.getKey())));
 				localDataItr.next();
 			} else {
-				keysForeRemoval.add(ByteBuffer.wrap(remote.getKey()));
+				keysForRemoval.add(ByteBuffer.wrap(remote.getKey()));
 				remoteDataItr.next();
 			}
 		}
@@ -264,12 +264,12 @@ public class HashTreesImpl implements HashTrees {
 					store.get(ByteBuffer.wrap(local.getKey())));
 		}
 		while (remoteDataItr.hasNext())
-			keysForeRemoval.add(ByteBuffer.wrap(remoteDataItr.next().getKey()));
+			keysForRemoval.add(ByteBuffer.wrap(remoteDataItr.next().getKey()));
 
 		if (kvsForAddition.size() > 0)
 			remoteTree.sPut(kvsForAddition);
-		if (keysForeRemoval.size() > 0)
-			remoteTree.sRemove(keysForeRemoval);
+		if (keysForRemoval.size() > 0)
+			remoteTree.sRemove(keysForRemoval);
 	}
 
 	private void updateRemoteTreeWithMissingSegments(long treeId,

@@ -11,6 +11,9 @@ import org.hashtrees.thrift.generated.SegmentHash;
  * Defines Hash tree methods. Hash tree provides a way for nodes to synch up
  * quickly by exchanging very little information.
  * 
+ * HashTrees can host multiple hash trees. Each hash tree is differentiated by a
+ * tree id.
+ * 
  */
 public interface HashTrees {
 

@@ -52,9 +52,6 @@ import org.slf4j.LoggerFactory;
  * at regular intervals. Binary tree is used currently. It should be easier to
  * extend to support higher no of children.
  * 
- * HashTree can host multiple hash trees. Each hash tree is differentiated by a
- * tree id.
- * 
  * Uses {@link HashTreesStore} for storing tree and segments.
  * {@link HashTreesMemStore} provides in memory implementation of storing entire
  * tree and segments.
@@ -173,6 +170,16 @@ public class HashTreesImpl implements HashTrees {
 		return true;
 	}
 
+	private static int compareSegNodeIds(SegmentHash left, SegmentHash right) {
+		if (left == null && right == null)
+			return 0;
+		if (left == null)
+			return 1;
+		if (right == null)
+			return -1;
+		return left.getNodeId() - right.getNodeId();
+	}
+
 	private void findDifferences(long treeId, HashTrees remoteTree,
 			Collection<Integer> nodesToCheck,
 			Collection<Integer> missingNodesInRemote,
@@ -189,11 +196,14 @@ public class HashTreesImpl implements HashTrees {
 			remoteItr = new CollectionPeekingIterator<SegmentHash>(
 					remoteTree.getSegmentHashes(treeId, pQueue));
 			pQueue = new ArrayList<Integer>();
-			while (localItr.hasNext() && remoteItr.hasNext()) {
-				local = localItr.peek();
-				remote = remoteItr.peek();
 
-				if (local.getNodeId() == remote.getNodeId()) {
+			while (localItr.hasNext() || remoteItr.hasNext()) {
+				local = localItr.hasNext() ? localItr.peek() : null;
+				remote = remoteItr.hasNext() ? remoteItr.peek() : null;
+
+				int compareRes = compareSegNodeIds(local, remote);
+
+				if (compareRes == 0) {
 					if (!Arrays.equals(local.getHash(), remote.getHash())) {
 						if (isLeafNode(local.getNodeId()))
 							nodesToCheck.add(local.getNodeId());
@@ -204,7 +214,7 @@ public class HashTreesImpl implements HashTrees {
 					}
 					localItr.next();
 					remoteItr.next();
-				} else if (local.getNodeId() < remote.getNodeId()) {
+				} else if (compareRes < 0) {
 					missingNodesInRemote.add(local.getNodeId());
 					localItr.next();
 				} else {
@@ -213,18 +223,22 @@ public class HashTreesImpl implements HashTrees {
 				}
 			}
 		}
-		while (localItr != null && localItr.hasNext()) {
-			missingNodesInRemote.add(localItr.next().getNodeId());
-		}
-		while (remoteItr != null && remoteItr.hasNext()) {
-			missingNodesInLocal.add(remoteItr.next().getNodeId());
-		}
 	}
 
 	private void syncSegments(long treeId, Collection<Integer> segIds,
 			HashTrees remoteTree) throws Exception {
 		for (int segId : segIds)
 			syncSegment(treeId, segId, remoteTree);
+	}
+
+	private static int compareSegmentKeys(SegmentData left, SegmentData right) {
+		if (left == null && right == null)
+			return 0;
+		if (left == null)
+			return 1;
+		if (right == null)
+			return -1;
+		return ByteUtils.compareTo(left.getKey(), right.getKey());
 	}
 
 	private void syncSegment(long treeId, int segId, HashTrees remoteTree)
@@ -238,11 +252,11 @@ public class HashTreesImpl implements HashTrees {
 		List<ByteBuffer> keysForRemoval = new ArrayList<ByteBuffer>();
 
 		SegmentData local, remote;
-		while (localDataItr.hasNext() && remoteDataItr.hasNext()) {
-			local = localDataItr.peek();
-			remote = remoteDataItr.peek();
+		while (localDataItr.hasNext() || remoteDataItr.hasNext()) {
+			local = localDataItr.hasNext() ? localDataItr.peek() : null;
+			remote = remoteDataItr.hasNext() ? remoteDataItr.peek() : null;
 
-			int compRes = ByteUtils.compareTo(local.getKey(), remote.getKey());
+			int compRes = compareSegmentKeys(local, remote);
 			if (compRes == 0) {
 				if (!Arrays.equals(local.getDigest(), remote.getDigest()))
 					kvsForAddition.put(ByteBuffer.wrap(local.getKey()),
@@ -258,13 +272,6 @@ public class HashTreesImpl implements HashTrees {
 				remoteDataItr.next();
 			}
 		}
-		while (localDataItr.hasNext()) {
-			local = localDataItr.next();
-			kvsForAddition.put(ByteBuffer.wrap(local.getKey()),
-					store.get(ByteBuffer.wrap(local.getKey())));
-		}
-		while (remoteDataItr.hasNext())
-			keysForRemoval.add(ByteBuffer.wrap(remoteDataItr.next().getKey()));
 
 		if (kvsForAddition.size() > 0)
 			remoteTree.sPut(kvsForAddition);

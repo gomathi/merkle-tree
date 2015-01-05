@@ -5,11 +5,16 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 
+import org.hashtrees.HashTrees;
 import org.hashtrees.thrift.generated.SegmentData;
 import org.hashtrees.thrift.generated.SegmentHash;
 
 /**
- * Defines storage interface to be used by higher level HTree.
+ * Defines store interface for storing tree and segments and is used by
+ * {@link HashTrees}.
+ * 
+ * {@link HashTreesMemStore} provides in memory store implementation.
+ * {@link HashTreesPersistentStore} provides persistent store implementation.
  * 
  */
 public interface HashTreesStore {
@@ -111,8 +116,8 @@ public interface HashTreesStore {
 
 	/**
 	 * Stores the timestamp at which the complete HashTree was rebuilt. This
-	 * method updates the value in storage only if the given value is higher
-	 * than the existing timestamp, otherwise a noop.
+	 * method updates the value in store only if the given value is higher than
+	 * the existing timestamp, otherwise a noop.
 	 * 
 	 * @param timestamp
 	 */

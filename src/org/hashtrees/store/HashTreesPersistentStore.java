@@ -12,9 +12,7 @@ import java.util.Map.Entry;
 import java.util.NoSuchElementException;
 import java.util.Queue;
 
-import org.apache.log4j.Logger;
 import org.fusesource.leveldbjni.JniDBFactory;
-import org.hashtrees.synch.HashTreeSyncManagerStore;
 import org.hashtrees.thrift.generated.SegmentData;
 import org.hashtrees.thrift.generated.SegmentHash;
 import org.hashtrees.thrift.generated.ServerName;
@@ -22,6 +20,8 @@ import org.hashtrees.util.ByteUtils;
 import org.iq80.leveldb.DB;
 import org.iq80.leveldb.DBIterator;
 import org.iq80.leveldb.Options;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Uses LevelDB for storing segment hashes and segment data. Dirty segment
@@ -39,7 +39,7 @@ import org.iq80.leveldb.Options;
 public class HashTreesPersistentStore extends HashTreesBaseStore implements
 		HashTreeSyncManagerStore {
 
-	private static final Logger LOG = Logger
+	private static final Logger LOG = LoggerFactory
 			.getLogger(HashTreesPersistentStore.class);
 
 	private static final int SIZE_TREEID = ByteUtils.SIZEOF_LONG;

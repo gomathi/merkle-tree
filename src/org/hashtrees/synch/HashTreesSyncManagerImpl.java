@@ -8,6 +8,7 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ConcurrentSkipListMap;
+import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -15,20 +16,20 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import org.apache.log4j.Logger;
 import org.apache.thrift.TException;
 import org.apache.thrift.transport.TTransportException;
 import org.hashtrees.HashTrees;
 import org.hashtrees.HashTreesIdProvider;
 import org.hashtrees.HashTreesImpl;
+import org.hashtrees.store.HashTreeSyncManagerStore;
 import org.hashtrees.thrift.generated.HashTreeSyncInterface;
 import org.hashtrees.thrift.generated.ServerName;
 import org.hashtrees.util.CustomThreadFactory;
-import org.hashtrees.util.LockedBy;
 import org.hashtrees.util.Pair;
-import org.hashtrees.util.Single;
 import org.hashtrees.util.StoppableTask;
 import org.hashtrees.util.TaskQueue;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Function;
 import com.google.common.collect.Collections2;
@@ -64,10 +65,10 @@ public class HashTreesSyncManagerImpl extends StoppableTask implements
 		START, REBUILD, SYNCH
 	}
 
-	private final static Logger LOG = Logger
+	private final static Logger LOG = LoggerFactory
 			.getLogger(HashTreesSyncManagerImpl.class);
-	private final static String HT_THREAD_NAME = "HTSyncManagerThreads";
-	private final static String HT_SM_THREAD = "HTStateMachineExecThread";
+	private final static String SYNC_THREADS_NAME = "SyncManagerThreads";
+	private final static String STATE_MACHINE_THREAD_NAME = "StateMachineThread";
 
 	public final static int DEFAULT_NO_OF_THREADS = 10;
 	// Expected time interval between two consecutive tree full rebuilds.
@@ -80,6 +81,8 @@ public class HashTreesSyncManagerImpl extends StoppableTask implements
 	// lapse between these two events.
 	public final static long DEFAULT_INTERVAL_BW_SYNCH_AND_REBUILD = 5 * 60 * 1000;
 
+	private final String syncThreadsName;
+	private final String stateMachineThreadName;
 	private final HashTrees hashTree;
 	private final HashTreesIdProvider treeIdProvider;
 	private final HashTreeSyncManagerStore syncManagerStore;
@@ -88,12 +91,11 @@ public class HashTreesSyncManagerImpl extends StoppableTask implements
 	private final long fullRebuildTimeInterval;
 	private final long intBetweenSynchAndRebuild;
 
-	@LockedBy("serversToSync")
-	private final ConcurrentMap<ServerName, Single<HashTreeSyncInterface.Iface>> serversToSync = new ConcurrentSkipListMap<>();
+	private final ConcurrentSkipListMap<ServerName, HashTreeSyncInterface.Iface> servers = new ConcurrentSkipListMap<>();
+	private final ConcurrentSkipListSet<ServerName> serversToSync = new ConcurrentSkipListSet<>();
 	private final ConcurrentMap<Pair<ServerName, Long>, Pair<Long, Boolean>> serverWTreeIdAndLastBuildRequestTSMap = new ConcurrentHashMap<>();
 	private final ConcurrentMap<Pair<ServerName, Long>, Long> serverWTreeIdAndLastSyncedTSMap = new ConcurrentHashMap<>();
-	private final ScheduledExecutorService stateMgrExecutor = Executors
-			.newScheduledThreadPool(1, new CustomThreadFactory(HT_SM_THREAD));
+	private final ScheduledExecutorService stateMgrExecutor;
 	private final AtomicBoolean initialized = new AtomicBoolean(false);
 	private final AtomicBoolean stopped = new AtomicBoolean(false);
 
@@ -101,13 +103,8 @@ public class HashTreesSyncManagerImpl extends StoppableTask implements
 	private volatile STATE currState = STATE.START;
 	private volatile HashTreesThriftServerTask htThriftServer;
 
-	private static class ServerRemovedFromSyncList extends Exception {
-
-		private static final long serialVersionUID = -7708009928736413442L;
-
-		public ServerRemovedFromSyncList(ServerName sn) {
-			super(sn + " is removed from sync list.");
-		}
+	private static String getHostNameAndPortNoString(String hostName, int portNo) {
+		return hostName + "," + portNo;
 	}
 
 	public HashTreesSyncManagerImpl(String thisHostName, HashTrees hashTree,
@@ -124,6 +121,10 @@ public class HashTreesSyncManagerImpl extends StoppableTask implements
 			int localServerPortNo, long fullRebuildTimeInterval,
 			long intBWSynchAndRebuild, int noOfBGThreads) {
 		this.localServer = new ServerName(localHostName, localServerPortNo);
+		this.syncThreadsName = SYNC_THREADS_NAME + ","
+				+ getHostNameAndPortNoString(localHostName, localServerPortNo);
+		this.stateMachineThreadName = STATE_MACHINE_THREAD_NAME + ","
+				+ getHostNameAndPortNoString(localHostName, localServerPortNo);
 		this.hashTree = hashTree;
 		this.syncManagerStore = syncMgrStore;
 		this.treeIdProvider = treeIdProvider;
@@ -133,6 +134,8 @@ public class HashTreesSyncManagerImpl extends StoppableTask implements
 		List<ServerName> serversToSyncInStore = syncMgrStore.getAllServers();
 		for (ServerName sn : serversToSyncInStore)
 			addServerToSyncList(sn);
+		stateMgrExecutor = Executors.newScheduledThreadPool(1,
+				new CustomThreadFactory(stateMachineThreadName));
 	}
 
 	@Override
@@ -213,18 +216,18 @@ public class HashTreesSyncManagerImpl extends StoppableTask implements
 	}
 
 	private void sendRequestForRebuild(long treeId) {
-		for (ServerName sn : serversToSync.keySet()) {
+		for (ServerName sn : serversToSync) {
 			Pair<ServerName, Long> serverNameWTreeId = Pair.create(sn, treeId);
 			try {
 				long buildReqTS = System.currentTimeMillis();
 				HashTreeSyncInterface.Iface client = getHashTreeSyncClient(sn);
-				client.rebuildHashTree(sn, treeId, buildReqTS,
+				client.rebuildHashTree(localServer, treeId, buildReqTS,
 						DEFAULT_MAX_UNSYNCED_TIME_INTERVAL);
 				serverWTreeIdAndLastSyncedTSMap.putIfAbsent(serverNameWTreeId,
 						buildReqTS);
 				serverWTreeIdAndLastBuildRequestTSMap.put(serverNameWTreeId,
 						Pair.create(buildReqTS, false));
-			} catch (TException | ServerRemovedFromSyncList e) {
+			} catch (TException e) {
 				LOG.warn("Unable to send rebuild notification to "
 						+ serverNameWTreeId, e);
 			}
@@ -238,7 +241,7 @@ public class HashTreesSyncManagerImpl extends StoppableTask implements
 		while (treeIds.hasNext()) {
 			long treeId = treeIds.next();
 
-			for (ServerName sn : serversToSync.keySet()) {
+			for (ServerName sn : serversToSync) {
 				Pair<ServerName, Long> serverNameATreeId = Pair.create(sn,
 						treeId);
 
@@ -316,33 +319,27 @@ public class HashTreesSyncManagerImpl extends StoppableTask implements
 			HashTreeSyncInterface.Iface remoteSyncClient = getHashTreeSyncClient(sn);
 			hashTree.synch(treeId, new HashTreesRemoteClient(remoteSyncClient));
 			LOG.info("Syncing " + hostNameAndTreeId + " complete.");
-		} catch (TException | ServerRemovedFromSyncList e) {
+		} catch (TException e) {
 			LOG.warn("Unable to synch remote hash tree server : "
 					+ hostNameAndTreeId, e);
 		}
 	}
 
 	private HashTreeSyncInterface.Iface getHashTreeSyncClient(ServerName sn)
-			throws TTransportException, ServerRemovedFromSyncList {
-		Single<HashTreeSyncInterface.Iface> wrappedObj = serversToSync.get(sn);
-		if (wrappedObj != null && wrappedObj.getData() == null) {
-			synchronized (serversToSync) {
-				wrappedObj = serversToSync.get(sn);
-				if (wrappedObj != null && wrappedObj.getData() == null)
-					serversToSync.put(sn, Single
-							.create(HashTreesThriftClientProvider
-									.getThriftHashTreeClient(sn)));
-			}
+			throws TTransportException {
+		HashTreeSyncInterface.Iface client = servers.get(sn);
+		if (client == null) {
+			servers.put(sn,
+					HashTreesThriftClientProvider.getThriftHashTreeClient(sn));
+			client = servers.get(sn);
 		}
-		if (wrappedObj == null || wrappedObj.getData() == null)
-			throw new ServerRemovedFromSyncList(sn);
-		return wrappedObj.getData();
+		return client;
 	}
 
 	public void init() {
 		if (initialized.compareAndSet(false, true)) {
 			this.fixedExecutors = Executors.newFixedThreadPool(noOfThreads,
-					new CustomThreadFactory(HT_THREAD_NAME));
+					new CustomThreadFactory(syncThreadsName));
 			CountDownLatch initializedLatch = new CountDownLatch(1);
 			htThriftServer = new HashTreesThriftServerTask(hashTree, this,
 					localServer.getPortNo(), initializedLatch);
@@ -414,30 +411,18 @@ public class HashTreesSyncManagerImpl extends StoppableTask implements
 
 	@Override
 	public void addServerToSyncList(ServerName sn) {
-		synchronized (serversToSync) {
-			if (!serversToSync.containsKey(sn)) {
-				try {
-					syncManagerStore.addServerToSyncList(sn);
-					serversToSync.put(sn, Single
-							.create(HashTreesThriftClientProvider
-									.getThriftHashTreeClient(sn)));
-				} catch (TTransportException e) {
-					HashTreeSyncInterface.Iface dummy = null;
-					serversToSync.put(sn, Single.create(dummy));
-				}
-				LOG.info(sn + " has been added to sync list.");
-			} else
-				LOG.info(sn + "has been already on the sync list.");
-		}
+		syncManagerStore.addServerToSyncList(sn);
+		boolean added = serversToSync.add(sn);
+		if (added) {
+			LOG.info(sn + " has been added to sync list.");
+		} else
+			LOG.info(sn + "has been already on the sync list.");
 	}
 
 	@Override
 	public void removeServerFromSyncList(ServerName sn) {
-		boolean removed;
-		synchronized (serversToSync) {
-			syncManagerStore.removeServerFromSyncList(sn);
-			removed = (serversToSync.remove(sn) != null) ? true : false;
-		}
+		syncManagerStore.removeServerFromSyncList(sn);
+		boolean removed = serversToSync.remove(sn);
 		if (removed)
 			LOG.info(sn + "has been removed from sync list.");
 		else

@@ -4,8 +4,8 @@ import java.util.concurrent.ConcurrentMap;
 
 /**
  * A wrapper object of another object. It can be used in cases where you want to
- * store null object and place it in a {@link ConcurrentMap} as they dont allow
- * to store null values.
+ * store null object in a data structure, and the data structure does not allow
+ * null value. For eg, {@link ConcurrentMap} does not allow null values.
  * 
  * @param <T>
  */

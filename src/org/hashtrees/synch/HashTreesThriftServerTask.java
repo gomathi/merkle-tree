@@ -4,7 +4,6 @@ import java.util.concurrent.CountDownLatch;
 
 import javax.annotation.concurrent.ThreadSafe;
 
-import org.apache.log4j.Logger;
 import org.apache.thrift.server.TServer;
 import org.apache.thrift.server.TThreadPoolServer;
 import org.apache.thrift.transport.TServerSocket;
@@ -13,6 +12,8 @@ import org.hashtrees.HashTrees;
 import org.hashtrees.thrift.generated.HashTreeSyncInterface;
 import org.hashtrees.thrift.generated.HashTreeSyncInterface.Iface;
 import org.hashtrees.util.StoppableTask;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * This class launches a server in order for other nodes to communicate and
@@ -22,7 +23,7 @@ import org.hashtrees.util.StoppableTask;
 @ThreadSafe
 public class HashTreesThriftServerTask extends StoppableTask {
 
-	private final static Logger LOG = Logger
+	private final static Logger LOG = LoggerFactory
 			.getLogger(HashTreesThriftServerTask.class.getName());
 	private volatile TServer server;
 	private final HashTrees localHashTree;

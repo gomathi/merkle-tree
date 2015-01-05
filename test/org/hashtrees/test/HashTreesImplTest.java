@@ -20,14 +20,14 @@ import org.apache.commons.codec.binary.Hex;
 import org.hashtrees.HashTrees;
 import org.hashtrees.HashTreesConstants;
 import org.hashtrees.HashTreesImpl;
+import org.hashtrees.store.HashTreeSyncManagerStore;
 import org.hashtrees.store.HashTreesMemStore;
 import org.hashtrees.store.HashTreesStore;
-import org.hashtrees.synch.HashTreeSyncManagerStore;
 import org.hashtrees.synch.HashTreesSyncManagerImpl;
 import org.hashtrees.synch.HashTreesThriftClientProvider;
 import org.hashtrees.test.HashTreesImplTestUtils.HTreeComponents;
 import org.hashtrees.test.HashTreesImplTestUtils.HashTreeIdProviderTest;
-import org.hashtrees.test.HashTreesImplTestUtils.StorageImplTest;
+import org.hashtrees.test.HashTreesImplTestUtils.StoreImplTest;
 import org.hashtrees.thrift.generated.SegmentData;
 import org.hashtrees.thrift.generated.SegmentHash;
 import org.hashtrees.thrift.generated.ServerName;
@@ -68,7 +68,7 @@ public class HashTreesImplTest {
 						DEFAULT_SEG_DATA_BLOCKS_COUNT, TREE_ID_PROVIDER,
 						SEG_ID_PROVIDER, store);
 				HashTrees testTree = components.hTree;
-				HashTreesStore testTreeStorage = components.hTStorage;
+				HashTreesStore testTreeStore = components.hTStore;
 
 				ByteBuffer key = generateRandomKeyWithPrefix(segId);
 				ByteBuffer value = ByteBuffer.wrap(randomBytes());
@@ -84,7 +84,7 @@ public class HashTreesImplTest {
 				Assert.assertTrue(Arrays.equals(expectedDigest.array(),
 						actualKeyAndDigest.getDigest()));
 
-				List<Integer> dirtySegs = testTreeStorage
+				List<Integer> dirtySegs = testTreeStore
 						.clearAndGetDirtySegments(HashTreeIdProviderTest.TREE_ID);
 				Assert.assertEquals(1, dirtySegs.size());
 				Assert.assertEquals(1, dirtySegs.get(0).intValue());
@@ -106,7 +106,7 @@ public class HashTreesImplTest {
 						DEFAULT_SEG_DATA_BLOCKS_COUNT, TREE_ID_PROVIDER,
 						SEG_ID_PROVIDER, store);
 				HashTrees testTree = components.hTree;
-				HashTreesStore testTreeStorage = components.hTStorage;
+				HashTreesStore testTreeStore = components.hTStore;
 
 				ByteBuffer key = generateRandomKeyWithPrefix(segId);
 				ByteBuffer value = ByteBuffer.wrap(randomBytes());
@@ -117,7 +117,7 @@ public class HashTreesImplTest {
 						HashTreeIdProviderTest.TREE_ID, segId, key);
 				Assert.assertNull(segData);
 
-				List<Integer> dirtySegs = testTreeStorage
+				List<Integer> dirtySegs = testTreeStore
 						.clearAndGetDirtySegments(HashTreeIdProviderTest.TREE_ID);
 				Assert.assertEquals(1, dirtySegs.size());
 				Assert.assertEquals(2, dirtySegs.get(0).intValue());
@@ -187,7 +187,7 @@ public class HashTreesImplTest {
 						DEFAULT_SEG_DATA_BLOCKS_COUNT, remoteStores[j]);
 
 				for (int i = 1; i <= DEFAULT_SEG_DATA_BLOCKS_COUNT; i++) {
-					localHTreeComp.storage.put(randomByteBuffer(),
+					localHTreeComp.store.put(randomByteBuffer(),
 							randomByteBuffer());
 				}
 
@@ -231,7 +231,7 @@ public class HashTreesImplTest {
 						DEFAULT_SEG_DATA_BLOCKS_COUNT, remoteStores[j]);
 
 				for (int i = 0; i < DEFAULT_SEG_DATA_BLOCKS_COUNT; i++) {
-					remoteHTreeComp.storage.put(randomByteBuffer(),
+					remoteHTreeComp.store.put(randomByteBuffer(),
 							randomByteBuffer());
 				}
 
@@ -239,12 +239,12 @@ public class HashTreesImplTest {
 				remoteHTreeComp.hTree.rebuildHashTrees(false);
 				localHTreeComp.hTree.synch(1, remoteHTreeComp.hTree);
 
-				Assert.assertEquals(localHTreeComp.storage.localStorage,
-						remoteHTreeComp.storage.localStorage);
+				Assert.assertEquals(localHTreeComp.store.localStore,
+						remoteHTreeComp.store.localStore);
 				Assert.assertEquals(0,
-						localHTreeComp.storage.localStorage.size());
+						localHTreeComp.store.localStore.size());
 				Assert.assertEquals(0,
-						remoteHTreeComp.storage.localStorage.size());
+						remoteHTreeComp.store.localStore.size());
 			}
 		} finally {
 			HashTreesImplTestUtils.closeStores(stores);
@@ -266,7 +266,7 @@ public class HashTreesImplTest {
 						DEFAULT_SEG_DATA_BLOCKS_COUNT, remoteStores[j]);
 
 				for (int i = 0; i < DEFAULT_SEG_DATA_BLOCKS_COUNT; i++) {
-					localHTreeComp.storage.put(randomByteBuffer(),
+					localHTreeComp.store.put(randomByteBuffer(),
 							randomByteBuffer());
 				}
 
@@ -274,8 +274,8 @@ public class HashTreesImplTest {
 				remoteHTreeComp.hTree.rebuildHashTrees(false);
 				localHTreeComp.hTree.synch(1, remoteHTreeComp.hTree);
 
-				Assert.assertEquals(localHTreeComp.storage.localStorage,
-						remoteHTreeComp.storage.localStorage);
+				Assert.assertEquals(localHTreeComp.store.localStore,
+						remoteHTreeComp.store.localStore);
 			}
 		} finally {
 			HashTreesImplTestUtils.closeStores(stores);
@@ -300,20 +300,20 @@ public class HashTreesImplTest {
 
 				for (int k = 0; k <= 1; k++) {
 					ByteBuffer key = generateBytesFrom(segId, k);
-					remoteHTreeComp.storage.put(key, randomByteBuffer());
+					remoteHTreeComp.store.put(key, randomByteBuffer());
 				}
 
 				for (int k = 1; k <= 2; k++) {
 					ByteBuffer key = generateBytesFrom(segId, k);
-					localHTreeComp.storage.put(key, randomByteBuffer());
+					localHTreeComp.store.put(key, randomByteBuffer());
 				}
 
 				localHTreeComp.hTree.rebuildHashTrees(false);
 				remoteHTreeComp.hTree.rebuildHashTrees(false);
 				localHTreeComp.hTree.synch(1, remoteHTreeComp.hTree);
 
-				Assert.assertEquals(localHTreeComp.storage.localStorage,
-						remoteHTreeComp.storage.localStorage);
+				Assert.assertEquals(localHTreeComp.store.localStore,
+						remoteHTreeComp.store.localStore);
 			}
 
 		} finally {
@@ -345,7 +345,7 @@ public class HashTreesImplTest {
 							HashTreesConstants.DEFAULT_HASH_TREE_SERVER_PORT_NO));
 
 			for (int i = 1; i <= DEFAULT_SEG_DATA_BLOCKS_COUNT; i++) {
-				localHTreeComp.storage.put(randomByteBuffer(),
+				localHTreeComp.store.put(randomByteBuffer(),
 						randomByteBuffer());
 			}
 
@@ -356,15 +356,15 @@ public class HashTreesImplTest {
 				List<SegmentData> segBlock = remoteHTreeComp.hTree.getSegment(
 						DEFAULT_TREE_ID, i);
 				for (SegmentData sData : segBlock) {
-					localHTreeComp.storage.put(ByteBuffer.wrap(sData.getKey()),
+					localHTreeComp.store.put(ByteBuffer.wrap(sData.getKey()),
 							randomByteBuffer());
 				}
 				localHTreeComp.hTree.rebuildHashTrees(false);
 				remoteHTreeComp.hTree.rebuildHashTrees(false);
 				localHTreeComp.hTree.synch(1, thriftClient);
 
-				Assert.assertEquals(localHTreeComp.storage.localStorage,
-						remoteHTreeComp.storage.localStorage);
+				Assert.assertEquals(localHTreeComp.store.localStore,
+						remoteHTreeComp.store.localStore);
 			}
 
 			hTreeManager.shutdown();
@@ -377,7 +377,7 @@ public class HashTreesImplTest {
 	@Test
 	public void testEnableNonBlockingCalls() {
 		HashTreesStore htStore = generateInMemoryStore();
-		StorageImplTest store = new StorageImplTest();
+		StoreImplTest store = new StoreImplTest();
 		HashTrees hTrees = new HashTreesImpl(DEFAULT_SEG_DATA_BLOCKS_COUNT,
 				TREE_ID_PROVIDER, SEG_ID_PROVIDER, htStore, store);
 		Assert.assertFalse(hTrees.enableNonblockingOperations());
@@ -388,7 +388,7 @@ public class HashTreesImplTest {
 	@Test
 	public void testStop() {
 		HashTreesStore htStore = generateInMemoryStore();
-		StorageImplTest store = new StorageImplTest();
+		StoreImplTest store = new StoreImplTest();
 		HashTrees hTrees = new HashTreesImpl(DEFAULT_SEG_DATA_BLOCKS_COUNT,
 				TREE_ID_PROVIDER, SEG_ID_PROVIDER, htStore, store);
 		hTrees.enableNonblockingOperations();
@@ -400,7 +400,7 @@ public class HashTreesImplTest {
 	@Test
 	public void testDisableNonBlockingCalls() {
 		HashTreesStore htStore = generateInMemoryStore();
-		StorageImplTest store = new StorageImplTest();
+		StoreImplTest store = new StoreImplTest();
 		HashTrees hTrees = new HashTreesImpl(DEFAULT_SEG_DATA_BLOCKS_COUNT,
 				TREE_ID_PROVIDER, SEG_ID_PROVIDER, htStore, store);
 		Assert.assertTrue(hTrees.disableNonblockingOperations());
@@ -437,7 +437,7 @@ public class HashTreesImplTest {
 			}
 		};
 
-		StorageImplTest store = new StorageImplTest();
+		StoreImplTest store = new StoreImplTest();
 		HashTrees hTrees = new HashTreesImpl(DEFAULT_SEG_DATA_BLOCKS_COUNT,
 				TREE_ID_PROVIDER, SEG_ID_PROVIDER, htStore, store);
 		hTrees.enableNonblockingOperations(maxQueueSize);

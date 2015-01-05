@@ -20,10 +20,10 @@ public class HashTreesImplTestObj extends HashTreesImpl {
 	private final BlockingQueue<HashTreesImplTestEvent> events;
 
 	public HashTreesImplTestObj(final int noOfSegments,
-			final HashTreesStore htStorage, final Store storage,
+			final HashTreesStore htStore, final Store store,
 			BlockingQueue<HashTreesImplTestEvent> events) {
 		super(noOfSegments, TREE_ID_PROVIDER, new ModuloSegIdProvider(
-				noOfSegments), htStorage, storage);
+				noOfSegments), htStore, store);
 		this.events = events;
 	}
 

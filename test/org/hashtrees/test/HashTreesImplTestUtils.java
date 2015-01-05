@@ -15,11 +15,11 @@ import org.hashtrees.HashTreesIdProvider;
 import org.hashtrees.HashTreesImpl;
 import org.hashtrees.ModuloSegIdProvider;
 import org.hashtrees.SegmentIdProvider;
+import org.hashtrees.store.HashTreeSyncManagerStore;
 import org.hashtrees.store.HashTreesMemStore;
 import org.hashtrees.store.HashTreesPersistentStore;
 import org.hashtrees.store.HashTreesStore;
 import org.hashtrees.store.Store;
-import org.hashtrees.synch.HashTreeSyncManagerStore;
 import org.hashtrees.util.Pair;
 
 public class HashTreesImplTestUtils {
@@ -76,26 +76,30 @@ public class HashTreesImplTestUtils {
 		}
 	}
 
-	public static class StorageImplTest implements Store {
+	public static class StoreImplTest implements Store {
 
-		final ConcurrentHashMap<ByteBuffer, ByteBuffer> localStorage = new ConcurrentHashMap<ByteBuffer, ByteBuffer>();
+		ConcurrentHashMap<ByteBuffer, ByteBuffer> localStore = new ConcurrentHashMap<ByteBuffer, ByteBuffer>();
 		volatile HashTrees hashTree;
 
 		public void setHashTree(final HashTrees hashTree) {
 			this.hashTree = hashTree;
 		}
 
+		public HashTrees getHashTree() {
+			return hashTree;
+		}
+
 		@Override
 		public ByteBuffer get(ByteBuffer key) {
 			ByteBuffer intKey = ByteBuffer.wrap(key.array());
-			return localStorage.get(intKey);
+			return localStore.get(intKey);
 		}
 
 		@Override
 		public void put(ByteBuffer key, ByteBuffer value) throws Exception {
 			ByteBuffer intKey = ByteBuffer.wrap(key.array());
 			ByteBuffer intValue = ByteBuffer.wrap(value.array());
-			localStorage.put(intKey, intValue);
+			localStore.put(intKey, intValue);
 			if (hashTree != null)
 				hashTree.hPut(intKey, intValue);
 		}
@@ -103,7 +107,7 @@ public class HashTreesImplTestUtils {
 		@Override
 		public ByteBuffer remove(ByteBuffer key) throws Exception {
 			ByteBuffer intKey = ByteBuffer.wrap(key.array());
-			ByteBuffer value = localStorage.remove(intKey);
+			ByteBuffer value = localStore.remove(intKey);
 			if (hashTree != null) {
 				hashTree.hRemove(intKey);
 				return value;
@@ -114,7 +118,7 @@ public class HashTreesImplTestUtils {
 		@Override
 		public Iterator<Pair<ByteBuffer, ByteBuffer>> iterator() {
 			List<Pair<ByteBuffer, ByteBuffer>> result = new ArrayList<Pair<ByteBuffer, ByteBuffer>>();
-			for (Map.Entry<ByteBuffer, ByteBuffer> entry : localStorage
+			for (Map.Entry<ByteBuffer, ByteBuffer> entry : localStore
 					.entrySet())
 				result.add(Pair.create(entry.getKey(), entry.getValue()));
 			return result.iterator();
@@ -124,14 +128,14 @@ public class HashTreesImplTestUtils {
 
 	public static class HTreeComponents {
 
-		public final HashTreesStore hTStorage;
-		public final StorageImplTest storage;
+		public final HashTreesStore hTStore;
+		public final StoreImplTest store;
 		public final HashTrees hTree;
 
-		public HTreeComponents(final HashTreesStore hTStorage,
-				final StorageImplTest storage, final HashTrees hTree) {
-			this.hTStorage = hTStorage;
-			this.storage = storage;
+		public HTreeComponents(final HashTreesStore hTStore,
+				final StoreImplTest store, final HashTrees hTree) {
+			this.hTStore = hTStore;
+			this.store = store;
 			this.hTree = hTree;
 		}
 	}
@@ -154,26 +158,26 @@ public class HashTreesImplTestUtils {
 
 	public static HTreeComponents createHashTree(int noOfSegDataBlocks,
 			final HashTreesIdProvider treeIdProv,
-			final SegmentIdProvider segIdPro, final HashTreesStore hTStorage)
+			final SegmentIdProvider segIdPro, final HashTreesStore hTStore)
 			throws Exception {
-		StorageImplTest storage = new StorageImplTest();
+		StoreImplTest store = new StoreImplTest();
 		HashTrees hTree = new HashTreesImpl(noOfSegDataBlocks, treeIdProv,
-				segIdPro, hTStorage, storage);
-		storage.setHashTree(hTree);
+				segIdPro, hTStore, store);
+		store.setHashTree(hTree);
 		hTree.rebuildHashTrees(true);
-		return new HTreeComponents(hTStorage, storage, hTree);
+		return new HTreeComponents(hTStore, store, hTree);
 	}
 
 	public static HTreeComponents createHashTree(int noOfSegments,
-			final HashTreesStore hTStorage) throws Exception {
-		StorageImplTest storage = new StorageImplTest();
+			final HashTreesStore hTStore) throws Exception {
+		StoreImplTest store = new StoreImplTest();
 		ModuloSegIdProvider segIdProvider = new ModuloSegIdProvider(
 				noOfSegments);
 		HashTrees hTree = new HashTreesImpl(noOfSegments, TREE_ID_PROVIDER,
-				segIdProvider, hTStorage, storage);
-		storage.setHashTree(hTree);
+				segIdProvider, hTStore, store);
+		store.setHashTree(hTree);
 		hTree.rebuildHashTrees(true);
-		return new HTreeComponents(hTStorage, storage, hTree);
+		return new HTreeComponents(hTStore, store, hTree);
 	}
 
 	public static HashTreesMemStore generateInMemoryStore() {

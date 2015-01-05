@@ -35,7 +35,7 @@ service HashTreeSyncInterface
 	string ping();
 	
 	/**
-     * Adds the (key,value) pair to the original storage. Intended to be used
+     * Adds the (key,value) pair to the store. Intended to be used
      * while synch operation.
      * 
      * @param keyValuePairs
@@ -43,7 +43,7 @@ service HashTreeSyncInterface
 	void sPut(1:map<binary,binary> keyValuePairs);
 	
 	/**
-     * Deletes the keys from the storage. While synching this function is used.
+     * Deletes the keys from the store. While synching this function is used.
      * 
      * @param keys
      */

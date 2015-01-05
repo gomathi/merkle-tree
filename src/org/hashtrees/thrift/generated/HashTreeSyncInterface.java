@@ -25,8 +25,8 @@ public class HashTreeSyncInterface {
 		public String ping() throws org.apache.thrift.TException;
 
 		/**
-		 * Adds the (key,value) pair to the original storage. Intended to be
-		 * used while synch operation.
+		 * Adds the (key,value) pair to the store. Intended to be used while
+		 * synch operation.
 		 * 
 		 * @param keyValuePairs
 		 * 
@@ -36,7 +36,7 @@ public class HashTreeSyncInterface {
 				throws org.apache.thrift.TException;
 
 		/**
-		 * Deletes the keys from the storage. While synching this function is
+		 * Deletes the keys from the store. While synching this function is
 		 * used.
 		 * 
 		 * @param keys

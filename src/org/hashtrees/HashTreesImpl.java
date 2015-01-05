@@ -27,7 +27,6 @@ import java.util.concurrent.locks.ReentrantLock;
 import javax.annotation.concurrent.ThreadSafe;
 
 import org.apache.commons.codec.binary.Hex;
-import org.hashtrees.store.HashTreesMemStore;
 import org.hashtrees.store.HashTreesStore;
 import org.hashtrees.store.Store;
 import org.hashtrees.thrift.generated.SegmentData;
@@ -52,10 +51,6 @@ import org.slf4j.LoggerFactory;
  * at regular intervals. Binary tree is used currently. It should be easier to
  * extend to support higher no of children.
  * 
- * Uses {@link HashTreesStore} for storing tree and segments.
- * {@link HashTreesMemStore} provides in memory implementation of storing entire
- * tree and segments.
- * 
  */
 @ThreadSafe
 public class HashTreesImpl implements HashTrees {
@@ -79,7 +74,7 @@ public class HashTreesImpl implements HashTrees {
 	private final int internalNodesCount;
 	private final int segmentsCount;
 
-	private final HashTreesStore hTStore;
+	private final HashTreesStore htStore;
 	private final HashTreesIdProvider treeIdProvider;
 	private final SegmentIdProvider segIdProvider;
 	private final Store store;
@@ -95,7 +90,7 @@ public class HashTreesImpl implements HashTrees {
 	public HashTreesImpl(int noOfSegments,
 			final HashTreesIdProvider treeIdProvider,
 			final SegmentIdProvider segIdProvider,
-			final HashTreesStore hTStroage, final Store storage) {
+			final HashTreesStore htStore, final Store store) {
 		this.noOfChildren = BINARY_TREE;
 		this.segmentsCount = ((noOfSegments > MAX_NO_OF_BUCKETS) || (noOfSegments < 0)) ? MAX_NO_OF_BUCKETS
 				: roundUpToPowerOf2(noOfSegments);
@@ -103,8 +98,8 @@ public class HashTreesImpl implements HashTrees {
 				(height(this.segmentsCount, noOfChildren) - 1), noOfChildren);
 		this.treeIdProvider = treeIdProvider;
 		this.segIdProvider = segIdProvider;
-		this.hTStore = hTStroage;
-		this.store = storage;
+		this.htStore = htStore;
+		this.store = store;
 	}
 
 	@Override
@@ -122,8 +117,8 @@ public class HashTreesImpl implements HashTrees {
 		long treeId = treeIdProvider.getTreeId(key);
 		int segId = segIdProvider.getSegmentId(key);
 		ByteBuffer digest = ByteBuffer.wrap(sha1(value.array()));
-		hTStore.setDirtySegment(treeId, segId);
-		hTStore.putSegmentData(treeId, segId, key, digest);
+		htStore.setDirtySegment(treeId, segId);
+		htStore.putSegmentData(treeId, segId, key, digest);
 	}
 
 	@Override
@@ -140,8 +135,8 @@ public class HashTreesImpl implements HashTrees {
 	void hRemoveInternal(final ByteBuffer key) {
 		long treeId = treeIdProvider.getTreeId(key);
 		int segId = segIdProvider.getSegmentId(key);
-		hTStore.setDirtySegment(treeId, segId);
-		hTStore.deleteSegmentData(treeId, segId, key);
+		htStore.setDirtySegment(treeId, segId);
+		htStore.deleteSegmentData(treeId, segId, key);
 	}
 
 	@Override
@@ -294,23 +289,23 @@ public class HashTreesImpl implements HashTrees {
 
 	@Override
 	public SegmentHash getSegmentHash(long treeId, int nodeId) {
-		return hTStore.getSegmentHash(treeId, nodeId);
+		return htStore.getSegmentHash(treeId, nodeId);
 	}
 
 	@Override
 	public List<SegmentHash> getSegmentHashes(long treeId,
 			final List<Integer> nodeIds) {
-		return hTStore.getSegmentHashes(treeId, nodeIds);
+		return htStore.getSegmentHashes(treeId, nodeIds);
 	}
 
 	@Override
 	public SegmentData getSegmentData(long treeId, int segId, ByteBuffer key) {
-		return hTStore.getSegmentData(treeId, segId, key);
+		return htStore.getSegmentData(treeId, segId, key);
 	}
 
 	@Override
 	public List<SegmentData> getSegment(long treeId, int segId) {
-		return hTStore.getSegment(treeId, segId);
+		return htStore.getSegment(treeId, segId);
 	}
 
 	private boolean acquireTreeLock(long treeId, boolean waitForLock) {
@@ -332,7 +327,7 @@ public class HashTreesImpl implements HashTrees {
 
 	@Override
 	public void rebuildHashTrees(boolean fullRebuild) {
-		Iterator<Long> treeIdItr = hTStore.getAllTreeIds();
+		Iterator<Long> treeIdItr = htStore.getAllTreeIds();
 		while (treeIdItr.hasNext())
 			rebuildHashTree(treeIdItr.next(), fullRebuild);
 	}
@@ -344,7 +339,7 @@ public class HashTreesImpl implements HashTrees {
 		if (acquiredLock) {
 			try {
 				long currentTs = System.currentTimeMillis();
-				List<Integer> dirtySegmentBuckets = hTStore
+				List<Integer> dirtySegmentBuckets = htStore
 						.clearAndGetDirtySegments(treeId);
 
 				Map<Integer, ByteBuffer> dirtyNodeAndDigestMap = rebuildLeaves(
@@ -352,11 +347,11 @@ public class HashTreesImpl implements HashTrees {
 				rebuildInternalNodes(treeId, dirtyNodeAndDigestMap);
 				for (Map.Entry<Integer, ByteBuffer> dirtyNodeAndDigest : dirtyNodeAndDigestMap
 						.entrySet())
-					hTStore.putSegmentHash(treeId, dirtyNodeAndDigest.getKey(),
+					htStore.putSegmentHash(treeId, dirtyNodeAndDigest.getKey(),
 							dirtyNodeAndDigest.getValue());
 				if (fullRebuild)
-					hTStore.setLastFullyTreeBuiltTimestamp(treeId, currentTs);
-				hTStore.setLastHashTreeUpdatedTimestamp(treeId, currentTs);
+					htStore.setLastFullyTreeBuiltTimestamp(treeId, currentTs);
+				htStore.setLastHashTreeUpdatedTimestamp(treeId, currentTs);
 			} finally {
 				releaseTreeLock(treeId);
 			}
@@ -426,7 +421,7 @@ public class HashTreesImpl implements HashTrees {
 	}
 
 	private ByteBuffer digestSegmentData(long treeId, int segId) {
-		List<SegmentData> dirtySegmentData = hTStore.getSegment(treeId, segId);
+		List<SegmentData> dirtySegmentData = htStore.getSegment(treeId, segId);
 		List<String> hexStrings = new ArrayList<String>();
 
 		for (SegmentData sd : dirtySegmentData)
@@ -500,7 +495,7 @@ public class HashTreesImpl implements HashTrees {
 				if (nodeIdAndDigestMap.containsKey(child))
 					segHashBB = nodeIdAndDigestMap.get(child);
 				else {
-					segHash = hTStore.getSegmentHash(treeId, child);
+					segHash = htStore.getSegmentHash(treeId, child);
 					segHashBB = (segHash == null) ? null : segHash.hash;
 				}
 				if (segHashBB != null)
@@ -583,7 +578,17 @@ public class HashTreesImpl implements HashTrees {
 
 	@Override
 	public long getLastFullyRebuiltTimeStamp(long treeId) {
-		return hTStore.getLastFullyTreeReBuiltTimestamp(treeId);
+		return htStore.getLastFullyTreeReBuiltTimestamp(treeId);
+	}
+
+	@Override
+	public boolean enableNonblockingOperations(int maxElementsToQue) {
+		return enableNonBlockingOperationsInternal(maxElementsToQue);
+	}
+
+	@Override
+	public boolean enableNonblockingOperations() {
+		return enableNonBlockingOperationsInternal(DEFAULT_NB_QUE_SIZE);
 	}
 
 	private boolean enableNonBlockingOperationsInternal(int maxElementsToQue) {
@@ -602,16 +607,6 @@ public class HashTreesImpl implements HashTrees {
 			}
 		}
 		return result;
-	}
-
-	@Override
-	public boolean enableNonblockingOperations(int maxElementsToQue) {
-		return enableNonBlockingOperationsInternal(maxElementsToQue);
-	}
-
-	@Override
-	public boolean enableNonblockingOperations() {
-		return enableNonBlockingOperationsInternal(DEFAULT_NB_QUE_SIZE);
 	}
 
 	@Override

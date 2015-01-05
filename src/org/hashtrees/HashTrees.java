@@ -18,8 +18,8 @@ import org.hashtrees.thrift.generated.SegmentHash;
 public interface HashTrees {
 
 	/**
-	 * Adds the (key,value) pair to the original storage. Intended to be used
-	 * while synch operation.
+	 * Adds the (key,value) pair to the store. Intended to be used while synch
+	 * operation.
 	 * 
 	 * @param keyValuePairs
 	 */
@@ -27,7 +27,7 @@ public interface HashTrees {
 			throws Exception;
 
 	/**
-	 * Deletes the keys from the storage. Intended to be used while synch
+	 * Deletes the keys from the store. Intended to be used while synch
 	 * operation.
 	 * 
 	 * @param keys

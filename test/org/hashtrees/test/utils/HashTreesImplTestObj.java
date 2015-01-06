@@ -1,6 +1,6 @@
-package org.hashtrees.test;
+package org.hashtrees.test.utils;
 
-import static org.hashtrees.test.HashTreesImplTestUtils.TREE_ID_PROVIDER;
+import static org.hashtrees.test.utils.HashTreesImplTestUtils.TREE_ID_PROVIDER;
 
 import java.nio.ByteBuffer;
 import java.util.List;

@@ -7,6 +7,7 @@ import java.util.List;
 import junit.framework.Assert;
 
 import org.hashtrees.store.HashTreeSyncManagerStore;
+import org.hashtrees.test.utils.HashTreesImplTestUtils;
 import org.hashtrees.thrift.generated.ServerName;
 import org.junit.Test;
 

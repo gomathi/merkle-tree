@@ -1,8 +1,8 @@
 package org.hashtrees.test;
 
-import static org.hashtrees.test.HashTreesImplTestUtils.DEFAULT_SEG_DATA_BLOCKS_COUNT;
-import static org.hashtrees.test.HashTreesImplTestUtils.TREE_ID_PROVIDER;
-import static org.hashtrees.test.HashTreesImplTestUtils.generateInMemoryStore;
+import static org.hashtrees.test.utils.HashTreesImplTestUtils.DEFAULT_SEG_DATA_BLOCKS_COUNT;
+import static org.hashtrees.test.utils.HashTreesImplTestUtils.TREE_ID_PROVIDER;
+import static org.hashtrees.test.utils.HashTreesImplTestUtils.generateInMemoryStore;
 
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
@@ -15,8 +15,10 @@ import org.hashtrees.store.HashTreeSyncManagerStore;
 import org.hashtrees.store.HashTreesMemStore;
 import org.hashtrees.store.HashTreesStore;
 import org.hashtrees.synch.HashTreesSyncManagerImpl;
-import org.hashtrees.test.HashTreesImplTestObj.HTSynchEvent;
-import org.hashtrees.test.HashTreesImplTestUtils.StoreImplTest;
+import org.hashtrees.test.utils.HashTreesImplTestObj;
+import org.hashtrees.test.utils.HashTreesImplTestUtils;
+import org.hashtrees.test.utils.HashTreesImplTestObj.HTSynchEvent;
+import org.hashtrees.test.utils.HashTreesImplTestUtils.StoreImplTest;
 import org.hashtrees.thrift.generated.ServerName;
 import org.junit.Test;
 

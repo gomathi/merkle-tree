@@ -4,11 +4,15 @@ import java.nio.ByteBuffer;
 import java.util.Iterator;
 
 /**
- * Each node maintains primary partition, and set of secondary
- * partitions(primary partitions of other nodes). It is necessary that we
- * maintain separate hash tree for each partition. In HashTree terms, partition
- * id corresponds to a tree id. When a key update comes to the
- * {@link HashTreesImpl}, it needs to know a tree id(partition no) for the key.
+ * There can be multiple hash trees. Given a key we need to know which hash tree
+ * that the key belongs to. This interface defines that signature
+ * {@link #getTreeId(ByteBuffer)}.
+ * 
+ * Also some nodes may act as replica nodes for some of the hash trees. In that
+ * case replica nodes should not synch primary nodes for those hash trees. To
+ * avoid this problem, {@link HashTrees} should know which hash trees are
+ * managed by the local node. {@link #getAllPrimaryTreeIds()} serves this
+ * purpose.
  * 
  * This interface defines methods which will be used by {@link HashTreesImpl}
  * class. The implementation has to be thread safe.

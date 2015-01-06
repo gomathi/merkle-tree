@@ -1,4 +1,4 @@
-package org.hashtrees.test;
+package org.hashtrees.test.utils;
 
 import java.io.File;
 import java.nio.ByteBuffer;
@@ -78,8 +78,8 @@ public class HashTreesImplTestUtils {
 
 	public static class StoreImplTest implements Store {
 
-		ConcurrentHashMap<ByteBuffer, ByteBuffer> localStore = new ConcurrentHashMap<ByteBuffer, ByteBuffer>();
-		volatile HashTrees hashTree;
+		public ConcurrentHashMap<ByteBuffer, ByteBuffer> localStore = new ConcurrentHashMap<ByteBuffer, ByteBuffer>();
+		public volatile HashTrees hashTree;
 
 		public void setHashTree(final HashTrees hashTree) {
 			this.hashTree = hashTree;

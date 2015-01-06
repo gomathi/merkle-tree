@@ -11,8 +11,8 @@ import org.hashtrees.thrift.generated.SegmentHash;
  * Defines Hash tree methods. Hash tree provides a way for nodes to synch up
  * quickly by exchanging very little information.
  * 
- * HashTrees can host multiple hash trees. Each hash tree is differentiated by a
- * tree id.
+ * This hosts multiple hash trees. Each hash tree is differentiated by a tree
+ * id.
  * 
  */
 public interface HashTrees {
@@ -23,8 +23,7 @@ public interface HashTrees {
 	 * 
 	 * @param keyValuePairs
 	 */
-	public void sPut(Map<ByteBuffer, ByteBuffer> keyValuePairs)
-			throws Exception;
+	void sPut(Map<ByteBuffer, ByteBuffer> keyValuePairs) throws Exception;
 
 	/**
 	 * Deletes the keys from the store. Intended to be used while synch
@@ -33,7 +32,7 @@ public interface HashTrees {
 	 * @param keys
 	 * 
 	 */
-	public void sRemove(List<ByteBuffer> keys) throws Exception;
+	void sRemove(List<ByteBuffer> keys) throws Exception;
 
 	/**
 	 * Hash tree internal nodes store the hash of their children nodes. Given a
@@ -46,7 +45,7 @@ public interface HashTrees {
 	 * @return
 	 * 
 	 */
-	public List<SegmentHash> getSegmentHashes(long treeId, List<Integer> nodeIds)
+	List<SegmentHash> getSegmentHashes(long treeId, List<Integer> nodeIds)
 			throws Exception;
 
 	/**
@@ -59,7 +58,7 @@ public interface HashTrees {
 	 * @return
 	 * 
 	 */
-	public SegmentHash getSegmentHash(long treeId, int nodeId) throws Exception;
+	SegmentHash getSegmentHash(long treeId, int nodeId) throws Exception;
 
 	/**
 	 * Hash tree data is stored on the leaf blocks. Given a segment id this
@@ -71,8 +70,7 @@ public interface HashTrees {
 	 * @return
 	 * 
 	 */
-	public List<SegmentData> getSegment(long treeId, int segId)
-			throws Exception;
+	List<SegmentData> getSegment(long treeId, int segId) throws Exception;
 
 	/**
 	 * Returns the (key,digest) for the given key in the given segment.
@@ -82,7 +80,7 @@ public interface HashTrees {
 	 * @param segId
 	 * @param key
 	 */
-	public SegmentData getSegmentData(long treeId, int segId, ByteBuffer key)
+	SegmentData getSegmentData(long treeId, int segId, ByteBuffer key)
 			throws Exception;
 
 	/**
@@ -92,8 +90,7 @@ public interface HashTrees {
 	 * @param treeId
 	 * @param nodeIds
 	 */
-	public void deleteTreeNodes(long treeId, List<Integer> nodeIds)
-			throws Exception;
+	void deleteTreeNodes(long treeId, List<Integer> nodeIds) throws Exception;
 
 	/**
 	 * Adds the key, and digest of value to the segment block in HashTree.

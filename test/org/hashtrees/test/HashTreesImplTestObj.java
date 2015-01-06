@@ -17,11 +17,15 @@ import org.hashtrees.thrift.generated.SegmentHash;
 
 public class HashTreesImplTestObj extends HashTreesImpl {
 
-	private final BlockingQueue<HashTreesImplTestEvent> events;
+	private final BlockingQueue<HTSynchEvent> events;
+
+	public static enum HTSynchEvent {
+		UPDATE_SEGMENT, UPDATE_FULL_TREE, SYNCH, SYNCH_INITIATED
+	}
 
 	public HashTreesImplTestObj(final int noOfSegments,
 			final HashTreesStore htStore, final Store store,
-			BlockingQueue<HashTreesImplTestEvent> events) {
+			BlockingQueue<HTSynchEvent> events) {
 		super(noOfSegments, TREE_ID_PROVIDER, new ModuloSegIdProvider(
 				noOfSegments), htStore, store);
 		this.events = events;
@@ -31,13 +35,13 @@ public class HashTreesImplTestObj extends HashTreesImpl {
 	public void sPut(Map<ByteBuffer, ByteBuffer> keyValuePairs)
 			throws Exception {
 		super.sPut(keyValuePairs);
-		events.put(HashTreesImplTestEvent.SYNCH_INITIATED);
+		events.put(HTSynchEvent.SYNCH_INITIATED);
 	}
 
 	@Override
 	public void sRemove(List<ByteBuffer> keys) throws Exception {
 		super.sRemove(keys);
-		events.put(HashTreesImplTestEvent.SYNCH_INITIATED);
+		events.put(HTSynchEvent.SYNCH_INITIATED);
 	}
 
 	@Override
@@ -79,7 +83,7 @@ public class HashTreesImplTestObj extends HashTreesImpl {
 	@Override
 	public boolean synch(long treeId, HashTrees remoteTree) throws Exception {
 		boolean result = super.synch(treeId, remoteTree);
-		events.add(HashTreesImplTestEvent.SYNCH);
+		events.add(HTSynchEvent.SYNCH);
 		return result;
 	}
 
@@ -92,9 +96,9 @@ public class HashTreesImplTestObj extends HashTreesImpl {
 	public void rebuildHashTree(long treeId, boolean fullRebuild) {
 		super.rebuildHashTree(treeId, fullRebuild);
 		if (!fullRebuild)
-			events.add(HashTreesImplTestEvent.UPDATE_SEGMENT);
+			events.add(HTSynchEvent.UPDATE_SEGMENT);
 		else
-			events.add(HashTreesImplTestEvent.UPDATE_FULL_TREE);
+			events.add(HTSynchEvent.UPDATE_FULL_TREE);
 	}
 
 }

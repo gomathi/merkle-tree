@@ -15,24 +15,24 @@ import org.hashtrees.store.HashTreeSyncManagerStore;
 import org.hashtrees.store.HashTreesMemStore;
 import org.hashtrees.store.HashTreesStore;
 import org.hashtrees.synch.HashTreesSyncManagerImpl;
+import org.hashtrees.test.HashTreesImplTestObj.HTSynchEvent;
 import org.hashtrees.test.HashTreesImplTestUtils.StoreImplTest;
 import org.hashtrees.thrift.generated.ServerName;
 import org.junit.Test;
 
 public class HashTreesSyncManagerImplTest {
 
-	private static void waitForTheEvent(
-			BlockingQueue<HashTreesImplTestEvent> events,
-			HashTreesImplTestEvent expectedEvent, long maxWaitTime)
+	private static void waitForTheEvent(BlockingQueue<HTSynchEvent> events,
+			HTSynchEvent expectedEvent, long maxWaitTime)
 			throws InterruptedException {
-		HashTreesImplTestEvent event = null;
-		long cntr = System.currentTimeMillis();
+		HTSynchEvent event = null;
+		long startTime = System.currentTimeMillis();
 		while (true) {
 			event = events.poll(1000, TimeUnit.MILLISECONDS);
 			if (event == expectedEvent)
 				break;
 			else if (event == null) {
-				long diff = System.currentTimeMillis() - cntr;
+				long diff = System.currentTimeMillis() - startTime;
 				if (diff > maxWaitTime)
 					break;
 			}
@@ -48,7 +48,7 @@ public class HashTreesSyncManagerImplTest {
 	}
 
 	private static HashTreeSyncManagerComponents createHashTreeSyncManager(
-			BlockingQueue<HashTreesImplTestEvent> events, int portNo,
+			BlockingQueue<HTSynchEvent> events, int portNo,
 			long fullRebuildTimeInterval, long intBWSynchAndRebuild,
 			int noOfBGThreads) {
 		HashTreesMemStore inMemoryStore = generateInMemoryStore();
@@ -72,9 +72,9 @@ public class HashTreesSyncManagerImplTest {
 		return components;
 	}
 
-	// @Test
+	@Test
 	public void testSegmentUpdate() throws InterruptedException {
-		BlockingQueue<HashTreesImplTestEvent> events = new ArrayBlockingQueue<HashTreesImplTestEvent>(
+		BlockingQueue<HTSynchEvent> events = new ArrayBlockingQueue<HTSynchEvent>(
 				1000);
 		HashTreeSyncManagerComponents components = createHashTreeSyncManager(
 				events, HashTreesConstants.DEFAULT_HASH_TREE_SERVER_PORT_NO,
@@ -85,13 +85,13 @@ public class HashTreesSyncManagerImplTest {
 		hashTreesStore.setLastFullyTreeBuiltTimestamp(1,
 				System.currentTimeMillis());
 		syncManager.init();
-		waitForTheEvent(events, HashTreesImplTestEvent.UPDATE_SEGMENT, 30000);
+		waitForTheEvent(events, HTSynchEvent.UPDATE_SEGMENT, 30000);
 		syncManager.shutdown();
 	}
 
-	// @Test
+	@Test
 	public void testFullTreeUpdate() throws InterruptedException {
-		BlockingQueue<HashTreesImplTestEvent> events = new ArrayBlockingQueue<HashTreesImplTestEvent>(
+		BlockingQueue<HTSynchEvent> events = new ArrayBlockingQueue<HTSynchEvent>(
 				1000);
 		HashTreeSyncManagerComponents components = createHashTreeSyncManager(
 				events, HashTreesConstants.DEFAULT_HASH_TREE_SERVER_PORT_NO,
@@ -99,14 +99,14 @@ public class HashTreesSyncManagerImplTest {
 		HashTreesSyncManagerImpl syncManager = components.syncMgrImpl;
 
 		syncManager.init();
-		waitForTheEvent(events, HashTreesImplTestEvent.UPDATE_FULL_TREE, 10000);
+		waitForTheEvent(events, HTSynchEvent.UPDATE_FULL_TREE, 10000);
 		syncManager.shutdown();
 	}
 
 	@Test
 	public void testSynch() throws Exception {
-		BlockingQueue<HashTreesImplTestEvent> localEvents = new ArrayBlockingQueue<HashTreesImplTestEvent>(
-				1000);
+		BlockingQueue<HTSynchEvent> localEvents = new ArrayBlockingQueue<HTSynchEvent>(
+				10000);
 		HashTreeSyncManagerComponents componentsLocal = createHashTreeSyncManager(
 				localEvents,
 				HashTreesConstants.DEFAULT_HASH_TREE_SERVER_PORT_NO, 3000, 300,
@@ -116,20 +116,18 @@ public class HashTreesSyncManagerImplTest {
 				HashTreesImplTestUtils.randomByteBuffer(),
 				HashTreesImplTestUtils.randomByteBuffer());
 
-		BlockingQueue<HashTreesImplTestEvent> remoteEvents = new ArrayBlockingQueue<HashTreesImplTestEvent>(
-				1000);
+		BlockingQueue<HTSynchEvent> remoteEvents = new ArrayBlockingQueue<HTSynchEvent>(
+				10000);
 		HashTreeSyncManagerComponents componentsRemote = createHashTreeSyncManager(
-				localEvents, 8999, 3000, 300, 10);
+				remoteEvents, 8999, 3000, 300, 10);
 		HashTreesSyncManagerImpl remoteSyncManager = componentsRemote.syncMgrImpl;
 
 		remoteSyncManager.init();
 		localSyncManager.addServerToSyncList(new ServerName("localhost", 8999));
 		localSyncManager.init();
 
-		waitForTheEvent(localEvents, HashTreesImplTestEvent.SYNCH,
-				10000000000000L);
-		waitForTheEvent(remoteEvents, HashTreesImplTestEvent.SYNCH_INITIATED,
-				10000);
+		waitForTheEvent(localEvents, HTSynchEvent.SYNCH, 10000);
+		waitForTheEvent(remoteEvents, HTSynchEvent.SYNCH_INITIATED, 10000);
 		localSyncManager.shutdown();
 		remoteSyncManager.shutdown();
 	}

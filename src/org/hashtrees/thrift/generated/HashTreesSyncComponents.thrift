@@ -1,4 +1,4 @@
-namespace java com.yahoo.mail.force.hashtrees.thrift.generated
+namespace java org.hashtrees.thrift.generated
 
 /**
 * Contains nodeId and segment hash.
@@ -101,7 +101,7 @@ service HashTreeSyncInterface
      *        within this interval, then remote tree is expected to do a full
      *        rebuild, otherwise just dirty segments rebuild.
      */
-    oneway void rebuildHashTree(1:ServerName sn, 2:i64 treeId, 3:i64 tokenNo, 4:i64 expFullRebuildTimeInt);
+    void rebuildHashTree(1:ServerName sn, 2:i64 treeId, 3:i64 tokenNo, 4:i64 expFullRebuildTimeInt);
 
     /**
      * This method posts a response on completion of the rebuild of the hash
@@ -111,5 +111,5 @@ service HashTreeSyncInterface
      * @param treeId, 
      * @param tokenNo which was passed in the request for rebuild.
      */
-    oneway void postRebuildHashTreeResponse(1:ServerName sn, 2:i64 treeId,  3:i64 tokenNo);
+    void postRebuildHashTreeResponse(1:ServerName sn, 2:i64 treeId,  3:i64 tokenNo);
 }

@@ -93,8 +93,8 @@ public class HashTreesSyncManagerImpl extends StoppableTask implements
 
 	private final ConcurrentSkipListMap<ServerName, HashTreeSyncInterface.Iface> servers = new ConcurrentSkipListMap<>();
 	private final ConcurrentSkipListSet<ServerName> serversToSync = new ConcurrentSkipListSet<>();
-	private final ConcurrentMap<Pair<ServerName, Long>, Pair<Long, Boolean>> serverWTreeIdAndLastBuildRequestTSMap = new ConcurrentHashMap<>();
-	private final ConcurrentMap<Pair<ServerName, Long>, Long> serverWTreeIdAndLastSyncedTSMap = new ConcurrentHashMap<>();
+	private final ConcurrentMap<Pair<ServerName, Long>, Pair<Long, Boolean>> remoteTreeAndLastBuildReqTS = new ConcurrentHashMap<>();
+	private final ConcurrentMap<Pair<ServerName, Long>, Long> remoteTreeAndLastSyncedTS = new ConcurrentHashMap<>();
 	private final ScheduledExecutorService stateMgrExecutor;
 	private final AtomicBoolean initialized = new AtomicBoolean(false);
 	private final AtomicBoolean stopped = new AtomicBoolean(false);
@@ -142,12 +142,12 @@ public class HashTreesSyncManagerImpl extends StoppableTask implements
 	public void onRebuildHashTreeResponse(ServerName sn, long treeId,
 			long tokenNo) {
 		Pair<ServerName, Long> snAndTid = Pair.create(sn, treeId);
-		Pair<Long, Boolean> tsAndResponse = serverWTreeIdAndLastBuildRequestTSMap
+		Pair<Long, Boolean> tsAndResponse = remoteTreeAndLastBuildReqTS
 				.get(snAndTid);
 		if (tsAndResponse != null && tsAndResponse.getFirst().equals(tokenNo)) {
 			Pair<Long, Boolean> updatedResponse = Pair.create(tokenNo, true);
-			serverWTreeIdAndLastBuildRequestTSMap.replace(snAndTid,
-					tsAndResponse, updatedResponse);
+			remoteTreeAndLastBuildReqTS.replace(snAndTid, tsAndResponse,
+					updatedResponse);
 		}
 	}
 
@@ -179,7 +179,7 @@ public class HashTreesSyncManagerImpl extends StoppableTask implements
 				sendRequestForRebuild(treeId);
 				treeIdAndRebuildType.add(Pair.create(treeId, fullRebuild));
 			} catch (Exception e) {
-				LOG.warn("Exception occurred while rebuilding.", e);
+				LOG.error("Exception occurred while rebuilding.", e);
 			}
 			if (hasStopRequested()) {
 				LOG.info("Stop has been requested. Not proceeding with further rebuild task.");
@@ -221,14 +221,14 @@ public class HashTreesSyncManagerImpl extends StoppableTask implements
 			try {
 				long buildReqTS = System.currentTimeMillis();
 				HashTreeSyncInterface.Iface client = getHashTreeSyncClient(sn);
+				remoteTreeAndLastSyncedTS.putIfAbsent(serverNameWTreeId,
+						buildReqTS);
+				remoteTreeAndLastBuildReqTS.put(serverNameWTreeId,
+						Pair.create(buildReqTS, false));
 				client.rebuildHashTree(localServer, treeId, buildReqTS,
 						DEFAULT_MAX_UNSYNCED_TIME_INTERVAL);
-				serverWTreeIdAndLastSyncedTSMap.putIfAbsent(serverNameWTreeId,
-						buildReqTS);
-				serverWTreeIdAndLastBuildRequestTSMap.put(serverNameWTreeId,
-						Pair.create(buildReqTS, false));
 			} catch (TException e) {
-				LOG.warn("Unable to send rebuild notification to "
+				LOG.error("Unable to send rebuild notification to "
 						+ serverNameWTreeId, e);
 			}
 		}
@@ -236,7 +236,7 @@ public class HashTreesSyncManagerImpl extends StoppableTask implements
 
 	private void synch() {
 		Iterator<Long> treeIds = treeIdProvider.getAllPrimaryTreeIds();
-		List<Pair<ServerName, Long>> hostNameAndTreeIdList = new ArrayList<>();
+		List<Pair<ServerName, Long>> remoteTrees = new ArrayList<>();
 
 		while (treeIds.hasNext()) {
 			long treeId = treeIds.next();
@@ -245,13 +245,13 @@ public class HashTreesSyncManagerImpl extends StoppableTask implements
 				Pair<ServerName, Long> serverNameATreeId = Pair.create(sn,
 						treeId);
 
-				Pair<Long, Boolean> lastBuildReqTSAndResponse = serverWTreeIdAndLastBuildRequestTSMap
+				Pair<Long, Boolean> lastBuildReqTSAndResponse = remoteTreeAndLastBuildReqTS
 						.remove(serverNameATreeId);
-				Long unsyncedTime = serverWTreeIdAndLastSyncedTSMap
+				Long unsyncedTime = remoteTreeAndLastSyncedTS
 						.get(serverNameATreeId);
 
 				if (unsyncedTime == null || lastBuildReqTSAndResponse == null) {
-					LOG.debug("Unsynced info entry is not available. Synch should be followed by rebuild. Skipping syncing "
+					LOG.info("Unsynced info entry is not available. Synch should be followed by rebuild. Skipping syncing "
 							+ serverNameATreeId);
 					continue;
 				}
@@ -259,9 +259,8 @@ public class HashTreesSyncManagerImpl extends StoppableTask implements
 				try {
 					if ((lastBuildReqTSAndResponse.getSecond())
 							|| ((System.currentTimeMillis() - unsyncedTime) > DEFAULT_MAX_UNSYNCED_TIME_INTERVAL)) {
-						hostNameAndTreeIdList.add(serverNameATreeId);
-						serverWTreeIdAndLastSyncedTSMap
-								.remove(serverNameATreeId);
+						remoteTrees.add(serverNameATreeId);
+						remoteTreeAndLastSyncedTS.remove(serverNameATreeId);
 					} else {
 						LOG.info("Did not receive confirmation from "
 								+ serverNameATreeId
@@ -278,13 +277,13 @@ public class HashTreesSyncManagerImpl extends StoppableTask implements
 			}
 		}
 
-		if (hostNameAndTreeIdList.size() == 0) {
+		if (remoteTrees.size() == 0) {
 			LOG.info("There is no synch required for any remote trees. Skipping this cycle.");
 			return;
 		}
 		LOG.info("Synching remote hash trees.");
 		Collection<Callable<Void>> syncTasks = Collections2.transform(
-				hostNameAndTreeIdList,
+				remoteTrees,
 				new Function<Pair<ServerName, Long>, Callable<Void>>() {
 
 					@Override
@@ -320,7 +319,7 @@ public class HashTreesSyncManagerImpl extends StoppableTask implements
 			hashTree.synch(treeId, new HashTreesRemoteClient(remoteSyncClient));
 			LOG.info("Syncing " + hostNameAndTreeId + " complete.");
 		} catch (TException e) {
-			LOG.warn("Unable to synch remote hash tree server : "
+			LOG.error("Unable to synch remote hash tree server : "
 					+ hostNameAndTreeId, e);
 		}
 	}
@@ -347,7 +346,7 @@ public class HashTreesSyncManagerImpl extends StoppableTask implements
 			try {
 				initializedLatch.await();
 			} catch (InterruptedException e) {
-				LOG.warn(
+				LOG.error(
 						"Exception occurred while waiting for the server to start",
 						e);
 			}
@@ -396,12 +395,13 @@ public class HashTreesSyncManagerImpl extends StoppableTask implements
 			try {
 				localLatch.await();
 			} catch (InterruptedException e) {
-				LOG.warn("Exception occurred while stopping the operations.", e);
+				LOG.error("Exception occurred while stopping the operations.",
+						e);
 			}
-			if (htThriftServer != null)
-				htThriftServer.stop();
 			if (stateMgrExecutor != null)
 				stateMgrExecutor.shutdown();
+			if (htThriftServer != null)
+				htThriftServer.stop();
 			if (fixedExecutors != null)
 				fixedExecutors.shutdown();
 			LOG.info("Hash tree sync manager operations stopped.");

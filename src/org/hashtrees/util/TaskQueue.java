@@ -16,8 +16,8 @@ import javax.annotation.concurrent.NotThreadSafe;
  * when the result of a previous task is removed from the task queue.
  * 
  * If a stop has been requested, new tasks will not submitted. Even after the
- * stop request, the previously submitted tasks will be continue to run. A call
- * to next() operation will block.
+ * stop request, the previously submitted tasks will continue to run. A call to
+ * next() operation will block.
  * 
  */
 @NotThreadSafe

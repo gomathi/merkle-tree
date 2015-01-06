@@ -116,7 +116,7 @@ public class HashTreesThriftServer implements HashTreeSyncInterface.Iface {
 	public void postRebuildHashTreeResponse(ServerName sn, long treeId,
 			long tokenNo) throws TException {
 		try {
-			htSyncManager.onRebuildHashTreeResponse(sn, tokenNo, treeId);
+			htSyncManager.onRebuildHashTreeResponse(sn, treeId, tokenNo);
 		} catch (Exception e) {
 			throw new TException(e);
 		}

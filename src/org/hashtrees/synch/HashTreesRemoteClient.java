@@ -6,22 +6,21 @@ import java.util.Map;
 
 import org.apache.thrift.TException;
 import org.hashtrees.HashTrees;
-import org.hashtrees.thrift.generated.HashTreeSyncInterface;
+import org.hashtrees.thrift.generated.HashTreesSyncInterface;
 import org.hashtrees.thrift.generated.SegmentData;
 import org.hashtrees.thrift.generated.SegmentHash;
 
 /**
  * A {@link HashTrees} implementation that wraps up
- * {@link HashTreeSyncInterface.Iface} client and forwards the calls to the
- * remote tree. Clients who use this class will assume that they talk to a local
- * Java object, but in fact they are talking to a remote Java object.
+ * {@link HashTreesSyncInterface.Iface} client and forwards the calls to the
+ * remote tree.
  * 
  */
 public class HashTreesRemoteClient implements HashTrees {
 
-	private final HashTreeSyncInterface.Iface remoteTree;
+	private final HashTreesSyncInterface.Iface remoteTree;
 
-	public HashTreesRemoteClient(final HashTreeSyncInterface.Iface remoteTree) {
+	public HashTreesRemoteClient(final HashTreesSyncInterface.Iface remoteTree) {
 		this.remoteTree = remoteTree;
 	}
 

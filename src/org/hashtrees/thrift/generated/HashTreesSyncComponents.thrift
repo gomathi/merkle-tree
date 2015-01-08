@@ -30,9 +30,8 @@ struct ServerName
 	2: required i32 portNo;
 }
 
-service HashTreeSyncInterface
+service HashTreesSyncInterface
 {
-	string ping();
 	
 	/**
      * Adds the (key,value) pair to the store. Intended to be used
@@ -112,4 +111,20 @@ service HashTreeSyncInterface
      * @param tokenNo which was passed in the request for rebuild.
      */
     void postRebuildHashTreeResponse(1:ServerName sn, 2:i64 treeId,  3:i64 tokenNo);
+    
+    /**
+	 * Adds server to sync list. Hashtrees on the local server will be synched
+	 * against the remote server.
+	 * 
+	 * @param sn
+	 */
+	void addServerToSyncList(1:ServerName sn);
+
+	/**
+	 * Removes a server from sync list. From the next iteration, the remote
+	 * server will not be synched by the local server.
+	 * 
+	 * @param sn
+	 */
+	void removeServerFromSyncList(1:ServerName sn);
 }

@@ -44,7 +44,7 @@ import org.slf4j.LoggerFactory;
  * 1) Segment blocks, where the (key, hash of value) pairs are stored. All the
  * pairs are stored in sorted order. Whenever a key addition/removal happens on
  * the node, HashTree segment is updated. Keys are distributed using uniform
- * hash distribution. Max no of segments is {@link #MAX_NO_OF_BUCKETS}.
+ * hash distribution.
  * 
  * 2) Segment trees, where the segments' hashes are updated and maintained. Tree
  * is not updated on every update on a segment. Rather, tree update is happening
@@ -56,8 +56,8 @@ import org.slf4j.LoggerFactory;
 public class HashTreesImpl implements HashTrees {
 
 	/**
-	 * Specifies how much element can be queued when hashtree is backed by a non
-	 * blocking queue. When the queue is full, the new puts or removes are
+	 * Specifies how much element can be queued when hash tree is backed by a
+	 * non blocking queue. When the queue is full, the new puts or removes are
 	 * rejected.
 	 */
 	public static final int DEFAULT_NB_QUE_SIZE = 10000;

@@ -6,30 +6,25 @@ import java.util.Map;
 
 import org.apache.thrift.TException;
 import org.hashtrees.HashTrees;
-import org.hashtrees.thrift.generated.HashTreeSyncInterface;
+import org.hashtrees.thrift.generated.HashTreesSyncInterface;
 import org.hashtrees.thrift.generated.SegmentData;
 import org.hashtrees.thrift.generated.SegmentHash;
 import org.hashtrees.thrift.generated.ServerName;
 
 /**
  * Just wraps up {@link HashTrees} and provides a view as
- * {@link HashTreeSyncInterface.Iface}. This is used by Thrift server.
+ * {@link HashTreesSyncInterface.Iface}. This is used by Thrift server.
  * 
  */
-public class HashTreesThriftServer implements HashTreeSyncInterface.Iface {
+public class HashTreesThriftServer implements HashTreesSyncInterface.Iface {
 
 	private final HashTrees hashTree;
-	private final HashTreesSyncManagerImpl htSyncManager;
+	private final HashTreesSyncCallsObserver syncCallsObserver;
 
 	public HashTreesThriftServer(final HashTrees hashTree,
-			final HashTreesSyncManagerImpl htSyncManager) {
+			final HashTreesSyncCallsObserver syncCallsObserver) {
 		this.hashTree = hashTree;
-		this.htSyncManager = htSyncManager;
-	}
-
-	@Override
-	public String ping() throws TException {
-		return "ping";
+		this.syncCallsObserver = syncCallsObserver;
 	}
 
 	@Override
@@ -105,7 +100,7 @@ public class HashTreesThriftServer implements HashTreeSyncInterface.Iface {
 	public void rebuildHashTree(ServerName sn, long treeId, long tokenNo,
 			long expFullRebuildTimeInt) throws TException {
 		try {
-			htSyncManager.onRebuildHashTreeRequest(sn, treeId, tokenNo,
+			syncCallsObserver.onRebuildHashTreeRequest(sn, treeId, tokenNo,
 					expFullRebuildTimeInt);
 		} catch (Exception e) {
 			throw new TException(e);
@@ -116,10 +111,20 @@ public class HashTreesThriftServer implements HashTreeSyncInterface.Iface {
 	public void postRebuildHashTreeResponse(ServerName sn, long treeId,
 			long tokenNo) throws TException {
 		try {
-			htSyncManager.onRebuildHashTreeResponse(sn, treeId, tokenNo);
+			syncCallsObserver.onRebuildHashTreeResponse(sn, treeId, tokenNo);
 		} catch (Exception e) {
 			throw new TException(e);
 		}
+	}
+
+	@Override
+	public void addServerToSyncList(ServerName sn) throws TException {
+		syncCallsObserver.addServerToSyncList(sn);
+	}
+
+	@Override
+	public void removeServerFromSyncList(ServerName sn) throws TException {
+		syncCallsObserver.removeServerFromSyncList(sn);
 	}
 
 }

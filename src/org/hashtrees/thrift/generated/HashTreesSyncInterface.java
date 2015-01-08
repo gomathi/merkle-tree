@@ -27,11 +27,9 @@ import java.util.Arrays;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class HashTreeSyncInterface {
+public class HashTreesSyncInterface {
 
   public interface Iface {
-
-    public String ping() throws org.apache.thrift.TException;
 
     /**
      * Adds the (key,value) pair to the store. Intended to be used
@@ -141,11 +139,29 @@ public class HashTreeSyncInterface {
      */
     public void postRebuildHashTreeResponse(ServerName sn, long treeId, long tokenNo) throws org.apache.thrift.TException;
 
+    /**
+     * Adds server to sync list. Hashtrees on the local server will be synched
+     * against the remote server.
+     * 
+     * @param sn
+     * 
+     * @param sn
+     */
+    public void addServerToSyncList(ServerName sn) throws org.apache.thrift.TException;
+
+    /**
+     * Removes a server from sync list. From the next iteration, the remote
+     * server will not be synched by the local server.
+     * 
+     * @param sn
+     * 
+     * @param sn
+     */
+    public void removeServerFromSyncList(ServerName sn) throws org.apache.thrift.TException;
+
   }
 
   public interface AsyncIface {
-
-    public void ping(org.apache.thrift.async.AsyncMethodCallback<AsyncClient.ping_call> resultHandler) throws org.apache.thrift.TException;
 
     public void sPut(Map<ByteBuffer,ByteBuffer> keyValuePairs, org.apache.thrift.async.AsyncMethodCallback<AsyncClient.sPut_call> resultHandler) throws org.apache.thrift.TException;
 
@@ -164,6 +180,10 @@ public class HashTreeSyncInterface {
     public void rebuildHashTree(ServerName sn, long treeId, long tokenNo, long expFullRebuildTimeInt, org.apache.thrift.async.AsyncMethodCallback<AsyncClient.rebuildHashTree_call> resultHandler) throws org.apache.thrift.TException;
 
     public void postRebuildHashTreeResponse(ServerName sn, long treeId, long tokenNo, org.apache.thrift.async.AsyncMethodCallback<AsyncClient.postRebuildHashTreeResponse_call> resultHandler) throws org.apache.thrift.TException;
+
+    public void addServerToSyncList(ServerName sn, org.apache.thrift.async.AsyncMethodCallback<AsyncClient.addServerToSyncList_call> resultHandler) throws org.apache.thrift.TException;
+
+    public void removeServerFromSyncList(ServerName sn, org.apache.thrift.async.AsyncMethodCallback<AsyncClient.removeServerFromSyncList_call> resultHandler) throws org.apache.thrift.TException;
 
   }
 
@@ -185,28 +205,6 @@ public class HashTreeSyncInterface {
 
     public Client(org.apache.thrift.protocol.TProtocol iprot, org.apache.thrift.protocol.TProtocol oprot) {
       super(iprot, oprot);
-    }
-
-    public String ping() throws org.apache.thrift.TException
-    {
-      send_ping();
-      return recv_ping();
-    }
-
-    public void send_ping() throws org.apache.thrift.TException
-    {
-      ping_args args = new ping_args();
-      sendBase("ping", args);
-    }
-
-    public String recv_ping() throws org.apache.thrift.TException
-    {
-      ping_result result = new ping_result();
-      receiveBase(result, "ping");
-      if (result.isSetSuccess()) {
-        return result.success;
-      }
-      throw new org.apache.thrift.TApplicationException(org.apache.thrift.TApplicationException.MISSING_RESULT, "ping failed: unknown result");
     }
 
     public void sPut(Map<ByteBuffer,ByteBuffer> keyValuePairs) throws org.apache.thrift.TException
@@ -412,6 +410,46 @@ public class HashTreeSyncInterface {
       return;
     }
 
+    public void addServerToSyncList(ServerName sn) throws org.apache.thrift.TException
+    {
+      send_addServerToSyncList(sn);
+      recv_addServerToSyncList();
+    }
+
+    public void send_addServerToSyncList(ServerName sn) throws org.apache.thrift.TException
+    {
+      addServerToSyncList_args args = new addServerToSyncList_args();
+      args.setSn(sn);
+      sendBase("addServerToSyncList", args);
+    }
+
+    public void recv_addServerToSyncList() throws org.apache.thrift.TException
+    {
+      addServerToSyncList_result result = new addServerToSyncList_result();
+      receiveBase(result, "addServerToSyncList");
+      return;
+    }
+
+    public void removeServerFromSyncList(ServerName sn) throws org.apache.thrift.TException
+    {
+      send_removeServerFromSyncList(sn);
+      recv_removeServerFromSyncList();
+    }
+
+    public void send_removeServerFromSyncList(ServerName sn) throws org.apache.thrift.TException
+    {
+      removeServerFromSyncList_args args = new removeServerFromSyncList_args();
+      args.setSn(sn);
+      sendBase("removeServerFromSyncList", args);
+    }
+
+    public void recv_removeServerFromSyncList() throws org.apache.thrift.TException
+    {
+      removeServerFromSyncList_result result = new removeServerFromSyncList_result();
+      receiveBase(result, "removeServerFromSyncList");
+      return;
+    }
+
   }
   public static class AsyncClient extends org.apache.thrift.async.TAsyncClient implements AsyncIface {
     public static class Factory implements org.apache.thrift.async.TAsyncClientFactory<AsyncClient> {
@@ -428,35 +466,6 @@ public class HashTreeSyncInterface {
 
     public AsyncClient(org.apache.thrift.protocol.TProtocolFactory protocolFactory, org.apache.thrift.async.TAsyncClientManager clientManager, org.apache.thrift.transport.TNonblockingTransport transport) {
       super(protocolFactory, clientManager, transport);
-    }
-
-    public void ping(org.apache.thrift.async.AsyncMethodCallback<ping_call> resultHandler) throws org.apache.thrift.TException {
-      checkReady();
-      ping_call method_call = new ping_call(resultHandler, this, ___protocolFactory, ___transport);
-      this.___currentMethod = method_call;
-      ___manager.call(method_call);
-    }
-
-    public static class ping_call extends org.apache.thrift.async.TAsyncMethodCall {
-      public ping_call(org.apache.thrift.async.AsyncMethodCallback<ping_call> resultHandler, org.apache.thrift.async.TAsyncClient client, org.apache.thrift.protocol.TProtocolFactory protocolFactory, org.apache.thrift.transport.TNonblockingTransport transport) throws org.apache.thrift.TException {
-        super(client, protocolFactory, transport, resultHandler, false);
-      }
-
-      public void write_args(org.apache.thrift.protocol.TProtocol prot) throws org.apache.thrift.TException {
-        prot.writeMessageBegin(new org.apache.thrift.protocol.TMessage("ping", org.apache.thrift.protocol.TMessageType.CALL, 0));
-        ping_args args = new ping_args();
-        args.write(prot);
-        prot.writeMessageEnd();
-      }
-
-      public String getResult() throws org.apache.thrift.TException {
-        if (getState() != org.apache.thrift.async.TAsyncMethodCall.State.RESPONSE_READ) {
-          throw new IllegalStateException("Method call not finished!");
-        }
-        org.apache.thrift.transport.TMemoryInputTransport memoryTransport = new org.apache.thrift.transport.TMemoryInputTransport(getFrameBuffer().array());
-        org.apache.thrift.protocol.TProtocol prot = client.getProtocolFactory().getProtocol(memoryTransport);
-        return (new Client(prot)).recv_ping();
-      }
     }
 
     public void sPut(Map<ByteBuffer,ByteBuffer> keyValuePairs, org.apache.thrift.async.AsyncMethodCallback<sPut_call> resultHandler) throws org.apache.thrift.TException {
@@ -780,6 +789,70 @@ public class HashTreeSyncInterface {
       }
     }
 
+    public void addServerToSyncList(ServerName sn, org.apache.thrift.async.AsyncMethodCallback<addServerToSyncList_call> resultHandler) throws org.apache.thrift.TException {
+      checkReady();
+      addServerToSyncList_call method_call = new addServerToSyncList_call(sn, resultHandler, this, ___protocolFactory, ___transport);
+      this.___currentMethod = method_call;
+      ___manager.call(method_call);
+    }
+
+    public static class addServerToSyncList_call extends org.apache.thrift.async.TAsyncMethodCall {
+      private ServerName sn;
+      public addServerToSyncList_call(ServerName sn, org.apache.thrift.async.AsyncMethodCallback<addServerToSyncList_call> resultHandler, org.apache.thrift.async.TAsyncClient client, org.apache.thrift.protocol.TProtocolFactory protocolFactory, org.apache.thrift.transport.TNonblockingTransport transport) throws org.apache.thrift.TException {
+        super(client, protocolFactory, transport, resultHandler, false);
+        this.sn = sn;
+      }
+
+      public void write_args(org.apache.thrift.protocol.TProtocol prot) throws org.apache.thrift.TException {
+        prot.writeMessageBegin(new org.apache.thrift.protocol.TMessage("addServerToSyncList", org.apache.thrift.protocol.TMessageType.CALL, 0));
+        addServerToSyncList_args args = new addServerToSyncList_args();
+        args.setSn(sn);
+        args.write(prot);
+        prot.writeMessageEnd();
+      }
+
+      public void getResult() throws org.apache.thrift.TException {
+        if (getState() != org.apache.thrift.async.TAsyncMethodCall.State.RESPONSE_READ) {
+          throw new IllegalStateException("Method call not finished!");
+        }
+        org.apache.thrift.transport.TMemoryInputTransport memoryTransport = new org.apache.thrift.transport.TMemoryInputTransport(getFrameBuffer().array());
+        org.apache.thrift.protocol.TProtocol prot = client.getProtocolFactory().getProtocol(memoryTransport);
+        (new Client(prot)).recv_addServerToSyncList();
+      }
+    }
+
+    public void removeServerFromSyncList(ServerName sn, org.apache.thrift.async.AsyncMethodCallback<removeServerFromSyncList_call> resultHandler) throws org.apache.thrift.TException {
+      checkReady();
+      removeServerFromSyncList_call method_call = new removeServerFromSyncList_call(sn, resultHandler, this, ___protocolFactory, ___transport);
+      this.___currentMethod = method_call;
+      ___manager.call(method_call);
+    }
+
+    public static class removeServerFromSyncList_call extends org.apache.thrift.async.TAsyncMethodCall {
+      private ServerName sn;
+      public removeServerFromSyncList_call(ServerName sn, org.apache.thrift.async.AsyncMethodCallback<removeServerFromSyncList_call> resultHandler, org.apache.thrift.async.TAsyncClient client, org.apache.thrift.protocol.TProtocolFactory protocolFactory, org.apache.thrift.transport.TNonblockingTransport transport) throws org.apache.thrift.TException {
+        super(client, protocolFactory, transport, resultHandler, false);
+        this.sn = sn;
+      }
+
+      public void write_args(org.apache.thrift.protocol.TProtocol prot) throws org.apache.thrift.TException {
+        prot.writeMessageBegin(new org.apache.thrift.protocol.TMessage("removeServerFromSyncList", org.apache.thrift.protocol.TMessageType.CALL, 0));
+        removeServerFromSyncList_args args = new removeServerFromSyncList_args();
+        args.setSn(sn);
+        args.write(prot);
+        prot.writeMessageEnd();
+      }
+
+      public void getResult() throws org.apache.thrift.TException {
+        if (getState() != org.apache.thrift.async.TAsyncMethodCall.State.RESPONSE_READ) {
+          throw new IllegalStateException("Method call not finished!");
+        }
+        org.apache.thrift.transport.TMemoryInputTransport memoryTransport = new org.apache.thrift.transport.TMemoryInputTransport(getFrameBuffer().array());
+        org.apache.thrift.protocol.TProtocol prot = client.getProtocolFactory().getProtocol(memoryTransport);
+        (new Client(prot)).recv_removeServerFromSyncList();
+      }
+    }
+
   }
 
   public static class Processor<I extends Iface> extends org.apache.thrift.TBaseProcessor<I> implements org.apache.thrift.TProcessor {
@@ -793,7 +866,6 @@ public class HashTreeSyncInterface {
     }
 
     private static <I extends Iface> Map<String,  org.apache.thrift.ProcessFunction<I, ? extends  org.apache.thrift.TBase>> getProcessMap(Map<String,  org.apache.thrift.ProcessFunction<I, ? extends  org.apache.thrift.TBase>> processMap) {
-      processMap.put("ping", new ping());
       processMap.put("sPut", new sPut());
       processMap.put("sRemove", new sRemove());
       processMap.put("getSegmentHashes", new getSegmentHashes());
@@ -803,23 +875,9 @@ public class HashTreeSyncInterface {
       processMap.put("deleteTreeNodes", new deleteTreeNodes());
       processMap.put("rebuildHashTree", new rebuildHashTree());
       processMap.put("postRebuildHashTreeResponse", new postRebuildHashTreeResponse());
+      processMap.put("addServerToSyncList", new addServerToSyncList());
+      processMap.put("removeServerFromSyncList", new removeServerFromSyncList());
       return processMap;
-    }
-
-    private static class ping<I extends Iface> extends org.apache.thrift.ProcessFunction<I, ping_args> {
-      public ping() {
-        super("ping");
-      }
-
-      protected ping_args getEmptyArgsInstance() {
-        return new ping_args();
-      }
-
-      protected ping_result getResult(I iface, ping_args args) throws org.apache.thrift.TException {
-        ping_result result = new ping_result();
-        result.success = iface.ping();
-        return result;
-      }
     }
 
     private static class sPut<I extends Iface> extends org.apache.thrift.ProcessFunction<I, sPut_args> {
@@ -966,601 +1024,35 @@ public class HashTreeSyncInterface {
       }
     }
 
-  }
-
-  public static class ping_args implements org.apache.thrift.TBase<ping_args, ping_args._Fields>, java.io.Serializable, Cloneable   {
-    private static final org.apache.thrift.protocol.TStruct STRUCT_DESC = new org.apache.thrift.protocol.TStruct("ping_args");
-
-
-    private static final Map<Class<? extends IScheme>, SchemeFactory> schemes = new HashMap<Class<? extends IScheme>, SchemeFactory>();
-    static {
-      schemes.put(StandardScheme.class, new ping_argsStandardSchemeFactory());
-      schemes.put(TupleScheme.class, new ping_argsTupleSchemeFactory());
-    }
-
-
-    /** The set of fields this struct contains, along with convenience methods for finding and manipulating them. */
-    public enum _Fields implements org.apache.thrift.TFieldIdEnum {
-;
-
-      private static final Map<String, _Fields> byName = new HashMap<String, _Fields>();
-
-      static {
-        for (_Fields field : EnumSet.allOf(_Fields.class)) {
-          byName.put(field.getFieldName(), field);
-        }
+    private static class addServerToSyncList<I extends Iface> extends org.apache.thrift.ProcessFunction<I, addServerToSyncList_args> {
+      public addServerToSyncList() {
+        super("addServerToSyncList");
       }
 
-      /**
-       * Find the _Fields constant that matches fieldId, or null if its not found.
-       */
-      public static _Fields findByThriftId(int fieldId) {
-        switch(fieldId) {
-          default:
-            return null;
-        }
+      protected addServerToSyncList_args getEmptyArgsInstance() {
+        return new addServerToSyncList_args();
       }
 
-      /**
-       * Find the _Fields constant that matches fieldId, throwing an exception
-       * if it is not found.
-       */
-      public static _Fields findByThriftIdOrThrow(int fieldId) {
-        _Fields fields = findByThriftId(fieldId);
-        if (fields == null) throw new IllegalArgumentException("Field " + fieldId + " doesn't exist!");
-        return fields;
-      }
-
-      /**
-       * Find the _Fields constant that matches name, or null if its not found.
-       */
-      public static _Fields findByName(String name) {
-        return byName.get(name);
-      }
-
-      private final short _thriftId;
-      private final String _fieldName;
-
-      _Fields(short thriftId, String fieldName) {
-        _thriftId = thriftId;
-        _fieldName = fieldName;
-      }
-
-      public short getThriftFieldId() {
-        return _thriftId;
-      }
-
-      public String getFieldName() {
-        return _fieldName;
-      }
-    }
-    public static final Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> metaDataMap;
-    static {
-      Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> tmpMap = new EnumMap<_Fields, org.apache.thrift.meta_data.FieldMetaData>(_Fields.class);
-      metaDataMap = Collections.unmodifiableMap(tmpMap);
-      org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(ping_args.class, metaDataMap);
-    }
-
-    public ping_args() {
-    }
-
-    /**
-     * Performs a deep copy on <i>other</i>.
-     */
-    public ping_args(ping_args other) {
-    }
-
-    public ping_args deepCopy() {
-      return new ping_args(this);
-    }
-
-    @Override
-    public void clear() {
-    }
-
-    public void setFieldValue(_Fields field, Object value) {
-      switch (field) {
+      protected addServerToSyncList_result getResult(I iface, addServerToSyncList_args args) throws org.apache.thrift.TException {
+        addServerToSyncList_result result = new addServerToSyncList_result();
+        iface.addServerToSyncList(args.sn);
+        return result;
       }
     }
 
-    public Object getFieldValue(_Fields field) {
-      switch (field) {
-      }
-      throw new IllegalStateException();
-    }
-
-    /** Returns true if field corresponding to fieldID is set (has been assigned a value) and false otherwise */
-    public boolean isSet(_Fields field) {
-      if (field == null) {
-        throw new IllegalArgumentException();
+    private static class removeServerFromSyncList<I extends Iface> extends org.apache.thrift.ProcessFunction<I, removeServerFromSyncList_args> {
+      public removeServerFromSyncList() {
+        super("removeServerFromSyncList");
       }
 
-      switch (field) {
-      }
-      throw new IllegalStateException();
-    }
-
-    @Override
-    public boolean equals(Object that) {
-      if (that == null)
-        return false;
-      if (that instanceof ping_args)
-        return this.equals((ping_args)that);
-      return false;
-    }
-
-    public boolean equals(ping_args that) {
-      if (that == null)
-        return false;
-
-      return true;
-    }
-
-    @Override
-    public int hashCode() {
-      return 0;
-    }
-
-    public int compareTo(ping_args other) {
-      if (!getClass().equals(other.getClass())) {
-        return getClass().getName().compareTo(other.getClass().getName());
+      protected removeServerFromSyncList_args getEmptyArgsInstance() {
+        return new removeServerFromSyncList_args();
       }
 
-      int lastComparison = 0;
-      ping_args typedOther = (ping_args)other;
-
-      return 0;
-    }
-
-    public _Fields fieldForId(int fieldId) {
-      return _Fields.findByThriftId(fieldId);
-    }
-
-    public void read(org.apache.thrift.protocol.TProtocol iprot) throws org.apache.thrift.TException {
-      schemes.get(iprot.getScheme()).getScheme().read(iprot, this);
-    }
-
-    public void write(org.apache.thrift.protocol.TProtocol oprot) throws org.apache.thrift.TException {
-      schemes.get(oprot.getScheme()).getScheme().write(oprot, this);
-    }
-
-    @Override
-    public String toString() {
-      StringBuilder sb = new StringBuilder("ping_args(");
-      boolean first = true;
-
-      sb.append(")");
-      return sb.toString();
-    }
-
-    public void validate() throws org.apache.thrift.TException {
-      // check for required fields
-    }
-
-    private void writeObject(java.io.ObjectOutputStream out) throws java.io.IOException {
-      try {
-        write(new org.apache.thrift.protocol.TCompactProtocol(new org.apache.thrift.transport.TIOStreamTransport(out)));
-      } catch (org.apache.thrift.TException te) {
-        throw new java.io.IOException(te);
-      }
-    }
-
-    private void readObject(java.io.ObjectInputStream in) throws java.io.IOException, ClassNotFoundException {
-      try {
-        read(new org.apache.thrift.protocol.TCompactProtocol(new org.apache.thrift.transport.TIOStreamTransport(in)));
-      } catch (org.apache.thrift.TException te) {
-        throw new java.io.IOException(te);
-      }
-    }
-
-    private static class ping_argsStandardSchemeFactory implements SchemeFactory {
-      public ping_argsStandardScheme getScheme() {
-        return new ping_argsStandardScheme();
-      }
-    }
-
-    private static class ping_argsStandardScheme extends StandardScheme<ping_args> {
-
-      public void read(org.apache.thrift.protocol.TProtocol iprot, ping_args struct) throws org.apache.thrift.TException {
-        org.apache.thrift.protocol.TField schemeField;
-        iprot.readStructBegin();
-        while (true)
-        {
-          schemeField = iprot.readFieldBegin();
-          if (schemeField.type == org.apache.thrift.protocol.TType.STOP) { 
-            break;
-          }
-          switch (schemeField.id) {
-            default:
-              org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
-          }
-          iprot.readFieldEnd();
-        }
-        iprot.readStructEnd();
-
-        // check for required fields of primitive type, which can't be checked in the validate method
-        struct.validate();
-      }
-
-      public void write(org.apache.thrift.protocol.TProtocol oprot, ping_args struct) throws org.apache.thrift.TException {
-        struct.validate();
-
-        oprot.writeStructBegin(STRUCT_DESC);
-        oprot.writeFieldStop();
-        oprot.writeStructEnd();
-      }
-
-    }
-
-    private static class ping_argsTupleSchemeFactory implements SchemeFactory {
-      public ping_argsTupleScheme getScheme() {
-        return new ping_argsTupleScheme();
-      }
-    }
-
-    private static class ping_argsTupleScheme extends TupleScheme<ping_args> {
-
-      @Override
-      public void write(org.apache.thrift.protocol.TProtocol prot, ping_args struct) throws org.apache.thrift.TException {
-        TTupleProtocol oprot = (TTupleProtocol) prot;
-      }
-
-      @Override
-      public void read(org.apache.thrift.protocol.TProtocol prot, ping_args struct) throws org.apache.thrift.TException {
-        TTupleProtocol iprot = (TTupleProtocol) prot;
-      }
-    }
-
-  }
-
-  public static class ping_result implements org.apache.thrift.TBase<ping_result, ping_result._Fields>, java.io.Serializable, Cloneable   {
-    private static final org.apache.thrift.protocol.TStruct STRUCT_DESC = new org.apache.thrift.protocol.TStruct("ping_result");
-
-    private static final org.apache.thrift.protocol.TField SUCCESS_FIELD_DESC = new org.apache.thrift.protocol.TField("success", org.apache.thrift.protocol.TType.STRING, (short)0);
-
-    private static final Map<Class<? extends IScheme>, SchemeFactory> schemes = new HashMap<Class<? extends IScheme>, SchemeFactory>();
-    static {
-      schemes.put(StandardScheme.class, new ping_resultStandardSchemeFactory());
-      schemes.put(TupleScheme.class, new ping_resultTupleSchemeFactory());
-    }
-
-    public String success; // required
-
-    /** The set of fields this struct contains, along with convenience methods for finding and manipulating them. */
-    public enum _Fields implements org.apache.thrift.TFieldIdEnum {
-      SUCCESS((short)0, "success");
-
-      private static final Map<String, _Fields> byName = new HashMap<String, _Fields>();
-
-      static {
-        for (_Fields field : EnumSet.allOf(_Fields.class)) {
-          byName.put(field.getFieldName(), field);
-        }
-      }
-
-      /**
-       * Find the _Fields constant that matches fieldId, or null if its not found.
-       */
-      public static _Fields findByThriftId(int fieldId) {
-        switch(fieldId) {
-          case 0: // SUCCESS
-            return SUCCESS;
-          default:
-            return null;
-        }
-      }
-
-      /**
-       * Find the _Fields constant that matches fieldId, throwing an exception
-       * if it is not found.
-       */
-      public static _Fields findByThriftIdOrThrow(int fieldId) {
-        _Fields fields = findByThriftId(fieldId);
-        if (fields == null) throw new IllegalArgumentException("Field " + fieldId + " doesn't exist!");
-        return fields;
-      }
-
-      /**
-       * Find the _Fields constant that matches name, or null if its not found.
-       */
-      public static _Fields findByName(String name) {
-        return byName.get(name);
-      }
-
-      private final short _thriftId;
-      private final String _fieldName;
-
-      _Fields(short thriftId, String fieldName) {
-        _thriftId = thriftId;
-        _fieldName = fieldName;
-      }
-
-      public short getThriftFieldId() {
-        return _thriftId;
-      }
-
-      public String getFieldName() {
-        return _fieldName;
-      }
-    }
-
-    // isset id assignments
-    public static final Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> metaDataMap;
-    static {
-      Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> tmpMap = new EnumMap<_Fields, org.apache.thrift.meta_data.FieldMetaData>(_Fields.class);
-      tmpMap.put(_Fields.SUCCESS, new org.apache.thrift.meta_data.FieldMetaData("success", org.apache.thrift.TFieldRequirementType.DEFAULT, 
-          new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING)));
-      metaDataMap = Collections.unmodifiableMap(tmpMap);
-      org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(ping_result.class, metaDataMap);
-    }
-
-    public ping_result() {
-    }
-
-    public ping_result(
-      String success)
-    {
-      this();
-      this.success = success;
-    }
-
-    /**
-     * Performs a deep copy on <i>other</i>.
-     */
-    public ping_result(ping_result other) {
-      if (other.isSetSuccess()) {
-        this.success = other.success;
-      }
-    }
-
-    public ping_result deepCopy() {
-      return new ping_result(this);
-    }
-
-    @Override
-    public void clear() {
-      this.success = null;
-    }
-
-    public String getSuccess() {
-      return this.success;
-    }
-
-    public ping_result setSuccess(String success) {
-      this.success = success;
-      return this;
-    }
-
-    public void unsetSuccess() {
-      this.success = null;
-    }
-
-    /** Returns true if field success is set (has been assigned a value) and false otherwise */
-    public boolean isSetSuccess() {
-      return this.success != null;
-    }
-
-    public void setSuccessIsSet(boolean value) {
-      if (!value) {
-        this.success = null;
-      }
-    }
-
-    public void setFieldValue(_Fields field, Object value) {
-      switch (field) {
-      case SUCCESS:
-        if (value == null) {
-          unsetSuccess();
-        } else {
-          setSuccess((String)value);
-        }
-        break;
-
-      }
-    }
-
-    public Object getFieldValue(_Fields field) {
-      switch (field) {
-      case SUCCESS:
-        return getSuccess();
-
-      }
-      throw new IllegalStateException();
-    }
-
-    /** Returns true if field corresponding to fieldID is set (has been assigned a value) and false otherwise */
-    public boolean isSet(_Fields field) {
-      if (field == null) {
-        throw new IllegalArgumentException();
-      }
-
-      switch (field) {
-      case SUCCESS:
-        return isSetSuccess();
-      }
-      throw new IllegalStateException();
-    }
-
-    @Override
-    public boolean equals(Object that) {
-      if (that == null)
-        return false;
-      if (that instanceof ping_result)
-        return this.equals((ping_result)that);
-      return false;
-    }
-
-    public boolean equals(ping_result that) {
-      if (that == null)
-        return false;
-
-      boolean this_present_success = true && this.isSetSuccess();
-      boolean that_present_success = true && that.isSetSuccess();
-      if (this_present_success || that_present_success) {
-        if (!(this_present_success && that_present_success))
-          return false;
-        if (!this.success.equals(that.success))
-          return false;
-      }
-
-      return true;
-    }
-
-    @Override
-    public int hashCode() {
-      return 0;
-    }
-
-    public int compareTo(ping_result other) {
-      if (!getClass().equals(other.getClass())) {
-        return getClass().getName().compareTo(other.getClass().getName());
-      }
-
-      int lastComparison = 0;
-      ping_result typedOther = (ping_result)other;
-
-      lastComparison = Boolean.valueOf(isSetSuccess()).compareTo(typedOther.isSetSuccess());
-      if (lastComparison != 0) {
-        return lastComparison;
-      }
-      if (isSetSuccess()) {
-        lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.success, typedOther.success);
-        if (lastComparison != 0) {
-          return lastComparison;
-        }
-      }
-      return 0;
-    }
-
-    public _Fields fieldForId(int fieldId) {
-      return _Fields.findByThriftId(fieldId);
-    }
-
-    public void read(org.apache.thrift.protocol.TProtocol iprot) throws org.apache.thrift.TException {
-      schemes.get(iprot.getScheme()).getScheme().read(iprot, this);
-    }
-
-    public void write(org.apache.thrift.protocol.TProtocol oprot) throws org.apache.thrift.TException {
-      schemes.get(oprot.getScheme()).getScheme().write(oprot, this);
-      }
-
-    @Override
-    public String toString() {
-      StringBuilder sb = new StringBuilder("ping_result(");
-      boolean first = true;
-
-      sb.append("success:");
-      if (this.success == null) {
-        sb.append("null");
-      } else {
-        sb.append(this.success);
-      }
-      first = false;
-      sb.append(")");
-      return sb.toString();
-    }
-
-    public void validate() throws org.apache.thrift.TException {
-      // check for required fields
-    }
-
-    private void writeObject(java.io.ObjectOutputStream out) throws java.io.IOException {
-      try {
-        write(new org.apache.thrift.protocol.TCompactProtocol(new org.apache.thrift.transport.TIOStreamTransport(out)));
-      } catch (org.apache.thrift.TException te) {
-        throw new java.io.IOException(te);
-      }
-    }
-
-    private void readObject(java.io.ObjectInputStream in) throws java.io.IOException, ClassNotFoundException {
-      try {
-        read(new org.apache.thrift.protocol.TCompactProtocol(new org.apache.thrift.transport.TIOStreamTransport(in)));
-      } catch (org.apache.thrift.TException te) {
-        throw new java.io.IOException(te);
-      }
-    }
-
-    private static class ping_resultStandardSchemeFactory implements SchemeFactory {
-      public ping_resultStandardScheme getScheme() {
-        return new ping_resultStandardScheme();
-      }
-    }
-
-    private static class ping_resultStandardScheme extends StandardScheme<ping_result> {
-
-      public void read(org.apache.thrift.protocol.TProtocol iprot, ping_result struct) throws org.apache.thrift.TException {
-        org.apache.thrift.protocol.TField schemeField;
-        iprot.readStructBegin();
-        while (true)
-        {
-          schemeField = iprot.readFieldBegin();
-          if (schemeField.type == org.apache.thrift.protocol.TType.STOP) { 
-            break;
-          }
-          switch (schemeField.id) {
-            case 0: // SUCCESS
-              if (schemeField.type == org.apache.thrift.protocol.TType.STRING) {
-                struct.success = iprot.readString();
-                struct.setSuccessIsSet(true);
-              } else { 
-                org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
-              }
-              break;
-            default:
-              org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
-          }
-          iprot.readFieldEnd();
-        }
-        iprot.readStructEnd();
-
-        // check for required fields of primitive type, which can't be checked in the validate method
-        struct.validate();
-      }
-
-      public void write(org.apache.thrift.protocol.TProtocol oprot, ping_result struct) throws org.apache.thrift.TException {
-        struct.validate();
-
-        oprot.writeStructBegin(STRUCT_DESC);
-        if (struct.success != null) {
-          oprot.writeFieldBegin(SUCCESS_FIELD_DESC);
-          oprot.writeString(struct.success);
-          oprot.writeFieldEnd();
-        }
-        oprot.writeFieldStop();
-        oprot.writeStructEnd();
-      }
-
-    }
-
-    private static class ping_resultTupleSchemeFactory implements SchemeFactory {
-      public ping_resultTupleScheme getScheme() {
-        return new ping_resultTupleScheme();
-      }
-    }
-
-    private static class ping_resultTupleScheme extends TupleScheme<ping_result> {
-
-      @Override
-      public void write(org.apache.thrift.protocol.TProtocol prot, ping_result struct) throws org.apache.thrift.TException {
-        TTupleProtocol oprot = (TTupleProtocol) prot;
-        BitSet optionals = new BitSet();
-        if (struct.isSetSuccess()) {
-          optionals.set(0);
-        }
-        oprot.writeBitSet(optionals, 1);
-        if (struct.isSetSuccess()) {
-          oprot.writeString(struct.success);
-        }
-      }
-
-      @Override
-      public void read(org.apache.thrift.protocol.TProtocol prot, ping_result struct) throws org.apache.thrift.TException {
-        TTupleProtocol iprot = (TTupleProtocol) prot;
-        BitSet incoming = iprot.readBitSet(1);
-        if (incoming.get(0)) {
-          struct.success = iprot.readString();
-          struct.setSuccessIsSet(true);
-        }
+      protected removeServerFromSyncList_result getResult(I iface, removeServerFromSyncList_args args) throws org.apache.thrift.TException {
+        removeServerFromSyncList_result result = new removeServerFromSyncList_result();
+        iface.removeServerFromSyncList(args.sn);
+        return result;
       }
     }
 
@@ -8771,6 +8263,1206 @@ public class HashTreeSyncInterface {
 
       @Override
       public void read(org.apache.thrift.protocol.TProtocol prot, postRebuildHashTreeResponse_result struct) throws org.apache.thrift.TException {
+        TTupleProtocol iprot = (TTupleProtocol) prot;
+      }
+    }
+
+  }
+
+  public static class addServerToSyncList_args implements org.apache.thrift.TBase<addServerToSyncList_args, addServerToSyncList_args._Fields>, java.io.Serializable, Cloneable   {
+    private static final org.apache.thrift.protocol.TStruct STRUCT_DESC = new org.apache.thrift.protocol.TStruct("addServerToSyncList_args");
+
+    private static final org.apache.thrift.protocol.TField SN_FIELD_DESC = new org.apache.thrift.protocol.TField("sn", org.apache.thrift.protocol.TType.STRUCT, (short)1);
+
+    private static final Map<Class<? extends IScheme>, SchemeFactory> schemes = new HashMap<Class<? extends IScheme>, SchemeFactory>();
+    static {
+      schemes.put(StandardScheme.class, new addServerToSyncList_argsStandardSchemeFactory());
+      schemes.put(TupleScheme.class, new addServerToSyncList_argsTupleSchemeFactory());
+    }
+
+    public ServerName sn; // required
+
+    /** The set of fields this struct contains, along with convenience methods for finding and manipulating them. */
+    public enum _Fields implements org.apache.thrift.TFieldIdEnum {
+      SN((short)1, "sn");
+
+      private static final Map<String, _Fields> byName = new HashMap<String, _Fields>();
+
+      static {
+        for (_Fields field : EnumSet.allOf(_Fields.class)) {
+          byName.put(field.getFieldName(), field);
+        }
+      }
+
+      /**
+       * Find the _Fields constant that matches fieldId, or null if its not found.
+       */
+      public static _Fields findByThriftId(int fieldId) {
+        switch(fieldId) {
+          case 1: // SN
+            return SN;
+          default:
+            return null;
+        }
+      }
+
+      /**
+       * Find the _Fields constant that matches fieldId, throwing an exception
+       * if it is not found.
+       */
+      public static _Fields findByThriftIdOrThrow(int fieldId) {
+        _Fields fields = findByThriftId(fieldId);
+        if (fields == null) throw new IllegalArgumentException("Field " + fieldId + " doesn't exist!");
+        return fields;
+      }
+
+      /**
+       * Find the _Fields constant that matches name, or null if its not found.
+       */
+      public static _Fields findByName(String name) {
+        return byName.get(name);
+      }
+
+      private final short _thriftId;
+      private final String _fieldName;
+
+      _Fields(short thriftId, String fieldName) {
+        _thriftId = thriftId;
+        _fieldName = fieldName;
+      }
+
+      public short getThriftFieldId() {
+        return _thriftId;
+      }
+
+      public String getFieldName() {
+        return _fieldName;
+      }
+    }
+
+    // isset id assignments
+    public static final Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> metaDataMap;
+    static {
+      Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> tmpMap = new EnumMap<_Fields, org.apache.thrift.meta_data.FieldMetaData>(_Fields.class);
+      tmpMap.put(_Fields.SN, new org.apache.thrift.meta_data.FieldMetaData("sn", org.apache.thrift.TFieldRequirementType.DEFAULT, 
+          new org.apache.thrift.meta_data.StructMetaData(org.apache.thrift.protocol.TType.STRUCT, ServerName.class)));
+      metaDataMap = Collections.unmodifiableMap(tmpMap);
+      org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(addServerToSyncList_args.class, metaDataMap);
+    }
+
+    public addServerToSyncList_args() {
+    }
+
+    public addServerToSyncList_args(
+      ServerName sn)
+    {
+      this();
+      this.sn = sn;
+    }
+
+    /**
+     * Performs a deep copy on <i>other</i>.
+     */
+    public addServerToSyncList_args(addServerToSyncList_args other) {
+      if (other.isSetSn()) {
+        this.sn = new ServerName(other.sn);
+      }
+    }
+
+    public addServerToSyncList_args deepCopy() {
+      return new addServerToSyncList_args(this);
+    }
+
+    @Override
+    public void clear() {
+      this.sn = null;
+    }
+
+    public ServerName getSn() {
+      return this.sn;
+    }
+
+    public addServerToSyncList_args setSn(ServerName sn) {
+      this.sn = sn;
+      return this;
+    }
+
+    public void unsetSn() {
+      this.sn = null;
+    }
+
+    /** Returns true if field sn is set (has been assigned a value) and false otherwise */
+    public boolean isSetSn() {
+      return this.sn != null;
+    }
+
+    public void setSnIsSet(boolean value) {
+      if (!value) {
+        this.sn = null;
+      }
+    }
+
+    public void setFieldValue(_Fields field, Object value) {
+      switch (field) {
+      case SN:
+        if (value == null) {
+          unsetSn();
+        } else {
+          setSn((ServerName)value);
+        }
+        break;
+
+      }
+    }
+
+    public Object getFieldValue(_Fields field) {
+      switch (field) {
+      case SN:
+        return getSn();
+
+      }
+      throw new IllegalStateException();
+    }
+
+    /** Returns true if field corresponding to fieldID is set (has been assigned a value) and false otherwise */
+    public boolean isSet(_Fields field) {
+      if (field == null) {
+        throw new IllegalArgumentException();
+      }
+
+      switch (field) {
+      case SN:
+        return isSetSn();
+      }
+      throw new IllegalStateException();
+    }
+
+    @Override
+    public boolean equals(Object that) {
+      if (that == null)
+        return false;
+      if (that instanceof addServerToSyncList_args)
+        return this.equals((addServerToSyncList_args)that);
+      return false;
+    }
+
+    public boolean equals(addServerToSyncList_args that) {
+      if (that == null)
+        return false;
+
+      boolean this_present_sn = true && this.isSetSn();
+      boolean that_present_sn = true && that.isSetSn();
+      if (this_present_sn || that_present_sn) {
+        if (!(this_present_sn && that_present_sn))
+          return false;
+        if (!this.sn.equals(that.sn))
+          return false;
+      }
+
+      return true;
+    }
+
+    @Override
+    public int hashCode() {
+      return 0;
+    }
+
+    public int compareTo(addServerToSyncList_args other) {
+      if (!getClass().equals(other.getClass())) {
+        return getClass().getName().compareTo(other.getClass().getName());
+      }
+
+      int lastComparison = 0;
+      addServerToSyncList_args typedOther = (addServerToSyncList_args)other;
+
+      lastComparison = Boolean.valueOf(isSetSn()).compareTo(typedOther.isSetSn());
+      if (lastComparison != 0) {
+        return lastComparison;
+      }
+      if (isSetSn()) {
+        lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.sn, typedOther.sn);
+        if (lastComparison != 0) {
+          return lastComparison;
+        }
+      }
+      return 0;
+    }
+
+    public _Fields fieldForId(int fieldId) {
+      return _Fields.findByThriftId(fieldId);
+    }
+
+    public void read(org.apache.thrift.protocol.TProtocol iprot) throws org.apache.thrift.TException {
+      schemes.get(iprot.getScheme()).getScheme().read(iprot, this);
+    }
+
+    public void write(org.apache.thrift.protocol.TProtocol oprot) throws org.apache.thrift.TException {
+      schemes.get(oprot.getScheme()).getScheme().write(oprot, this);
+    }
+
+    @Override
+    public String toString() {
+      StringBuilder sb = new StringBuilder("addServerToSyncList_args(");
+      boolean first = true;
+
+      sb.append("sn:");
+      if (this.sn == null) {
+        sb.append("null");
+      } else {
+        sb.append(this.sn);
+      }
+      first = false;
+      sb.append(")");
+      return sb.toString();
+    }
+
+    public void validate() throws org.apache.thrift.TException {
+      // check for required fields
+    }
+
+    private void writeObject(java.io.ObjectOutputStream out) throws java.io.IOException {
+      try {
+        write(new org.apache.thrift.protocol.TCompactProtocol(new org.apache.thrift.transport.TIOStreamTransport(out)));
+      } catch (org.apache.thrift.TException te) {
+        throw new java.io.IOException(te);
+      }
+    }
+
+    private void readObject(java.io.ObjectInputStream in) throws java.io.IOException, ClassNotFoundException {
+      try {
+        read(new org.apache.thrift.protocol.TCompactProtocol(new org.apache.thrift.transport.TIOStreamTransport(in)));
+      } catch (org.apache.thrift.TException te) {
+        throw new java.io.IOException(te);
+      }
+    }
+
+    private static class addServerToSyncList_argsStandardSchemeFactory implements SchemeFactory {
+      public addServerToSyncList_argsStandardScheme getScheme() {
+        return new addServerToSyncList_argsStandardScheme();
+      }
+    }
+
+    private static class addServerToSyncList_argsStandardScheme extends StandardScheme<addServerToSyncList_args> {
+
+      public void read(org.apache.thrift.protocol.TProtocol iprot, addServerToSyncList_args struct) throws org.apache.thrift.TException {
+        org.apache.thrift.protocol.TField schemeField;
+        iprot.readStructBegin();
+        while (true)
+        {
+          schemeField = iprot.readFieldBegin();
+          if (schemeField.type == org.apache.thrift.protocol.TType.STOP) { 
+            break;
+          }
+          switch (schemeField.id) {
+            case 1: // SN
+              if (schemeField.type == org.apache.thrift.protocol.TType.STRUCT) {
+                struct.sn = new ServerName();
+                struct.sn.read(iprot);
+                struct.setSnIsSet(true);
+              } else { 
+                org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
+              }
+              break;
+            default:
+              org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
+          }
+          iprot.readFieldEnd();
+        }
+        iprot.readStructEnd();
+
+        // check for required fields of primitive type, which can't be checked in the validate method
+        struct.validate();
+      }
+
+      public void write(org.apache.thrift.protocol.TProtocol oprot, addServerToSyncList_args struct) throws org.apache.thrift.TException {
+        struct.validate();
+
+        oprot.writeStructBegin(STRUCT_DESC);
+        if (struct.sn != null) {
+          oprot.writeFieldBegin(SN_FIELD_DESC);
+          struct.sn.write(oprot);
+          oprot.writeFieldEnd();
+        }
+        oprot.writeFieldStop();
+        oprot.writeStructEnd();
+      }
+
+    }
+
+    private static class addServerToSyncList_argsTupleSchemeFactory implements SchemeFactory {
+      public addServerToSyncList_argsTupleScheme getScheme() {
+        return new addServerToSyncList_argsTupleScheme();
+      }
+    }
+
+    private static class addServerToSyncList_argsTupleScheme extends TupleScheme<addServerToSyncList_args> {
+
+      @Override
+      public void write(org.apache.thrift.protocol.TProtocol prot, addServerToSyncList_args struct) throws org.apache.thrift.TException {
+        TTupleProtocol oprot = (TTupleProtocol) prot;
+        BitSet optionals = new BitSet();
+        if (struct.isSetSn()) {
+          optionals.set(0);
+        }
+        oprot.writeBitSet(optionals, 1);
+        if (struct.isSetSn()) {
+          struct.sn.write(oprot);
+        }
+      }
+
+      @Override
+      public void read(org.apache.thrift.protocol.TProtocol prot, addServerToSyncList_args struct) throws org.apache.thrift.TException {
+        TTupleProtocol iprot = (TTupleProtocol) prot;
+        BitSet incoming = iprot.readBitSet(1);
+        if (incoming.get(0)) {
+          struct.sn = new ServerName();
+          struct.sn.read(iprot);
+          struct.setSnIsSet(true);
+        }
+      }
+    }
+
+  }
+
+  public static class addServerToSyncList_result implements org.apache.thrift.TBase<addServerToSyncList_result, addServerToSyncList_result._Fields>, java.io.Serializable, Cloneable   {
+    private static final org.apache.thrift.protocol.TStruct STRUCT_DESC = new org.apache.thrift.protocol.TStruct("addServerToSyncList_result");
+
+
+    private static final Map<Class<? extends IScheme>, SchemeFactory> schemes = new HashMap<Class<? extends IScheme>, SchemeFactory>();
+    static {
+      schemes.put(StandardScheme.class, new addServerToSyncList_resultStandardSchemeFactory());
+      schemes.put(TupleScheme.class, new addServerToSyncList_resultTupleSchemeFactory());
+    }
+
+
+    /** The set of fields this struct contains, along with convenience methods for finding and manipulating them. */
+    public enum _Fields implements org.apache.thrift.TFieldIdEnum {
+;
+
+      private static final Map<String, _Fields> byName = new HashMap<String, _Fields>();
+
+      static {
+        for (_Fields field : EnumSet.allOf(_Fields.class)) {
+          byName.put(field.getFieldName(), field);
+        }
+      }
+
+      /**
+       * Find the _Fields constant that matches fieldId, or null if its not found.
+       */
+      public static _Fields findByThriftId(int fieldId) {
+        switch(fieldId) {
+          default:
+            return null;
+        }
+      }
+
+      /**
+       * Find the _Fields constant that matches fieldId, throwing an exception
+       * if it is not found.
+       */
+      public static _Fields findByThriftIdOrThrow(int fieldId) {
+        _Fields fields = findByThriftId(fieldId);
+        if (fields == null) throw new IllegalArgumentException("Field " + fieldId + " doesn't exist!");
+        return fields;
+      }
+
+      /**
+       * Find the _Fields constant that matches name, or null if its not found.
+       */
+      public static _Fields findByName(String name) {
+        return byName.get(name);
+      }
+
+      private final short _thriftId;
+      private final String _fieldName;
+
+      _Fields(short thriftId, String fieldName) {
+        _thriftId = thriftId;
+        _fieldName = fieldName;
+      }
+
+      public short getThriftFieldId() {
+        return _thriftId;
+      }
+
+      public String getFieldName() {
+        return _fieldName;
+      }
+    }
+    public static final Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> metaDataMap;
+    static {
+      Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> tmpMap = new EnumMap<_Fields, org.apache.thrift.meta_data.FieldMetaData>(_Fields.class);
+      metaDataMap = Collections.unmodifiableMap(tmpMap);
+      org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(addServerToSyncList_result.class, metaDataMap);
+    }
+
+    public addServerToSyncList_result() {
+    }
+
+    /**
+     * Performs a deep copy on <i>other</i>.
+     */
+    public addServerToSyncList_result(addServerToSyncList_result other) {
+    }
+
+    public addServerToSyncList_result deepCopy() {
+      return new addServerToSyncList_result(this);
+    }
+
+    @Override
+    public void clear() {
+    }
+
+    public void setFieldValue(_Fields field, Object value) {
+      switch (field) {
+      }
+    }
+
+    public Object getFieldValue(_Fields field) {
+      switch (field) {
+      }
+      throw new IllegalStateException();
+    }
+
+    /** Returns true if field corresponding to fieldID is set (has been assigned a value) and false otherwise */
+    public boolean isSet(_Fields field) {
+      if (field == null) {
+        throw new IllegalArgumentException();
+      }
+
+      switch (field) {
+      }
+      throw new IllegalStateException();
+    }
+
+    @Override
+    public boolean equals(Object that) {
+      if (that == null)
+        return false;
+      if (that instanceof addServerToSyncList_result)
+        return this.equals((addServerToSyncList_result)that);
+      return false;
+    }
+
+    public boolean equals(addServerToSyncList_result that) {
+      if (that == null)
+        return false;
+
+      return true;
+    }
+
+    @Override
+    public int hashCode() {
+      return 0;
+    }
+
+    public int compareTo(addServerToSyncList_result other) {
+      if (!getClass().equals(other.getClass())) {
+        return getClass().getName().compareTo(other.getClass().getName());
+      }
+
+      int lastComparison = 0;
+      addServerToSyncList_result typedOther = (addServerToSyncList_result)other;
+
+      return 0;
+    }
+
+    public _Fields fieldForId(int fieldId) {
+      return _Fields.findByThriftId(fieldId);
+    }
+
+    public void read(org.apache.thrift.protocol.TProtocol iprot) throws org.apache.thrift.TException {
+      schemes.get(iprot.getScheme()).getScheme().read(iprot, this);
+    }
+
+    public void write(org.apache.thrift.protocol.TProtocol oprot) throws org.apache.thrift.TException {
+      schemes.get(oprot.getScheme()).getScheme().write(oprot, this);
+      }
+
+    @Override
+    public String toString() {
+      StringBuilder sb = new StringBuilder("addServerToSyncList_result(");
+      boolean first = true;
+
+      sb.append(")");
+      return sb.toString();
+    }
+
+    public void validate() throws org.apache.thrift.TException {
+      // check for required fields
+    }
+
+    private void writeObject(java.io.ObjectOutputStream out) throws java.io.IOException {
+      try {
+        write(new org.apache.thrift.protocol.TCompactProtocol(new org.apache.thrift.transport.TIOStreamTransport(out)));
+      } catch (org.apache.thrift.TException te) {
+        throw new java.io.IOException(te);
+      }
+    }
+
+    private void readObject(java.io.ObjectInputStream in) throws java.io.IOException, ClassNotFoundException {
+      try {
+        read(new org.apache.thrift.protocol.TCompactProtocol(new org.apache.thrift.transport.TIOStreamTransport(in)));
+      } catch (org.apache.thrift.TException te) {
+        throw new java.io.IOException(te);
+      }
+    }
+
+    private static class addServerToSyncList_resultStandardSchemeFactory implements SchemeFactory {
+      public addServerToSyncList_resultStandardScheme getScheme() {
+        return new addServerToSyncList_resultStandardScheme();
+      }
+    }
+
+    private static class addServerToSyncList_resultStandardScheme extends StandardScheme<addServerToSyncList_result> {
+
+      public void read(org.apache.thrift.protocol.TProtocol iprot, addServerToSyncList_result struct) throws org.apache.thrift.TException {
+        org.apache.thrift.protocol.TField schemeField;
+        iprot.readStructBegin();
+        while (true)
+        {
+          schemeField = iprot.readFieldBegin();
+          if (schemeField.type == org.apache.thrift.protocol.TType.STOP) { 
+            break;
+          }
+          switch (schemeField.id) {
+            default:
+              org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
+          }
+          iprot.readFieldEnd();
+        }
+        iprot.readStructEnd();
+
+        // check for required fields of primitive type, which can't be checked in the validate method
+        struct.validate();
+      }
+
+      public void write(org.apache.thrift.protocol.TProtocol oprot, addServerToSyncList_result struct) throws org.apache.thrift.TException {
+        struct.validate();
+
+        oprot.writeStructBegin(STRUCT_DESC);
+        oprot.writeFieldStop();
+        oprot.writeStructEnd();
+      }
+
+    }
+
+    private static class addServerToSyncList_resultTupleSchemeFactory implements SchemeFactory {
+      public addServerToSyncList_resultTupleScheme getScheme() {
+        return new addServerToSyncList_resultTupleScheme();
+      }
+    }
+
+    private static class addServerToSyncList_resultTupleScheme extends TupleScheme<addServerToSyncList_result> {
+
+      @Override
+      public void write(org.apache.thrift.protocol.TProtocol prot, addServerToSyncList_result struct) throws org.apache.thrift.TException {
+        TTupleProtocol oprot = (TTupleProtocol) prot;
+      }
+
+      @Override
+      public void read(org.apache.thrift.protocol.TProtocol prot, addServerToSyncList_result struct) throws org.apache.thrift.TException {
+        TTupleProtocol iprot = (TTupleProtocol) prot;
+      }
+    }
+
+  }
+
+  public static class removeServerFromSyncList_args implements org.apache.thrift.TBase<removeServerFromSyncList_args, removeServerFromSyncList_args._Fields>, java.io.Serializable, Cloneable   {
+    private static final org.apache.thrift.protocol.TStruct STRUCT_DESC = new org.apache.thrift.protocol.TStruct("removeServerFromSyncList_args");
+
+    private static final org.apache.thrift.protocol.TField SN_FIELD_DESC = new org.apache.thrift.protocol.TField("sn", org.apache.thrift.protocol.TType.STRUCT, (short)1);
+
+    private static final Map<Class<? extends IScheme>, SchemeFactory> schemes = new HashMap<Class<? extends IScheme>, SchemeFactory>();
+    static {
+      schemes.put(StandardScheme.class, new removeServerFromSyncList_argsStandardSchemeFactory());
+      schemes.put(TupleScheme.class, new removeServerFromSyncList_argsTupleSchemeFactory());
+    }
+
+    public ServerName sn; // required
+
+    /** The set of fields this struct contains, along with convenience methods for finding and manipulating them. */
+    public enum _Fields implements org.apache.thrift.TFieldIdEnum {
+      SN((short)1, "sn");
+
+      private static final Map<String, _Fields> byName = new HashMap<String, _Fields>();
+
+      static {
+        for (_Fields field : EnumSet.allOf(_Fields.class)) {
+          byName.put(field.getFieldName(), field);
+        }
+      }
+
+      /**
+       * Find the _Fields constant that matches fieldId, or null if its not found.
+       */
+      public static _Fields findByThriftId(int fieldId) {
+        switch(fieldId) {
+          case 1: // SN
+            return SN;
+          default:
+            return null;
+        }
+      }
+
+      /**
+       * Find the _Fields constant that matches fieldId, throwing an exception
+       * if it is not found.
+       */
+      public static _Fields findByThriftIdOrThrow(int fieldId) {
+        _Fields fields = findByThriftId(fieldId);
+        if (fields == null) throw new IllegalArgumentException("Field " + fieldId + " doesn't exist!");
+        return fields;
+      }
+
+      /**
+       * Find the _Fields constant that matches name, or null if its not found.
+       */
+      public static _Fields findByName(String name) {
+        return byName.get(name);
+      }
+
+      private final short _thriftId;
+      private final String _fieldName;
+
+      _Fields(short thriftId, String fieldName) {
+        _thriftId = thriftId;
+        _fieldName = fieldName;
+      }
+
+      public short getThriftFieldId() {
+        return _thriftId;
+      }
+
+      public String getFieldName() {
+        return _fieldName;
+      }
+    }
+
+    // isset id assignments
+    public static final Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> metaDataMap;
+    static {
+      Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> tmpMap = new EnumMap<_Fields, org.apache.thrift.meta_data.FieldMetaData>(_Fields.class);
+      tmpMap.put(_Fields.SN, new org.apache.thrift.meta_data.FieldMetaData("sn", org.apache.thrift.TFieldRequirementType.DEFAULT, 
+          new org.apache.thrift.meta_data.StructMetaData(org.apache.thrift.protocol.TType.STRUCT, ServerName.class)));
+      metaDataMap = Collections.unmodifiableMap(tmpMap);
+      org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(removeServerFromSyncList_args.class, metaDataMap);
+    }
+
+    public removeServerFromSyncList_args() {
+    }
+
+    public removeServerFromSyncList_args(
+      ServerName sn)
+    {
+      this();
+      this.sn = sn;
+    }
+
+    /**
+     * Performs a deep copy on <i>other</i>.
+     */
+    public removeServerFromSyncList_args(removeServerFromSyncList_args other) {
+      if (other.isSetSn()) {
+        this.sn = new ServerName(other.sn);
+      }
+    }
+
+    public removeServerFromSyncList_args deepCopy() {
+      return new removeServerFromSyncList_args(this);
+    }
+
+    @Override
+    public void clear() {
+      this.sn = null;
+    }
+
+    public ServerName getSn() {
+      return this.sn;
+    }
+
+    public removeServerFromSyncList_args setSn(ServerName sn) {
+      this.sn = sn;
+      return this;
+    }
+
+    public void unsetSn() {
+      this.sn = null;
+    }
+
+    /** Returns true if field sn is set (has been assigned a value) and false otherwise */
+    public boolean isSetSn() {
+      return this.sn != null;
+    }
+
+    public void setSnIsSet(boolean value) {
+      if (!value) {
+        this.sn = null;
+      }
+    }
+
+    public void setFieldValue(_Fields field, Object value) {
+      switch (field) {
+      case SN:
+        if (value == null) {
+          unsetSn();
+        } else {
+          setSn((ServerName)value);
+        }
+        break;
+
+      }
+    }
+
+    public Object getFieldValue(_Fields field) {
+      switch (field) {
+      case SN:
+        return getSn();
+
+      }
+      throw new IllegalStateException();
+    }
+
+    /** Returns true if field corresponding to fieldID is set (has been assigned a value) and false otherwise */
+    public boolean isSet(_Fields field) {
+      if (field == null) {
+        throw new IllegalArgumentException();
+      }
+
+      switch (field) {
+      case SN:
+        return isSetSn();
+      }
+      throw new IllegalStateException();
+    }
+
+    @Override
+    public boolean equals(Object that) {
+      if (that == null)
+        return false;
+      if (that instanceof removeServerFromSyncList_args)
+        return this.equals((removeServerFromSyncList_args)that);
+      return false;
+    }
+
+    public boolean equals(removeServerFromSyncList_args that) {
+      if (that == null)
+        return false;
+
+      boolean this_present_sn = true && this.isSetSn();
+      boolean that_present_sn = true && that.isSetSn();
+      if (this_present_sn || that_present_sn) {
+        if (!(this_present_sn && that_present_sn))
+          return false;
+        if (!this.sn.equals(that.sn))
+          return false;
+      }
+
+      return true;
+    }
+
+    @Override
+    public int hashCode() {
+      return 0;
+    }
+
+    public int compareTo(removeServerFromSyncList_args other) {
+      if (!getClass().equals(other.getClass())) {
+        return getClass().getName().compareTo(other.getClass().getName());
+      }
+
+      int lastComparison = 0;
+      removeServerFromSyncList_args typedOther = (removeServerFromSyncList_args)other;
+
+      lastComparison = Boolean.valueOf(isSetSn()).compareTo(typedOther.isSetSn());
+      if (lastComparison != 0) {
+        return lastComparison;
+      }
+      if (isSetSn()) {
+        lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.sn, typedOther.sn);
+        if (lastComparison != 0) {
+          return lastComparison;
+        }
+      }
+      return 0;
+    }
+
+    public _Fields fieldForId(int fieldId) {
+      return _Fields.findByThriftId(fieldId);
+    }
+
+    public void read(org.apache.thrift.protocol.TProtocol iprot) throws org.apache.thrift.TException {
+      schemes.get(iprot.getScheme()).getScheme().read(iprot, this);
+    }
+
+    public void write(org.apache.thrift.protocol.TProtocol oprot) throws org.apache.thrift.TException {
+      schemes.get(oprot.getScheme()).getScheme().write(oprot, this);
+    }
+
+    @Override
+    public String toString() {
+      StringBuilder sb = new StringBuilder("removeServerFromSyncList_args(");
+      boolean first = true;
+
+      sb.append("sn:");
+      if (this.sn == null) {
+        sb.append("null");
+      } else {
+        sb.append(this.sn);
+      }
+      first = false;
+      sb.append(")");
+      return sb.toString();
+    }
+
+    public void validate() throws org.apache.thrift.TException {
+      // check for required fields
+    }
+
+    private void writeObject(java.io.ObjectOutputStream out) throws java.io.IOException {
+      try {
+        write(new org.apache.thrift.protocol.TCompactProtocol(new org.apache.thrift.transport.TIOStreamTransport(out)));
+      } catch (org.apache.thrift.TException te) {
+        throw new java.io.IOException(te);
+      }
+    }
+
+    private void readObject(java.io.ObjectInputStream in) throws java.io.IOException, ClassNotFoundException {
+      try {
+        read(new org.apache.thrift.protocol.TCompactProtocol(new org.apache.thrift.transport.TIOStreamTransport(in)));
+      } catch (org.apache.thrift.TException te) {
+        throw new java.io.IOException(te);
+      }
+    }
+
+    private static class removeServerFromSyncList_argsStandardSchemeFactory implements SchemeFactory {
+      public removeServerFromSyncList_argsStandardScheme getScheme() {
+        return new removeServerFromSyncList_argsStandardScheme();
+      }
+    }
+
+    private static class removeServerFromSyncList_argsStandardScheme extends StandardScheme<removeServerFromSyncList_args> {
+
+      public void read(org.apache.thrift.protocol.TProtocol iprot, removeServerFromSyncList_args struct) throws org.apache.thrift.TException {
+        org.apache.thrift.protocol.TField schemeField;
+        iprot.readStructBegin();
+        while (true)
+        {
+          schemeField = iprot.readFieldBegin();
+          if (schemeField.type == org.apache.thrift.protocol.TType.STOP) { 
+            break;
+          }
+          switch (schemeField.id) {
+            case 1: // SN
+              if (schemeField.type == org.apache.thrift.protocol.TType.STRUCT) {
+                struct.sn = new ServerName();
+                struct.sn.read(iprot);
+                struct.setSnIsSet(true);
+              } else { 
+                org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
+              }
+              break;
+            default:
+              org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
+          }
+          iprot.readFieldEnd();
+        }
+        iprot.readStructEnd();
+
+        // check for required fields of primitive type, which can't be checked in the validate method
+        struct.validate();
+      }
+
+      public void write(org.apache.thrift.protocol.TProtocol oprot, removeServerFromSyncList_args struct) throws org.apache.thrift.TException {
+        struct.validate();
+
+        oprot.writeStructBegin(STRUCT_DESC);
+        if (struct.sn != null) {
+          oprot.writeFieldBegin(SN_FIELD_DESC);
+          struct.sn.write(oprot);
+          oprot.writeFieldEnd();
+        }
+        oprot.writeFieldStop();
+        oprot.writeStructEnd();
+      }
+
+    }
+
+    private static class removeServerFromSyncList_argsTupleSchemeFactory implements SchemeFactory {
+      public removeServerFromSyncList_argsTupleScheme getScheme() {
+        return new removeServerFromSyncList_argsTupleScheme();
+      }
+    }
+
+    private static class removeServerFromSyncList_argsTupleScheme extends TupleScheme<removeServerFromSyncList_args> {
+
+      @Override
+      public void write(org.apache.thrift.protocol.TProtocol prot, removeServerFromSyncList_args struct) throws org.apache.thrift.TException {
+        TTupleProtocol oprot = (TTupleProtocol) prot;
+        BitSet optionals = new BitSet();
+        if (struct.isSetSn()) {
+          optionals.set(0);
+        }
+        oprot.writeBitSet(optionals, 1);
+        if (struct.isSetSn()) {
+          struct.sn.write(oprot);
+        }
+      }
+
+      @Override
+      public void read(org.apache.thrift.protocol.TProtocol prot, removeServerFromSyncList_args struct) throws org.apache.thrift.TException {
+        TTupleProtocol iprot = (TTupleProtocol) prot;
+        BitSet incoming = iprot.readBitSet(1);
+        if (incoming.get(0)) {
+          struct.sn = new ServerName();
+          struct.sn.read(iprot);
+          struct.setSnIsSet(true);
+        }
+      }
+    }
+
+  }
+
+  public static class removeServerFromSyncList_result implements org.apache.thrift.TBase<removeServerFromSyncList_result, removeServerFromSyncList_result._Fields>, java.io.Serializable, Cloneable   {
+    private static final org.apache.thrift.protocol.TStruct STRUCT_DESC = new org.apache.thrift.protocol.TStruct("removeServerFromSyncList_result");
+
+
+    private static final Map<Class<? extends IScheme>, SchemeFactory> schemes = new HashMap<Class<? extends IScheme>, SchemeFactory>();
+    static {
+      schemes.put(StandardScheme.class, new removeServerFromSyncList_resultStandardSchemeFactory());
+      schemes.put(TupleScheme.class, new removeServerFromSyncList_resultTupleSchemeFactory());
+    }
+
+
+    /** The set of fields this struct contains, along with convenience methods for finding and manipulating them. */
+    public enum _Fields implements org.apache.thrift.TFieldIdEnum {
+;
+
+      private static final Map<String, _Fields> byName = new HashMap<String, _Fields>();
+
+      static {
+        for (_Fields field : EnumSet.allOf(_Fields.class)) {
+          byName.put(field.getFieldName(), field);
+        }
+      }
+
+      /**
+       * Find the _Fields constant that matches fieldId, or null if its not found.
+       */
+      public static _Fields findByThriftId(int fieldId) {
+        switch(fieldId) {
+          default:
+            return null;
+        }
+      }
+
+      /**
+       * Find the _Fields constant that matches fieldId, throwing an exception
+       * if it is not found.
+       */
+      public static _Fields findByThriftIdOrThrow(int fieldId) {
+        _Fields fields = findByThriftId(fieldId);
+        if (fields == null) throw new IllegalArgumentException("Field " + fieldId + " doesn't exist!");
+        return fields;
+      }
+
+      /**
+       * Find the _Fields constant that matches name, or null if its not found.
+       */
+      public static _Fields findByName(String name) {
+        return byName.get(name);
+      }
+
+      private final short _thriftId;
+      private final String _fieldName;
+
+      _Fields(short thriftId, String fieldName) {
+        _thriftId = thriftId;
+        _fieldName = fieldName;
+      }
+
+      public short getThriftFieldId() {
+        return _thriftId;
+      }
+
+      public String getFieldName() {
+        return _fieldName;
+      }
+    }
+    public static final Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> metaDataMap;
+    static {
+      Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> tmpMap = new EnumMap<_Fields, org.apache.thrift.meta_data.FieldMetaData>(_Fields.class);
+      metaDataMap = Collections.unmodifiableMap(tmpMap);
+      org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(removeServerFromSyncList_result.class, metaDataMap);
+    }
+
+    public removeServerFromSyncList_result() {
+    }
+
+    /**
+     * Performs a deep copy on <i>other</i>.
+     */
+    public removeServerFromSyncList_result(removeServerFromSyncList_result other) {
+    }
+
+    public removeServerFromSyncList_result deepCopy() {
+      return new removeServerFromSyncList_result(this);
+    }
+
+    @Override
+    public void clear() {
+    }
+
+    public void setFieldValue(_Fields field, Object value) {
+      switch (field) {
+      }
+    }
+
+    public Object getFieldValue(_Fields field) {
+      switch (field) {
+      }
+      throw new IllegalStateException();
+    }
+
+    /** Returns true if field corresponding to fieldID is set (has been assigned a value) and false otherwise */
+    public boolean isSet(_Fields field) {
+      if (field == null) {
+        throw new IllegalArgumentException();
+      }
+
+      switch (field) {
+      }
+      throw new IllegalStateException();
+    }
+
+    @Override
+    public boolean equals(Object that) {
+      if (that == null)
+        return false;
+      if (that instanceof removeServerFromSyncList_result)
+        return this.equals((removeServerFromSyncList_result)that);
+      return false;
+    }
+
+    public boolean equals(removeServerFromSyncList_result that) {
+      if (that == null)
+        return false;
+
+      return true;
+    }
+
+    @Override
+    public int hashCode() {
+      return 0;
+    }
+
+    public int compareTo(removeServerFromSyncList_result other) {
+      if (!getClass().equals(other.getClass())) {
+        return getClass().getName().compareTo(other.getClass().getName());
+      }
+
+      int lastComparison = 0;
+      removeServerFromSyncList_result typedOther = (removeServerFromSyncList_result)other;
+
+      return 0;
+    }
+
+    public _Fields fieldForId(int fieldId) {
+      return _Fields.findByThriftId(fieldId);
+    }
+
+    public void read(org.apache.thrift.protocol.TProtocol iprot) throws org.apache.thrift.TException {
+      schemes.get(iprot.getScheme()).getScheme().read(iprot, this);
+    }
+
+    public void write(org.apache.thrift.protocol.TProtocol oprot) throws org.apache.thrift.TException {
+      schemes.get(oprot.getScheme()).getScheme().write(oprot, this);
+      }
+
+    @Override
+    public String toString() {
+      StringBuilder sb = new StringBuilder("removeServerFromSyncList_result(");
+      boolean first = true;
+
+      sb.append(")");
+      return sb.toString();
+    }
+
+    public void validate() throws org.apache.thrift.TException {
+      // check for required fields
+    }
+
+    private void writeObject(java.io.ObjectOutputStream out) throws java.io.IOException {
+      try {
+        write(new org.apache.thrift.protocol.TCompactProtocol(new org.apache.thrift.transport.TIOStreamTransport(out)));
+      } catch (org.apache.thrift.TException te) {
+        throw new java.io.IOException(te);
+      }
+    }
+
+    private void readObject(java.io.ObjectInputStream in) throws java.io.IOException, ClassNotFoundException {
+      try {
+        read(new org.apache.thrift.protocol.TCompactProtocol(new org.apache.thrift.transport.TIOStreamTransport(in)));
+      } catch (org.apache.thrift.TException te) {
+        throw new java.io.IOException(te);
+      }
+    }
+
+    private static class removeServerFromSyncList_resultStandardSchemeFactory implements SchemeFactory {
+      public removeServerFromSyncList_resultStandardScheme getScheme() {
+        return new removeServerFromSyncList_resultStandardScheme();
+      }
+    }
+
+    private static class removeServerFromSyncList_resultStandardScheme extends StandardScheme<removeServerFromSyncList_result> {
+
+      public void read(org.apache.thrift.protocol.TProtocol iprot, removeServerFromSyncList_result struct) throws org.apache.thrift.TException {
+        org.apache.thrift.protocol.TField schemeField;
+        iprot.readStructBegin();
+        while (true)
+        {
+          schemeField = iprot.readFieldBegin();
+          if (schemeField.type == org.apache.thrift.protocol.TType.STOP) { 
+            break;
+          }
+          switch (schemeField.id) {
+            default:
+              org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
+          }
+          iprot.readFieldEnd();
+        }
+        iprot.readStructEnd();
+
+        // check for required fields of primitive type, which can't be checked in the validate method
+        struct.validate();
+      }
+
+      public void write(org.apache.thrift.protocol.TProtocol oprot, removeServerFromSyncList_result struct) throws org.apache.thrift.TException {
+        struct.validate();
+
+        oprot.writeStructBegin(STRUCT_DESC);
+        oprot.writeFieldStop();
+        oprot.writeStructEnd();
+      }
+
+    }
+
+    private static class removeServerFromSyncList_resultTupleSchemeFactory implements SchemeFactory {
+      public removeServerFromSyncList_resultTupleScheme getScheme() {
+        return new removeServerFromSyncList_resultTupleScheme();
+      }
+    }
+
+    private static class removeServerFromSyncList_resultTupleScheme extends TupleScheme<removeServerFromSyncList_result> {
+
+      @Override
+      public void write(org.apache.thrift.protocol.TProtocol prot, removeServerFromSyncList_result struct) throws org.apache.thrift.TException {
+        TTupleProtocol oprot = (TTupleProtocol) prot;
+      }
+
+      @Override
+      public void read(org.apache.thrift.protocol.TProtocol prot, removeServerFromSyncList_result struct) throws org.apache.thrift.TException {
         TTupleProtocol iprot = (TTupleProtocol) prot;
       }
     }

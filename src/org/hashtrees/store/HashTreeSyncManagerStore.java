@@ -2,11 +2,11 @@ package org.hashtrees.store;
 
 import java.util.List;
 
-import org.hashtrees.synch.HashTreesSyncManager;
+import org.hashtrees.synch.HashTreesSyncCallsObserver;
 import org.hashtrees.thrift.generated.ServerName;
 
 /**
- * Used by {@link HashTreesSyncManager} to persist information about which
+ * Used by {@link HashTreesSyncCallsObserver} to persist information about which
  * remote hash trees to be synced.
  * 
  */

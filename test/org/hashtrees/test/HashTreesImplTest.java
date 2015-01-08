@@ -23,7 +23,7 @@ import org.hashtrees.HashTreesImpl;
 import org.hashtrees.store.HashTreeSyncManagerStore;
 import org.hashtrees.store.HashTreesMemStore;
 import org.hashtrees.store.HashTreesStore;
-import org.hashtrees.synch.HashTreesSyncManagerImpl;
+import org.hashtrees.synch.HashTreesSyncManager;
 import org.hashtrees.synch.HashTreesThriftClientProvider;
 import org.hashtrees.test.utils.HashTreesImplTestUtils;
 import org.hashtrees.test.utils.HashTreesImplTestUtils.HTreeComponents;
@@ -242,10 +242,8 @@ public class HashTreesImplTest {
 
 				Assert.assertEquals(localHTreeComp.store.localStore,
 						remoteHTreeComp.store.localStore);
-				Assert.assertEquals(0,
-						localHTreeComp.store.localStore.size());
-				Assert.assertEquals(0,
-						remoteHTreeComp.store.localStore.size());
+				Assert.assertEquals(0, localHTreeComp.store.localStore.size());
+				Assert.assertEquals(0, remoteHTreeComp.store.localStore.size());
 			}
 		} finally {
 			HashTreesImplTestUtils.closeStores(stores);
@@ -334,10 +332,10 @@ public class HashTreesImplTest {
 					DEFAULT_SEG_DATA_BLOCKS_COUNT, store);
 			HTreeComponents remoteHTreeComp = createHashTree(
 					DEFAULT_SEG_DATA_BLOCKS_COUNT, remoteStore);
-			HashTreesSyncManagerImpl hTreeManager = new HashTreesSyncManagerImpl(
-					"test", remoteHTreeComp.hTree, TREE_ID_PROVIDER,
-					syncMgrStore,
-					HashTreesConstants.DEFAULT_HASH_TREE_SERVER_PORT_NO);
+			HashTreesSyncManager hTreeManager = new HashTreesSyncManager(
+					"test",
+					HashTreesConstants.DEFAULT_HASH_TREE_SERVER_PORT_NO,
+					remoteHTreeComp.hTree, TREE_ID_PROVIDER, syncMgrStore);
 
 			hTreeManager.init();
 			Thread.sleep(100);
@@ -346,8 +344,8 @@ public class HashTreesImplTest {
 							HashTreesConstants.DEFAULT_HASH_TREE_SERVER_PORT_NO));
 
 			for (int i = 1; i <= DEFAULT_SEG_DATA_BLOCKS_COUNT; i++) {
-				localHTreeComp.store.put(randomByteBuffer(),
-						randomByteBuffer());
+				localHTreeComp.store
+						.put(randomByteBuffer(), randomByteBuffer());
 			}
 
 			localHTreeComp.hTree.rebuildHashTrees(false);

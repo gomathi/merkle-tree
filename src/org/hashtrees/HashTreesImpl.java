@@ -74,12 +74,12 @@ public class HashTreesImpl implements HashTrees {
 	private final int internalNodesCount;
 	private final int segmentsCount;
 
+	private final Store store;
 	private final HashTreesStore htStore;
 	private final HashTreesIdProvider treeIdProvider;
 	private final SegmentIdProvider segIdProvider;
-	private final Store store;
 
-	private final ConcurrentMap<Long, ReentrantLock> treeLocks = new ConcurrentHashMap<Long, ReentrantLock>();
+	private final ConcurrentMap<Long, Lock> treeLocks = new ConcurrentHashMap<>();
 
 	private final Object nonBlockingCallsLock = new Object();
 	@LockedBy("nonBlockingCallsLock")
@@ -339,9 +339,10 @@ public class HashTreesImpl implements HashTrees {
 		if (acquiredLock) {
 			try {
 				long currentTs = System.currentTimeMillis();
+				if (fullRebuild)
+					rebuildCompleteTree(treeId);
 				List<Integer> dirtySegmentBuckets = htStore
 						.clearAndGetDirtySegments(treeId);
-
 				Map<Integer, ByteBuffer> dirtyNodeAndDigestMap = rebuildLeaves(
 						treeId, dirtySegmentBuckets);
 				rebuildInternalNodes(treeId, dirtyNodeAndDigestMap);
@@ -356,6 +357,10 @@ public class HashTreesImpl implements HashTrees {
 				releaseTreeLock(treeId);
 			}
 		}
+	}
+
+	private void rebuildCompleteTree(long treeId) {
+
 	}
 
 	@Override

@@ -116,7 +116,7 @@ public class HashTreesImplTestUtils {
 		}
 
 		@Override
-		public Iterator<Pair<ByteBuffer, ByteBuffer>> iterator() {
+		public Iterator<Pair<ByteBuffer, ByteBuffer>> iterator(long treeId) {
 			List<Pair<ByteBuffer, ByteBuffer>> result = new ArrayList<Pair<ByteBuffer, ByteBuffer>>();
 			for (Map.Entry<ByteBuffer, ByteBuffer> entry : localStore
 					.entrySet())

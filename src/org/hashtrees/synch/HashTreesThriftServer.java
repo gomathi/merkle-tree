@@ -7,6 +7,8 @@ import java.util.Map;
 import org.apache.thrift.TException;
 import org.hashtrees.HashTrees;
 import org.hashtrees.thrift.generated.HashTreesSyncInterface;
+import org.hashtrees.thrift.generated.RebuildHashTreeRequest;
+import org.hashtrees.thrift.generated.RebuildHashTreeResponse;
 import org.hashtrees.thrift.generated.SegmentData;
 import org.hashtrees.thrift.generated.SegmentHash;
 import org.hashtrees.thrift.generated.ServerName;
@@ -97,21 +99,20 @@ public class HashTreesThriftServer implements HashTreesSyncInterface.Iface {
 	}
 
 	@Override
-	public void rebuildHashTree(ServerName sn, long treeId, long tokenNo,
-			long expFullRebuildTimeInt) throws TException {
+	public void submitRebuildRequest(RebuildHashTreeRequest request)
+			throws TException {
 		try {
-			syncCallsObserver.onRebuildHashTreeRequest(sn, treeId, tokenNo,
-					expFullRebuildTimeInt);
+			syncCallsObserver.onRebuildHashTreeRequest(request);
 		} catch (Exception e) {
 			throw new TException(e);
 		}
 	}
 
 	@Override
-	public void postRebuildHashTreeResponse(ServerName sn, long treeId,
-			long tokenNo) throws TException {
+	public void submitRebuildResponse(RebuildHashTreeResponse response)
+			throws TException {
 		try {
-			syncCallsObserver.onRebuildHashTreeResponse(sn, treeId, tokenNo);
+			syncCallsObserver.onRebuildHashTreeResponse(response);
 		} catch (Exception e) {
 			throw new TException(e);
 		}
@@ -126,5 +127,4 @@ public class HashTreesThriftServer implements HashTreesSyncInterface.Iface {
 	public void removeServerFromSyncList(ServerName sn) throws TException {
 		syncCallsObserver.removeServerFromSyncList(sn);
 	}
-
 }

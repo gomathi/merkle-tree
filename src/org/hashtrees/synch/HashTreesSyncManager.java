@@ -22,6 +22,8 @@ import org.hashtrees.HashTrees;
 import org.hashtrees.HashTreesIdProvider;
 import org.hashtrees.store.HashTreeSyncManagerStore;
 import org.hashtrees.thrift.generated.HashTreesSyncInterface;
+import org.hashtrees.thrift.generated.RebuildHashTreeRequest;
+import org.hashtrees.thrift.generated.RebuildHashTreeResponse;
 import org.hashtrees.thrift.generated.ServerName;
 import org.hashtrees.util.CustomThreadFactory;
 import org.hashtrees.util.Pair;
@@ -138,27 +140,31 @@ public class HashTreesSyncManager extends StoppableTask implements
 	}
 
 	@Override
-	public void onRebuildHashTreeResponse(ServerName sn, long treeId,
-			long tokenNo) {
-		Pair<ServerName, Long> snAndTid = Pair.create(sn, treeId);
+	public void onRebuildHashTreeResponse(RebuildHashTreeResponse response) {
+		Pair<ServerName, Long> snAndTid = Pair.create(response.sn,
+				response.treeId);
 		Pair<Long, Boolean> tsAndResponse = remoteTreeAndLastBuildReqTS
 				.get(snAndTid);
-		if (tsAndResponse != null && tsAndResponse.getFirst().equals(tokenNo)) {
-			Pair<Long, Boolean> updatedResponse = Pair.create(tokenNo, true);
+		if (tsAndResponse != null
+				&& tsAndResponse.getFirst().equals(response.tokenNo)) {
+			Pair<Long, Boolean> updatedResponse = Pair.create(response.tokenNo,
+					true);
 			remoteTreeAndLastBuildReqTS.replace(snAndTid, tsAndResponse,
 					updatedResponse);
 		}
 	}
 
 	@Override
-	public void onRebuildHashTreeRequest(ServerName sn, long treeId,
-			long tokenNo, long expFullRebuildTimeInt) throws Exception {
+	public void onRebuildHashTreeRequest(RebuildHashTreeRequest request)
+			throws Exception {
 		boolean fullRebuild = (System.currentTimeMillis() - hashTrees
-				.getLastFullyRebuiltTimeStamp(treeId)) > expFullRebuildTimeInt ? true
+				.getLastFullyRebuiltTimeStamp(request.treeId)) > request.expFullRebuildTimeInt ? true
 				: false;
-		hashTrees.rebuildHashTree(treeId, fullRebuild);
-		HashTreesSyncInterface.Iface client = getHashTreeSyncClient(sn);
-		client.postRebuildHashTreeResponse(localServer, treeId, tokenNo);
+		hashTrees.rebuildHashTree(request.treeId, fullRebuild);
+		HashTreesSyncInterface.Iface client = getHashTreeSyncClient(request.requester);
+		RebuildHashTreeResponse response = new RebuildHashTreeResponse(
+				localServer, request.treeId, request.tokenNo);
+		client.submitRebuildResponse(response);
 	}
 
 	private void rebuildAllLocallyManagedTrees() {
@@ -223,8 +229,10 @@ public class HashTreesSyncManager extends StoppableTask implements
 						buildReqTS);
 				remoteTreeAndLastBuildReqTS.put(serverNameWTreeId,
 						Pair.create(buildReqTS, false));
-				client.rebuildHashTree(localServer, treeId, buildReqTS,
-						DEF_MAX_UNSYNCED_TIME_INTERVAL);
+				RebuildHashTreeRequest request = new RebuildHashTreeRequest(
+						localServer, treeId, buildReqTS,
+						DEF_FULL_REBUILD_TIME_INTERVAL);
+				client.submitRebuildRequest(request);
 			} catch (TException e) {
 				LOG.error("Unable to send rebuild notification to "
 						+ serverNameWTreeId, e);

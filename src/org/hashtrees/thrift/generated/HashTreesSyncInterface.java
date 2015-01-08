@@ -109,35 +109,20 @@ public class HashTreesSyncInterface {
     public void deleteTreeNodes(long treeId, List<Integer> nodeIds) throws org.apache.thrift.TException;
 
     /**
-     * Requests a rebuild of the hash tree on the remote node.
+     * Requests a rebuild of the hashtree.
      * 
-     * @param sn, servername which requests for the rebuild
-     * @param treeId
-     * @param tokenNo a unique tokenNo to differentiate similar requests.
-     * @param expFullRebuildTimeInt, if the remote tree is not fully rebuilt
-     *        within this interval, then remote tree is expected to do a full
-     *        rebuild, otherwise just dirty segments rebuild.
      * 
-     * @param sn
-     * @param treeId
-     * @param tokenNo
-     * @param expFullRebuildTimeInt
+     * @param request
      */
-    public void rebuildHashTree(ServerName sn, long treeId, long tokenNo, long expFullRebuildTimeInt) throws org.apache.thrift.TException;
+    public void submitRebuildRequest(RebuildHashTreeRequest request) throws org.apache.thrift.TException;
 
     /**
-     * This method posts a response on completion of the rebuild of the hash
-     * tree.
+     * Submits the response to the server.
      * 
-     * @param sn, the server which posts the response
-     * @param treeId,
-     * @param tokenNo which was passed in the request for rebuild.
      * 
-     * @param sn
-     * @param treeId
-     * @param tokenNo
+     * @param response
      */
-    public void postRebuildHashTreeResponse(ServerName sn, long treeId, long tokenNo) throws org.apache.thrift.TException;
+    public void submitRebuildResponse(RebuildHashTreeResponse response) throws org.apache.thrift.TException;
 
     /**
      * Adds server to sync list. Hashtrees on the local server will be synched
@@ -177,9 +162,9 @@ public class HashTreesSyncInterface {
 
     public void deleteTreeNodes(long treeId, List<Integer> nodeIds, org.apache.thrift.async.AsyncMethodCallback<AsyncClient.deleteTreeNodes_call> resultHandler) throws org.apache.thrift.TException;
 
-    public void rebuildHashTree(ServerName sn, long treeId, long tokenNo, long expFullRebuildTimeInt, org.apache.thrift.async.AsyncMethodCallback<AsyncClient.rebuildHashTree_call> resultHandler) throws org.apache.thrift.TException;
+    public void submitRebuildRequest(RebuildHashTreeRequest request, org.apache.thrift.async.AsyncMethodCallback<AsyncClient.submitRebuildRequest_call> resultHandler) throws org.apache.thrift.TException;
 
-    public void postRebuildHashTreeResponse(ServerName sn, long treeId, long tokenNo, org.apache.thrift.async.AsyncMethodCallback<AsyncClient.postRebuildHashTreeResponse_call> resultHandler) throws org.apache.thrift.TException;
+    public void submitRebuildResponse(RebuildHashTreeResponse response, org.apache.thrift.async.AsyncMethodCallback<AsyncClient.submitRebuildResponse_call> resultHandler) throws org.apache.thrift.TException;
 
     public void addServerToSyncList(ServerName sn, org.apache.thrift.async.AsyncMethodCallback<AsyncClient.addServerToSyncList_call> resultHandler) throws org.apache.thrift.TException;
 
@@ -365,48 +350,43 @@ public class HashTreesSyncInterface {
       return;
     }
 
-    public void rebuildHashTree(ServerName sn, long treeId, long tokenNo, long expFullRebuildTimeInt) throws org.apache.thrift.TException
+    public void submitRebuildRequest(RebuildHashTreeRequest request) throws org.apache.thrift.TException
     {
-      send_rebuildHashTree(sn, treeId, tokenNo, expFullRebuildTimeInt);
-      recv_rebuildHashTree();
+      send_submitRebuildRequest(request);
+      recv_submitRebuildRequest();
     }
 
-    public void send_rebuildHashTree(ServerName sn, long treeId, long tokenNo, long expFullRebuildTimeInt) throws org.apache.thrift.TException
+    public void send_submitRebuildRequest(RebuildHashTreeRequest request) throws org.apache.thrift.TException
     {
-      rebuildHashTree_args args = new rebuildHashTree_args();
-      args.setSn(sn);
-      args.setTreeId(treeId);
-      args.setTokenNo(tokenNo);
-      args.setExpFullRebuildTimeInt(expFullRebuildTimeInt);
-      sendBase("rebuildHashTree", args);
+      submitRebuildRequest_args args = new submitRebuildRequest_args();
+      args.setRequest(request);
+      sendBase("submitRebuildRequest", args);
     }
 
-    public void recv_rebuildHashTree() throws org.apache.thrift.TException
+    public void recv_submitRebuildRequest() throws org.apache.thrift.TException
     {
-      rebuildHashTree_result result = new rebuildHashTree_result();
-      receiveBase(result, "rebuildHashTree");
+      submitRebuildRequest_result result = new submitRebuildRequest_result();
+      receiveBase(result, "submitRebuildRequest");
       return;
     }
 
-    public void postRebuildHashTreeResponse(ServerName sn, long treeId, long tokenNo) throws org.apache.thrift.TException
+    public void submitRebuildResponse(RebuildHashTreeResponse response) throws org.apache.thrift.TException
     {
-      send_postRebuildHashTreeResponse(sn, treeId, tokenNo);
-      recv_postRebuildHashTreeResponse();
+      send_submitRebuildResponse(response);
+      recv_submitRebuildResponse();
     }
 
-    public void send_postRebuildHashTreeResponse(ServerName sn, long treeId, long tokenNo) throws org.apache.thrift.TException
+    public void send_submitRebuildResponse(RebuildHashTreeResponse response) throws org.apache.thrift.TException
     {
-      postRebuildHashTreeResponse_args args = new postRebuildHashTreeResponse_args();
-      args.setSn(sn);
-      args.setTreeId(treeId);
-      args.setTokenNo(tokenNo);
-      sendBase("postRebuildHashTreeResponse", args);
+      submitRebuildResponse_args args = new submitRebuildResponse_args();
+      args.setResponse(response);
+      sendBase("submitRebuildResponse", args);
     }
 
-    public void recv_postRebuildHashTreeResponse() throws org.apache.thrift.TException
+    public void recv_submitRebuildResponse() throws org.apache.thrift.TException
     {
-      postRebuildHashTreeResponse_result result = new postRebuildHashTreeResponse_result();
-      receiveBase(result, "postRebuildHashTreeResponse");
+      submitRebuildResponse_result result = new submitRebuildResponse_result();
+      receiveBase(result, "submitRebuildResponse");
       return;
     }
 
@@ -710,33 +690,24 @@ public class HashTreesSyncInterface {
       }
     }
 
-    public void rebuildHashTree(ServerName sn, long treeId, long tokenNo, long expFullRebuildTimeInt, org.apache.thrift.async.AsyncMethodCallback<rebuildHashTree_call> resultHandler) throws org.apache.thrift.TException {
+    public void submitRebuildRequest(RebuildHashTreeRequest request, org.apache.thrift.async.AsyncMethodCallback<submitRebuildRequest_call> resultHandler) throws org.apache.thrift.TException {
       checkReady();
-      rebuildHashTree_call method_call = new rebuildHashTree_call(sn, treeId, tokenNo, expFullRebuildTimeInt, resultHandler, this, ___protocolFactory, ___transport);
+      submitRebuildRequest_call method_call = new submitRebuildRequest_call(request, resultHandler, this, ___protocolFactory, ___transport);
       this.___currentMethod = method_call;
       ___manager.call(method_call);
     }
 
-    public static class rebuildHashTree_call extends org.apache.thrift.async.TAsyncMethodCall {
-      private ServerName sn;
-      private long treeId;
-      private long tokenNo;
-      private long expFullRebuildTimeInt;
-      public rebuildHashTree_call(ServerName sn, long treeId, long tokenNo, long expFullRebuildTimeInt, org.apache.thrift.async.AsyncMethodCallback<rebuildHashTree_call> resultHandler, org.apache.thrift.async.TAsyncClient client, org.apache.thrift.protocol.TProtocolFactory protocolFactory, org.apache.thrift.transport.TNonblockingTransport transport) throws org.apache.thrift.TException {
+    public static class submitRebuildRequest_call extends org.apache.thrift.async.TAsyncMethodCall {
+      private RebuildHashTreeRequest request;
+      public submitRebuildRequest_call(RebuildHashTreeRequest request, org.apache.thrift.async.AsyncMethodCallback<submitRebuildRequest_call> resultHandler, org.apache.thrift.async.TAsyncClient client, org.apache.thrift.protocol.TProtocolFactory protocolFactory, org.apache.thrift.transport.TNonblockingTransport transport) throws org.apache.thrift.TException {
         super(client, protocolFactory, transport, resultHandler, false);
-        this.sn = sn;
-        this.treeId = treeId;
-        this.tokenNo = tokenNo;
-        this.expFullRebuildTimeInt = expFullRebuildTimeInt;
+        this.request = request;
       }
 
       public void write_args(org.apache.thrift.protocol.TProtocol prot) throws org.apache.thrift.TException {
-        prot.writeMessageBegin(new org.apache.thrift.protocol.TMessage("rebuildHashTree", org.apache.thrift.protocol.TMessageType.CALL, 0));
-        rebuildHashTree_args args = new rebuildHashTree_args();
-        args.setSn(sn);
-        args.setTreeId(treeId);
-        args.setTokenNo(tokenNo);
-        args.setExpFullRebuildTimeInt(expFullRebuildTimeInt);
+        prot.writeMessageBegin(new org.apache.thrift.protocol.TMessage("submitRebuildRequest", org.apache.thrift.protocol.TMessageType.CALL, 0));
+        submitRebuildRequest_args args = new submitRebuildRequest_args();
+        args.setRequest(request);
         args.write(prot);
         prot.writeMessageEnd();
       }
@@ -747,34 +718,28 @@ public class HashTreesSyncInterface {
         }
         org.apache.thrift.transport.TMemoryInputTransport memoryTransport = new org.apache.thrift.transport.TMemoryInputTransport(getFrameBuffer().array());
         org.apache.thrift.protocol.TProtocol prot = client.getProtocolFactory().getProtocol(memoryTransport);
-        (new Client(prot)).recv_rebuildHashTree();
+        (new Client(prot)).recv_submitRebuildRequest();
       }
     }
 
-    public void postRebuildHashTreeResponse(ServerName sn, long treeId, long tokenNo, org.apache.thrift.async.AsyncMethodCallback<postRebuildHashTreeResponse_call> resultHandler) throws org.apache.thrift.TException {
+    public void submitRebuildResponse(RebuildHashTreeResponse response, org.apache.thrift.async.AsyncMethodCallback<submitRebuildResponse_call> resultHandler) throws org.apache.thrift.TException {
       checkReady();
-      postRebuildHashTreeResponse_call method_call = new postRebuildHashTreeResponse_call(sn, treeId, tokenNo, resultHandler, this, ___protocolFactory, ___transport);
+      submitRebuildResponse_call method_call = new submitRebuildResponse_call(response, resultHandler, this, ___protocolFactory, ___transport);
       this.___currentMethod = method_call;
       ___manager.call(method_call);
     }
 
-    public static class postRebuildHashTreeResponse_call extends org.apache.thrift.async.TAsyncMethodCall {
-      private ServerName sn;
-      private long treeId;
-      private long tokenNo;
-      public postRebuildHashTreeResponse_call(ServerName sn, long treeId, long tokenNo, org.apache.thrift.async.AsyncMethodCallback<postRebuildHashTreeResponse_call> resultHandler, org.apache.thrift.async.TAsyncClient client, org.apache.thrift.protocol.TProtocolFactory protocolFactory, org.apache.thrift.transport.TNonblockingTransport transport) throws org.apache.thrift.TException {
+    public static class submitRebuildResponse_call extends org.apache.thrift.async.TAsyncMethodCall {
+      private RebuildHashTreeResponse response;
+      public submitRebuildResponse_call(RebuildHashTreeResponse response, org.apache.thrift.async.AsyncMethodCallback<submitRebuildResponse_call> resultHandler, org.apache.thrift.async.TAsyncClient client, org.apache.thrift.protocol.TProtocolFactory protocolFactory, org.apache.thrift.transport.TNonblockingTransport transport) throws org.apache.thrift.TException {
         super(client, protocolFactory, transport, resultHandler, false);
-        this.sn = sn;
-        this.treeId = treeId;
-        this.tokenNo = tokenNo;
+        this.response = response;
       }
 
       public void write_args(org.apache.thrift.protocol.TProtocol prot) throws org.apache.thrift.TException {
-        prot.writeMessageBegin(new org.apache.thrift.protocol.TMessage("postRebuildHashTreeResponse", org.apache.thrift.protocol.TMessageType.CALL, 0));
-        postRebuildHashTreeResponse_args args = new postRebuildHashTreeResponse_args();
-        args.setSn(sn);
-        args.setTreeId(treeId);
-        args.setTokenNo(tokenNo);
+        prot.writeMessageBegin(new org.apache.thrift.protocol.TMessage("submitRebuildResponse", org.apache.thrift.protocol.TMessageType.CALL, 0));
+        submitRebuildResponse_args args = new submitRebuildResponse_args();
+        args.setResponse(response);
         args.write(prot);
         prot.writeMessageEnd();
       }
@@ -785,7 +750,7 @@ public class HashTreesSyncInterface {
         }
         org.apache.thrift.transport.TMemoryInputTransport memoryTransport = new org.apache.thrift.transport.TMemoryInputTransport(getFrameBuffer().array());
         org.apache.thrift.protocol.TProtocol prot = client.getProtocolFactory().getProtocol(memoryTransport);
-        (new Client(prot)).recv_postRebuildHashTreeResponse();
+        (new Client(prot)).recv_submitRebuildResponse();
       }
     }
 
@@ -873,8 +838,8 @@ public class HashTreesSyncInterface {
       processMap.put("getSegment", new getSegment());
       processMap.put("getSegmentData", new getSegmentData());
       processMap.put("deleteTreeNodes", new deleteTreeNodes());
-      processMap.put("rebuildHashTree", new rebuildHashTree());
-      processMap.put("postRebuildHashTreeResponse", new postRebuildHashTreeResponse());
+      processMap.put("submitRebuildRequest", new submitRebuildRequest());
+      processMap.put("submitRebuildResponse", new submitRebuildResponse());
       processMap.put("addServerToSyncList", new addServerToSyncList());
       processMap.put("removeServerFromSyncList", new removeServerFromSyncList());
       return processMap;
@@ -992,34 +957,34 @@ public class HashTreesSyncInterface {
       }
     }
 
-    private static class rebuildHashTree<I extends Iface> extends org.apache.thrift.ProcessFunction<I, rebuildHashTree_args> {
-      public rebuildHashTree() {
-        super("rebuildHashTree");
+    private static class submitRebuildRequest<I extends Iface> extends org.apache.thrift.ProcessFunction<I, submitRebuildRequest_args> {
+      public submitRebuildRequest() {
+        super("submitRebuildRequest");
       }
 
-      protected rebuildHashTree_args getEmptyArgsInstance() {
-        return new rebuildHashTree_args();
+      protected submitRebuildRequest_args getEmptyArgsInstance() {
+        return new submitRebuildRequest_args();
       }
 
-      protected rebuildHashTree_result getResult(I iface, rebuildHashTree_args args) throws org.apache.thrift.TException {
-        rebuildHashTree_result result = new rebuildHashTree_result();
-        iface.rebuildHashTree(args.sn, args.treeId, args.tokenNo, args.expFullRebuildTimeInt);
+      protected submitRebuildRequest_result getResult(I iface, submitRebuildRequest_args args) throws org.apache.thrift.TException {
+        submitRebuildRequest_result result = new submitRebuildRequest_result();
+        iface.submitRebuildRequest(args.request);
         return result;
       }
     }
 
-    private static class postRebuildHashTreeResponse<I extends Iface> extends org.apache.thrift.ProcessFunction<I, postRebuildHashTreeResponse_args> {
-      public postRebuildHashTreeResponse() {
-        super("postRebuildHashTreeResponse");
+    private static class submitRebuildResponse<I extends Iface> extends org.apache.thrift.ProcessFunction<I, submitRebuildResponse_args> {
+      public submitRebuildResponse() {
+        super("submitRebuildResponse");
       }
 
-      protected postRebuildHashTreeResponse_args getEmptyArgsInstance() {
-        return new postRebuildHashTreeResponse_args();
+      protected submitRebuildResponse_args getEmptyArgsInstance() {
+        return new submitRebuildResponse_args();
       }
 
-      protected postRebuildHashTreeResponse_result getResult(I iface, postRebuildHashTreeResponse_args args) throws org.apache.thrift.TException {
-        postRebuildHashTreeResponse_result result = new postRebuildHashTreeResponse_result();
-        iface.postRebuildHashTreeResponse(args.sn, args.treeId, args.tokenNo);
+      protected submitRebuildResponse_result getResult(I iface, submitRebuildResponse_args args) throws org.apache.thrift.TException {
+        submitRebuildResponse_result result = new submitRebuildResponse_result();
+        iface.submitRebuildResponse(args.response);
         return result;
       }
     }
@@ -6593,31 +6558,22 @@ public class HashTreesSyncInterface {
 
   }
 
-  public static class rebuildHashTree_args implements org.apache.thrift.TBase<rebuildHashTree_args, rebuildHashTree_args._Fields>, java.io.Serializable, Cloneable   {
-    private static final org.apache.thrift.protocol.TStruct STRUCT_DESC = new org.apache.thrift.protocol.TStruct("rebuildHashTree_args");
+  public static class submitRebuildRequest_args implements org.apache.thrift.TBase<submitRebuildRequest_args, submitRebuildRequest_args._Fields>, java.io.Serializable, Cloneable   {
+    private static final org.apache.thrift.protocol.TStruct STRUCT_DESC = new org.apache.thrift.protocol.TStruct("submitRebuildRequest_args");
 
-    private static final org.apache.thrift.protocol.TField SN_FIELD_DESC = new org.apache.thrift.protocol.TField("sn", org.apache.thrift.protocol.TType.STRUCT, (short)1);
-    private static final org.apache.thrift.protocol.TField TREE_ID_FIELD_DESC = new org.apache.thrift.protocol.TField("treeId", org.apache.thrift.protocol.TType.I64, (short)2);
-    private static final org.apache.thrift.protocol.TField TOKEN_NO_FIELD_DESC = new org.apache.thrift.protocol.TField("tokenNo", org.apache.thrift.protocol.TType.I64, (short)3);
-    private static final org.apache.thrift.protocol.TField EXP_FULL_REBUILD_TIME_INT_FIELD_DESC = new org.apache.thrift.protocol.TField("expFullRebuildTimeInt", org.apache.thrift.protocol.TType.I64, (short)4);
+    private static final org.apache.thrift.protocol.TField REQUEST_FIELD_DESC = new org.apache.thrift.protocol.TField("request", org.apache.thrift.protocol.TType.STRUCT, (short)1);
 
     private static final Map<Class<? extends IScheme>, SchemeFactory> schemes = new HashMap<Class<? extends IScheme>, SchemeFactory>();
     static {
-      schemes.put(StandardScheme.class, new rebuildHashTree_argsStandardSchemeFactory());
-      schemes.put(TupleScheme.class, new rebuildHashTree_argsTupleSchemeFactory());
+      schemes.put(StandardScheme.class, new submitRebuildRequest_argsStandardSchemeFactory());
+      schemes.put(TupleScheme.class, new submitRebuildRequest_argsTupleSchemeFactory());
     }
 
-    public ServerName sn; // required
-    public long treeId; // required
-    public long tokenNo; // required
-    public long expFullRebuildTimeInt; // required
+    public RebuildHashTreeRequest request; // required
 
     /** The set of fields this struct contains, along with convenience methods for finding and manipulating them. */
     public enum _Fields implements org.apache.thrift.TFieldIdEnum {
-      SN((short)1, "sn"),
-      TREE_ID((short)2, "treeId"),
-      TOKEN_NO((short)3, "tokenNo"),
-      EXP_FULL_REBUILD_TIME_INT((short)4, "expFullRebuildTimeInt");
+      REQUEST((short)1, "request");
 
       private static final Map<String, _Fields> byName = new HashMap<String, _Fields>();
 
@@ -6632,14 +6588,8 @@ public class HashTreesSyncInterface {
        */
       public static _Fields findByThriftId(int fieldId) {
         switch(fieldId) {
-          case 1: // SN
-            return SN;
-          case 2: // TREE_ID
-            return TREE_ID;
-          case 3: // TOKEN_NO
-            return TOKEN_NO;
-          case 4: // EXP_FULL_REBUILD_TIME_INT
-            return EXP_FULL_REBUILD_TIME_INT;
+          case 1: // REQUEST
+            return REQUEST;
           default:
             return null;
         }
@@ -6680,197 +6630,74 @@ public class HashTreesSyncInterface {
     }
 
     // isset id assignments
-    private static final int __TREEID_ISSET_ID = 0;
-    private static final int __TOKENNO_ISSET_ID = 1;
-    private static final int __EXPFULLREBUILDTIMEINT_ISSET_ID = 2;
-    private BitSet __isset_bit_vector = new BitSet(3);
     public static final Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> metaDataMap;
     static {
       Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> tmpMap = new EnumMap<_Fields, org.apache.thrift.meta_data.FieldMetaData>(_Fields.class);
-      tmpMap.put(_Fields.SN, new org.apache.thrift.meta_data.FieldMetaData("sn", org.apache.thrift.TFieldRequirementType.DEFAULT, 
-          new org.apache.thrift.meta_data.StructMetaData(org.apache.thrift.protocol.TType.STRUCT, ServerName.class)));
-      tmpMap.put(_Fields.TREE_ID, new org.apache.thrift.meta_data.FieldMetaData("treeId", org.apache.thrift.TFieldRequirementType.DEFAULT, 
-          new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.I64)));
-      tmpMap.put(_Fields.TOKEN_NO, new org.apache.thrift.meta_data.FieldMetaData("tokenNo", org.apache.thrift.TFieldRequirementType.DEFAULT, 
-          new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.I64)));
-      tmpMap.put(_Fields.EXP_FULL_REBUILD_TIME_INT, new org.apache.thrift.meta_data.FieldMetaData("expFullRebuildTimeInt", org.apache.thrift.TFieldRequirementType.DEFAULT, 
-          new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.I64)));
+      tmpMap.put(_Fields.REQUEST, new org.apache.thrift.meta_data.FieldMetaData("request", org.apache.thrift.TFieldRequirementType.DEFAULT, 
+          new org.apache.thrift.meta_data.StructMetaData(org.apache.thrift.protocol.TType.STRUCT, RebuildHashTreeRequest.class)));
       metaDataMap = Collections.unmodifiableMap(tmpMap);
-      org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(rebuildHashTree_args.class, metaDataMap);
+      org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(submitRebuildRequest_args.class, metaDataMap);
     }
 
-    public rebuildHashTree_args() {
+    public submitRebuildRequest_args() {
     }
 
-    public rebuildHashTree_args(
-      ServerName sn,
-      long treeId,
-      long tokenNo,
-      long expFullRebuildTimeInt)
+    public submitRebuildRequest_args(
+      RebuildHashTreeRequest request)
     {
       this();
-      this.sn = sn;
-      this.treeId = treeId;
-      setTreeIdIsSet(true);
-      this.tokenNo = tokenNo;
-      setTokenNoIsSet(true);
-      this.expFullRebuildTimeInt = expFullRebuildTimeInt;
-      setExpFullRebuildTimeIntIsSet(true);
+      this.request = request;
     }
 
     /**
      * Performs a deep copy on <i>other</i>.
      */
-    public rebuildHashTree_args(rebuildHashTree_args other) {
-      __isset_bit_vector.clear();
-      __isset_bit_vector.or(other.__isset_bit_vector);
-      if (other.isSetSn()) {
-        this.sn = new ServerName(other.sn);
+    public submitRebuildRequest_args(submitRebuildRequest_args other) {
+      if (other.isSetRequest()) {
+        this.request = new RebuildHashTreeRequest(other.request);
       }
-      this.treeId = other.treeId;
-      this.tokenNo = other.tokenNo;
-      this.expFullRebuildTimeInt = other.expFullRebuildTimeInt;
     }
 
-    public rebuildHashTree_args deepCopy() {
-      return new rebuildHashTree_args(this);
+    public submitRebuildRequest_args deepCopy() {
+      return new submitRebuildRequest_args(this);
     }
 
     @Override
     public void clear() {
-      this.sn = null;
-      setTreeIdIsSet(false);
-      this.treeId = 0;
-      setTokenNoIsSet(false);
-      this.tokenNo = 0;
-      setExpFullRebuildTimeIntIsSet(false);
-      this.expFullRebuildTimeInt = 0;
+      this.request = null;
     }
 
-    public ServerName getSn() {
-      return this.sn;
+    public RebuildHashTreeRequest getRequest() {
+      return this.request;
     }
 
-    public rebuildHashTree_args setSn(ServerName sn) {
-      this.sn = sn;
+    public submitRebuildRequest_args setRequest(RebuildHashTreeRequest request) {
+      this.request = request;
       return this;
     }
 
-    public void unsetSn() {
-      this.sn = null;
+    public void unsetRequest() {
+      this.request = null;
     }
 
-    /** Returns true if field sn is set (has been assigned a value) and false otherwise */
-    public boolean isSetSn() {
-      return this.sn != null;
+    /** Returns true if field request is set (has been assigned a value) and false otherwise */
+    public boolean isSetRequest() {
+      return this.request != null;
     }
 
-    public void setSnIsSet(boolean value) {
+    public void setRequestIsSet(boolean value) {
       if (!value) {
-        this.sn = null;
+        this.request = null;
       }
-    }
-
-    public long getTreeId() {
-      return this.treeId;
-    }
-
-    public rebuildHashTree_args setTreeId(long treeId) {
-      this.treeId = treeId;
-      setTreeIdIsSet(true);
-      return this;
-    }
-
-    public void unsetTreeId() {
-      __isset_bit_vector.clear(__TREEID_ISSET_ID);
-    }
-
-    /** Returns true if field treeId is set (has been assigned a value) and false otherwise */
-    public boolean isSetTreeId() {
-      return __isset_bit_vector.get(__TREEID_ISSET_ID);
-    }
-
-    public void setTreeIdIsSet(boolean value) {
-      __isset_bit_vector.set(__TREEID_ISSET_ID, value);
-    }
-
-    public long getTokenNo() {
-      return this.tokenNo;
-    }
-
-    public rebuildHashTree_args setTokenNo(long tokenNo) {
-      this.tokenNo = tokenNo;
-      setTokenNoIsSet(true);
-      return this;
-    }
-
-    public void unsetTokenNo() {
-      __isset_bit_vector.clear(__TOKENNO_ISSET_ID);
-    }
-
-    /** Returns true if field tokenNo is set (has been assigned a value) and false otherwise */
-    public boolean isSetTokenNo() {
-      return __isset_bit_vector.get(__TOKENNO_ISSET_ID);
-    }
-
-    public void setTokenNoIsSet(boolean value) {
-      __isset_bit_vector.set(__TOKENNO_ISSET_ID, value);
-    }
-
-    public long getExpFullRebuildTimeInt() {
-      return this.expFullRebuildTimeInt;
-    }
-
-    public rebuildHashTree_args setExpFullRebuildTimeInt(long expFullRebuildTimeInt) {
-      this.expFullRebuildTimeInt = expFullRebuildTimeInt;
-      setExpFullRebuildTimeIntIsSet(true);
-      return this;
-    }
-
-    public void unsetExpFullRebuildTimeInt() {
-      __isset_bit_vector.clear(__EXPFULLREBUILDTIMEINT_ISSET_ID);
-    }
-
-    /** Returns true if field expFullRebuildTimeInt is set (has been assigned a value) and false otherwise */
-    public boolean isSetExpFullRebuildTimeInt() {
-      return __isset_bit_vector.get(__EXPFULLREBUILDTIMEINT_ISSET_ID);
-    }
-
-    public void setExpFullRebuildTimeIntIsSet(boolean value) {
-      __isset_bit_vector.set(__EXPFULLREBUILDTIMEINT_ISSET_ID, value);
     }
 
     public void setFieldValue(_Fields field, Object value) {
       switch (field) {
-      case SN:
+      case REQUEST:
         if (value == null) {
-          unsetSn();
+          unsetRequest();
         } else {
-          setSn((ServerName)value);
-        }
-        break;
-
-      case TREE_ID:
-        if (value == null) {
-          unsetTreeId();
-        } else {
-          setTreeId((Long)value);
-        }
-        break;
-
-      case TOKEN_NO:
-        if (value == null) {
-          unsetTokenNo();
-        } else {
-          setTokenNo((Long)value);
-        }
-        break;
-
-      case EXP_FULL_REBUILD_TIME_INT:
-        if (value == null) {
-          unsetExpFullRebuildTimeInt();
-        } else {
-          setExpFullRebuildTimeInt((Long)value);
+          setRequest((RebuildHashTreeRequest)value);
         }
         break;
 
@@ -6879,17 +6706,8 @@ public class HashTreesSyncInterface {
 
     public Object getFieldValue(_Fields field) {
       switch (field) {
-      case SN:
-        return getSn();
-
-      case TREE_ID:
-        return Long.valueOf(getTreeId());
-
-      case TOKEN_NO:
-        return Long.valueOf(getTokenNo());
-
-      case EXP_FULL_REBUILD_TIME_INT:
-        return Long.valueOf(getExpFullRebuildTimeInt());
+      case REQUEST:
+        return getRequest();
 
       }
       throw new IllegalStateException();
@@ -6902,14 +6720,8 @@ public class HashTreesSyncInterface {
       }
 
       switch (field) {
-      case SN:
-        return isSetSn();
-      case TREE_ID:
-        return isSetTreeId();
-      case TOKEN_NO:
-        return isSetTokenNo();
-      case EXP_FULL_REBUILD_TIME_INT:
-        return isSetExpFullRebuildTimeInt();
+      case REQUEST:
+        return isSetRequest();
       }
       throw new IllegalStateException();
     }
@@ -6918,48 +6730,21 @@ public class HashTreesSyncInterface {
     public boolean equals(Object that) {
       if (that == null)
         return false;
-      if (that instanceof rebuildHashTree_args)
-        return this.equals((rebuildHashTree_args)that);
+      if (that instanceof submitRebuildRequest_args)
+        return this.equals((submitRebuildRequest_args)that);
       return false;
     }
 
-    public boolean equals(rebuildHashTree_args that) {
+    public boolean equals(submitRebuildRequest_args that) {
       if (that == null)
         return false;
 
-      boolean this_present_sn = true && this.isSetSn();
-      boolean that_present_sn = true && that.isSetSn();
-      if (this_present_sn || that_present_sn) {
-        if (!(this_present_sn && that_present_sn))
+      boolean this_present_request = true && this.isSetRequest();
+      boolean that_present_request = true && that.isSetRequest();
+      if (this_present_request || that_present_request) {
+        if (!(this_present_request && that_present_request))
           return false;
-        if (!this.sn.equals(that.sn))
-          return false;
-      }
-
-      boolean this_present_treeId = true;
-      boolean that_present_treeId = true;
-      if (this_present_treeId || that_present_treeId) {
-        if (!(this_present_treeId && that_present_treeId))
-          return false;
-        if (this.treeId != that.treeId)
-          return false;
-      }
-
-      boolean this_present_tokenNo = true;
-      boolean that_present_tokenNo = true;
-      if (this_present_tokenNo || that_present_tokenNo) {
-        if (!(this_present_tokenNo && that_present_tokenNo))
-          return false;
-        if (this.tokenNo != that.tokenNo)
-          return false;
-      }
-
-      boolean this_present_expFullRebuildTimeInt = true;
-      boolean that_present_expFullRebuildTimeInt = true;
-      if (this_present_expFullRebuildTimeInt || that_present_expFullRebuildTimeInt) {
-        if (!(this_present_expFullRebuildTimeInt && that_present_expFullRebuildTimeInt))
-          return false;
-        if (this.expFullRebuildTimeInt != that.expFullRebuildTimeInt)
+        if (!this.request.equals(that.request))
           return false;
       }
 
@@ -6971,50 +6756,20 @@ public class HashTreesSyncInterface {
       return 0;
     }
 
-    public int compareTo(rebuildHashTree_args other) {
+    public int compareTo(submitRebuildRequest_args other) {
       if (!getClass().equals(other.getClass())) {
         return getClass().getName().compareTo(other.getClass().getName());
       }
 
       int lastComparison = 0;
-      rebuildHashTree_args typedOther = (rebuildHashTree_args)other;
+      submitRebuildRequest_args typedOther = (submitRebuildRequest_args)other;
 
-      lastComparison = Boolean.valueOf(isSetSn()).compareTo(typedOther.isSetSn());
+      lastComparison = Boolean.valueOf(isSetRequest()).compareTo(typedOther.isSetRequest());
       if (lastComparison != 0) {
         return lastComparison;
       }
-      if (isSetSn()) {
-        lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.sn, typedOther.sn);
-        if (lastComparison != 0) {
-          return lastComparison;
-        }
-      }
-      lastComparison = Boolean.valueOf(isSetTreeId()).compareTo(typedOther.isSetTreeId());
-      if (lastComparison != 0) {
-        return lastComparison;
-      }
-      if (isSetTreeId()) {
-        lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.treeId, typedOther.treeId);
-        if (lastComparison != 0) {
-          return lastComparison;
-        }
-      }
-      lastComparison = Boolean.valueOf(isSetTokenNo()).compareTo(typedOther.isSetTokenNo());
-      if (lastComparison != 0) {
-        return lastComparison;
-      }
-      if (isSetTokenNo()) {
-        lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.tokenNo, typedOther.tokenNo);
-        if (lastComparison != 0) {
-          return lastComparison;
-        }
-      }
-      lastComparison = Boolean.valueOf(isSetExpFullRebuildTimeInt()).compareTo(typedOther.isSetExpFullRebuildTimeInt());
-      if (lastComparison != 0) {
-        return lastComparison;
-      }
-      if (isSetExpFullRebuildTimeInt()) {
-        lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.expFullRebuildTimeInt, typedOther.expFullRebuildTimeInt);
+      if (isSetRequest()) {
+        lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.request, typedOther.request);
         if (lastComparison != 0) {
           return lastComparison;
         }
@@ -7036,27 +6791,15 @@ public class HashTreesSyncInterface {
 
     @Override
     public String toString() {
-      StringBuilder sb = new StringBuilder("rebuildHashTree_args(");
+      StringBuilder sb = new StringBuilder("submitRebuildRequest_args(");
       boolean first = true;
 
-      sb.append("sn:");
-      if (this.sn == null) {
+      sb.append("request:");
+      if (this.request == null) {
         sb.append("null");
       } else {
-        sb.append(this.sn);
+        sb.append(this.request);
       }
-      first = false;
-      if (!first) sb.append(", ");
-      sb.append("treeId:");
-      sb.append(this.treeId);
-      first = false;
-      if (!first) sb.append(", ");
-      sb.append("tokenNo:");
-      sb.append(this.tokenNo);
-      first = false;
-      if (!first) sb.append(", ");
-      sb.append("expFullRebuildTimeInt:");
-      sb.append(this.expFullRebuildTimeInt);
       first = false;
       sb.append(")");
       return sb.toString();
@@ -7082,15 +6825,15 @@ public class HashTreesSyncInterface {
       }
     }
 
-    private static class rebuildHashTree_argsStandardSchemeFactory implements SchemeFactory {
-      public rebuildHashTree_argsStandardScheme getScheme() {
-        return new rebuildHashTree_argsStandardScheme();
+    private static class submitRebuildRequest_argsStandardSchemeFactory implements SchemeFactory {
+      public submitRebuildRequest_argsStandardScheme getScheme() {
+        return new submitRebuildRequest_argsStandardScheme();
       }
     }
 
-    private static class rebuildHashTree_argsStandardScheme extends StandardScheme<rebuildHashTree_args> {
+    private static class submitRebuildRequest_argsStandardScheme extends StandardScheme<submitRebuildRequest_args> {
 
-      public void read(org.apache.thrift.protocol.TProtocol iprot, rebuildHashTree_args struct) throws org.apache.thrift.TException {
+      public void read(org.apache.thrift.protocol.TProtocol iprot, submitRebuildRequest_args struct) throws org.apache.thrift.TException {
         org.apache.thrift.protocol.TField schemeField;
         iprot.readStructBegin();
         while (true)
@@ -7100,35 +6843,11 @@ public class HashTreesSyncInterface {
             break;
           }
           switch (schemeField.id) {
-            case 1: // SN
+            case 1: // REQUEST
               if (schemeField.type == org.apache.thrift.protocol.TType.STRUCT) {
-                struct.sn = new ServerName();
-                struct.sn.read(iprot);
-                struct.setSnIsSet(true);
-              } else { 
-                org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
-              }
-              break;
-            case 2: // TREE_ID
-              if (schemeField.type == org.apache.thrift.protocol.TType.I64) {
-                struct.treeId = iprot.readI64();
-                struct.setTreeIdIsSet(true);
-              } else { 
-                org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
-              }
-              break;
-            case 3: // TOKEN_NO
-              if (schemeField.type == org.apache.thrift.protocol.TType.I64) {
-                struct.tokenNo = iprot.readI64();
-                struct.setTokenNoIsSet(true);
-              } else { 
-                org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
-              }
-              break;
-            case 4: // EXP_FULL_REBUILD_TIME_INT
-              if (schemeField.type == org.apache.thrift.protocol.TType.I64) {
-                struct.expFullRebuildTimeInt = iprot.readI64();
-                struct.setExpFullRebuildTimeIntIsSet(true);
+                struct.request = new RebuildHashTreeRequest();
+                struct.request.read(iprot);
+                struct.setRequestIsSet(true);
               } else { 
                 org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
               }
@@ -7144,103 +6863,64 @@ public class HashTreesSyncInterface {
         struct.validate();
       }
 
-      public void write(org.apache.thrift.protocol.TProtocol oprot, rebuildHashTree_args struct) throws org.apache.thrift.TException {
+      public void write(org.apache.thrift.protocol.TProtocol oprot, submitRebuildRequest_args struct) throws org.apache.thrift.TException {
         struct.validate();
 
         oprot.writeStructBegin(STRUCT_DESC);
-        if (struct.sn != null) {
-          oprot.writeFieldBegin(SN_FIELD_DESC);
-          struct.sn.write(oprot);
+        if (struct.request != null) {
+          oprot.writeFieldBegin(REQUEST_FIELD_DESC);
+          struct.request.write(oprot);
           oprot.writeFieldEnd();
         }
-        oprot.writeFieldBegin(TREE_ID_FIELD_DESC);
-        oprot.writeI64(struct.treeId);
-        oprot.writeFieldEnd();
-        oprot.writeFieldBegin(TOKEN_NO_FIELD_DESC);
-        oprot.writeI64(struct.tokenNo);
-        oprot.writeFieldEnd();
-        oprot.writeFieldBegin(EXP_FULL_REBUILD_TIME_INT_FIELD_DESC);
-        oprot.writeI64(struct.expFullRebuildTimeInt);
-        oprot.writeFieldEnd();
         oprot.writeFieldStop();
         oprot.writeStructEnd();
       }
 
     }
 
-    private static class rebuildHashTree_argsTupleSchemeFactory implements SchemeFactory {
-      public rebuildHashTree_argsTupleScheme getScheme() {
-        return new rebuildHashTree_argsTupleScheme();
+    private static class submitRebuildRequest_argsTupleSchemeFactory implements SchemeFactory {
+      public submitRebuildRequest_argsTupleScheme getScheme() {
+        return new submitRebuildRequest_argsTupleScheme();
       }
     }
 
-    private static class rebuildHashTree_argsTupleScheme extends TupleScheme<rebuildHashTree_args> {
+    private static class submitRebuildRequest_argsTupleScheme extends TupleScheme<submitRebuildRequest_args> {
 
       @Override
-      public void write(org.apache.thrift.protocol.TProtocol prot, rebuildHashTree_args struct) throws org.apache.thrift.TException {
+      public void write(org.apache.thrift.protocol.TProtocol prot, submitRebuildRequest_args struct) throws org.apache.thrift.TException {
         TTupleProtocol oprot = (TTupleProtocol) prot;
         BitSet optionals = new BitSet();
-        if (struct.isSetSn()) {
+        if (struct.isSetRequest()) {
           optionals.set(0);
         }
-        if (struct.isSetTreeId()) {
-          optionals.set(1);
-        }
-        if (struct.isSetTokenNo()) {
-          optionals.set(2);
-        }
-        if (struct.isSetExpFullRebuildTimeInt()) {
-          optionals.set(3);
-        }
-        oprot.writeBitSet(optionals, 4);
-        if (struct.isSetSn()) {
-          struct.sn.write(oprot);
-        }
-        if (struct.isSetTreeId()) {
-          oprot.writeI64(struct.treeId);
-        }
-        if (struct.isSetTokenNo()) {
-          oprot.writeI64(struct.tokenNo);
-        }
-        if (struct.isSetExpFullRebuildTimeInt()) {
-          oprot.writeI64(struct.expFullRebuildTimeInt);
+        oprot.writeBitSet(optionals, 1);
+        if (struct.isSetRequest()) {
+          struct.request.write(oprot);
         }
       }
 
       @Override
-      public void read(org.apache.thrift.protocol.TProtocol prot, rebuildHashTree_args struct) throws org.apache.thrift.TException {
+      public void read(org.apache.thrift.protocol.TProtocol prot, submitRebuildRequest_args struct) throws org.apache.thrift.TException {
         TTupleProtocol iprot = (TTupleProtocol) prot;
-        BitSet incoming = iprot.readBitSet(4);
+        BitSet incoming = iprot.readBitSet(1);
         if (incoming.get(0)) {
-          struct.sn = new ServerName();
-          struct.sn.read(iprot);
-          struct.setSnIsSet(true);
-        }
-        if (incoming.get(1)) {
-          struct.treeId = iprot.readI64();
-          struct.setTreeIdIsSet(true);
-        }
-        if (incoming.get(2)) {
-          struct.tokenNo = iprot.readI64();
-          struct.setTokenNoIsSet(true);
-        }
-        if (incoming.get(3)) {
-          struct.expFullRebuildTimeInt = iprot.readI64();
-          struct.setExpFullRebuildTimeIntIsSet(true);
+          struct.request = new RebuildHashTreeRequest();
+          struct.request.read(iprot);
+          struct.setRequestIsSet(true);
         }
       }
     }
 
   }
 
-  public static class rebuildHashTree_result implements org.apache.thrift.TBase<rebuildHashTree_result, rebuildHashTree_result._Fields>, java.io.Serializable, Cloneable   {
-    private static final org.apache.thrift.protocol.TStruct STRUCT_DESC = new org.apache.thrift.protocol.TStruct("rebuildHashTree_result");
+  public static class submitRebuildRequest_result implements org.apache.thrift.TBase<submitRebuildRequest_result, submitRebuildRequest_result._Fields>, java.io.Serializable, Cloneable   {
+    private static final org.apache.thrift.protocol.TStruct STRUCT_DESC = new org.apache.thrift.protocol.TStruct("submitRebuildRequest_result");
 
 
     private static final Map<Class<? extends IScheme>, SchemeFactory> schemes = new HashMap<Class<? extends IScheme>, SchemeFactory>();
     static {
-      schemes.put(StandardScheme.class, new rebuildHashTree_resultStandardSchemeFactory());
-      schemes.put(TupleScheme.class, new rebuildHashTree_resultTupleSchemeFactory());
+      schemes.put(StandardScheme.class, new submitRebuildRequest_resultStandardSchemeFactory());
+      schemes.put(TupleScheme.class, new submitRebuildRequest_resultTupleSchemeFactory());
     }
 
 
@@ -7303,20 +6983,20 @@ public class HashTreesSyncInterface {
     static {
       Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> tmpMap = new EnumMap<_Fields, org.apache.thrift.meta_data.FieldMetaData>(_Fields.class);
       metaDataMap = Collections.unmodifiableMap(tmpMap);
-      org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(rebuildHashTree_result.class, metaDataMap);
+      org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(submitRebuildRequest_result.class, metaDataMap);
     }
 
-    public rebuildHashTree_result() {
+    public submitRebuildRequest_result() {
     }
 
     /**
      * Performs a deep copy on <i>other</i>.
      */
-    public rebuildHashTree_result(rebuildHashTree_result other) {
+    public submitRebuildRequest_result(submitRebuildRequest_result other) {
     }
 
-    public rebuildHashTree_result deepCopy() {
-      return new rebuildHashTree_result(this);
+    public submitRebuildRequest_result deepCopy() {
+      return new submitRebuildRequest_result(this);
     }
 
     @Override
@@ -7349,12 +7029,12 @@ public class HashTreesSyncInterface {
     public boolean equals(Object that) {
       if (that == null)
         return false;
-      if (that instanceof rebuildHashTree_result)
-        return this.equals((rebuildHashTree_result)that);
+      if (that instanceof submitRebuildRequest_result)
+        return this.equals((submitRebuildRequest_result)that);
       return false;
     }
 
-    public boolean equals(rebuildHashTree_result that) {
+    public boolean equals(submitRebuildRequest_result that) {
       if (that == null)
         return false;
 
@@ -7366,13 +7046,13 @@ public class HashTreesSyncInterface {
       return 0;
     }
 
-    public int compareTo(rebuildHashTree_result other) {
+    public int compareTo(submitRebuildRequest_result other) {
       if (!getClass().equals(other.getClass())) {
         return getClass().getName().compareTo(other.getClass().getName());
       }
 
       int lastComparison = 0;
-      rebuildHashTree_result typedOther = (rebuildHashTree_result)other;
+      submitRebuildRequest_result typedOther = (submitRebuildRequest_result)other;
 
       return 0;
     }
@@ -7391,7 +7071,7 @@ public class HashTreesSyncInterface {
 
     @Override
     public String toString() {
-      StringBuilder sb = new StringBuilder("rebuildHashTree_result(");
+      StringBuilder sb = new StringBuilder("submitRebuildRequest_result(");
       boolean first = true;
 
       sb.append(")");
@@ -7418,15 +7098,15 @@ public class HashTreesSyncInterface {
       }
     }
 
-    private static class rebuildHashTree_resultStandardSchemeFactory implements SchemeFactory {
-      public rebuildHashTree_resultStandardScheme getScheme() {
-        return new rebuildHashTree_resultStandardScheme();
+    private static class submitRebuildRequest_resultStandardSchemeFactory implements SchemeFactory {
+      public submitRebuildRequest_resultStandardScheme getScheme() {
+        return new submitRebuildRequest_resultStandardScheme();
       }
     }
 
-    private static class rebuildHashTree_resultStandardScheme extends StandardScheme<rebuildHashTree_result> {
+    private static class submitRebuildRequest_resultStandardScheme extends StandardScheme<submitRebuildRequest_result> {
 
-      public void read(org.apache.thrift.protocol.TProtocol iprot, rebuildHashTree_result struct) throws org.apache.thrift.TException {
+      public void read(org.apache.thrift.protocol.TProtocol iprot, submitRebuildRequest_result struct) throws org.apache.thrift.TException {
         org.apache.thrift.protocol.TField schemeField;
         iprot.readStructBegin();
         while (true)
@@ -7447,7 +7127,7 @@ public class HashTreesSyncInterface {
         struct.validate();
       }
 
-      public void write(org.apache.thrift.protocol.TProtocol oprot, rebuildHashTree_result struct) throws org.apache.thrift.TException {
+      public void write(org.apache.thrift.protocol.TProtocol oprot, submitRebuildRequest_result struct) throws org.apache.thrift.TException {
         struct.validate();
 
         oprot.writeStructBegin(STRUCT_DESC);
@@ -7457,49 +7137,43 @@ public class HashTreesSyncInterface {
 
     }
 
-    private static class rebuildHashTree_resultTupleSchemeFactory implements SchemeFactory {
-      public rebuildHashTree_resultTupleScheme getScheme() {
-        return new rebuildHashTree_resultTupleScheme();
+    private static class submitRebuildRequest_resultTupleSchemeFactory implements SchemeFactory {
+      public submitRebuildRequest_resultTupleScheme getScheme() {
+        return new submitRebuildRequest_resultTupleScheme();
       }
     }
 
-    private static class rebuildHashTree_resultTupleScheme extends TupleScheme<rebuildHashTree_result> {
+    private static class submitRebuildRequest_resultTupleScheme extends TupleScheme<submitRebuildRequest_result> {
 
       @Override
-      public void write(org.apache.thrift.protocol.TProtocol prot, rebuildHashTree_result struct) throws org.apache.thrift.TException {
+      public void write(org.apache.thrift.protocol.TProtocol prot, submitRebuildRequest_result struct) throws org.apache.thrift.TException {
         TTupleProtocol oprot = (TTupleProtocol) prot;
       }
 
       @Override
-      public void read(org.apache.thrift.protocol.TProtocol prot, rebuildHashTree_result struct) throws org.apache.thrift.TException {
+      public void read(org.apache.thrift.protocol.TProtocol prot, submitRebuildRequest_result struct) throws org.apache.thrift.TException {
         TTupleProtocol iprot = (TTupleProtocol) prot;
       }
     }
 
   }
 
-  public static class postRebuildHashTreeResponse_args implements org.apache.thrift.TBase<postRebuildHashTreeResponse_args, postRebuildHashTreeResponse_args._Fields>, java.io.Serializable, Cloneable   {
-    private static final org.apache.thrift.protocol.TStruct STRUCT_DESC = new org.apache.thrift.protocol.TStruct("postRebuildHashTreeResponse_args");
+  public static class submitRebuildResponse_args implements org.apache.thrift.TBase<submitRebuildResponse_args, submitRebuildResponse_args._Fields>, java.io.Serializable, Cloneable   {
+    private static final org.apache.thrift.protocol.TStruct STRUCT_DESC = new org.apache.thrift.protocol.TStruct("submitRebuildResponse_args");
 
-    private static final org.apache.thrift.protocol.TField SN_FIELD_DESC = new org.apache.thrift.protocol.TField("sn", org.apache.thrift.protocol.TType.STRUCT, (short)1);
-    private static final org.apache.thrift.protocol.TField TREE_ID_FIELD_DESC = new org.apache.thrift.protocol.TField("treeId", org.apache.thrift.protocol.TType.I64, (short)2);
-    private static final org.apache.thrift.protocol.TField TOKEN_NO_FIELD_DESC = new org.apache.thrift.protocol.TField("tokenNo", org.apache.thrift.protocol.TType.I64, (short)3);
+    private static final org.apache.thrift.protocol.TField RESPONSE_FIELD_DESC = new org.apache.thrift.protocol.TField("response", org.apache.thrift.protocol.TType.STRUCT, (short)1);
 
     private static final Map<Class<? extends IScheme>, SchemeFactory> schemes = new HashMap<Class<? extends IScheme>, SchemeFactory>();
     static {
-      schemes.put(StandardScheme.class, new postRebuildHashTreeResponse_argsStandardSchemeFactory());
-      schemes.put(TupleScheme.class, new postRebuildHashTreeResponse_argsTupleSchemeFactory());
+      schemes.put(StandardScheme.class, new submitRebuildResponse_argsStandardSchemeFactory());
+      schemes.put(TupleScheme.class, new submitRebuildResponse_argsTupleSchemeFactory());
     }
 
-    public ServerName sn; // required
-    public long treeId; // required
-    public long tokenNo; // required
+    public RebuildHashTreeResponse response; // required
 
     /** The set of fields this struct contains, along with convenience methods for finding and manipulating them. */
     public enum _Fields implements org.apache.thrift.TFieldIdEnum {
-      SN((short)1, "sn"),
-      TREE_ID((short)2, "treeId"),
-      TOKEN_NO((short)3, "tokenNo");
+      RESPONSE((short)1, "response");
 
       private static final Map<String, _Fields> byName = new HashMap<String, _Fields>();
 
@@ -7514,12 +7188,8 @@ public class HashTreesSyncInterface {
        */
       public static _Fields findByThriftId(int fieldId) {
         switch(fieldId) {
-          case 1: // SN
-            return SN;
-          case 2: // TREE_ID
-            return TREE_ID;
-          case 3: // TOKEN_NO
-            return TOKEN_NO;
+          case 1: // RESPONSE
+            return RESPONSE;
           default:
             return null;
         }
@@ -7560,157 +7230,74 @@ public class HashTreesSyncInterface {
     }
 
     // isset id assignments
-    private static final int __TREEID_ISSET_ID = 0;
-    private static final int __TOKENNO_ISSET_ID = 1;
-    private BitSet __isset_bit_vector = new BitSet(2);
     public static final Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> metaDataMap;
     static {
       Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> tmpMap = new EnumMap<_Fields, org.apache.thrift.meta_data.FieldMetaData>(_Fields.class);
-      tmpMap.put(_Fields.SN, new org.apache.thrift.meta_data.FieldMetaData("sn", org.apache.thrift.TFieldRequirementType.DEFAULT, 
-          new org.apache.thrift.meta_data.StructMetaData(org.apache.thrift.protocol.TType.STRUCT, ServerName.class)));
-      tmpMap.put(_Fields.TREE_ID, new org.apache.thrift.meta_data.FieldMetaData("treeId", org.apache.thrift.TFieldRequirementType.DEFAULT, 
-          new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.I64)));
-      tmpMap.put(_Fields.TOKEN_NO, new org.apache.thrift.meta_data.FieldMetaData("tokenNo", org.apache.thrift.TFieldRequirementType.DEFAULT, 
-          new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.I64)));
+      tmpMap.put(_Fields.RESPONSE, new org.apache.thrift.meta_data.FieldMetaData("response", org.apache.thrift.TFieldRequirementType.DEFAULT, 
+          new org.apache.thrift.meta_data.StructMetaData(org.apache.thrift.protocol.TType.STRUCT, RebuildHashTreeResponse.class)));
       metaDataMap = Collections.unmodifiableMap(tmpMap);
-      org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(postRebuildHashTreeResponse_args.class, metaDataMap);
+      org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(submitRebuildResponse_args.class, metaDataMap);
     }
 
-    public postRebuildHashTreeResponse_args() {
+    public submitRebuildResponse_args() {
     }
 
-    public postRebuildHashTreeResponse_args(
-      ServerName sn,
-      long treeId,
-      long tokenNo)
+    public submitRebuildResponse_args(
+      RebuildHashTreeResponse response)
     {
       this();
-      this.sn = sn;
-      this.treeId = treeId;
-      setTreeIdIsSet(true);
-      this.tokenNo = tokenNo;
-      setTokenNoIsSet(true);
+      this.response = response;
     }
 
     /**
      * Performs a deep copy on <i>other</i>.
      */
-    public postRebuildHashTreeResponse_args(postRebuildHashTreeResponse_args other) {
-      __isset_bit_vector.clear();
-      __isset_bit_vector.or(other.__isset_bit_vector);
-      if (other.isSetSn()) {
-        this.sn = new ServerName(other.sn);
+    public submitRebuildResponse_args(submitRebuildResponse_args other) {
+      if (other.isSetResponse()) {
+        this.response = new RebuildHashTreeResponse(other.response);
       }
-      this.treeId = other.treeId;
-      this.tokenNo = other.tokenNo;
     }
 
-    public postRebuildHashTreeResponse_args deepCopy() {
-      return new postRebuildHashTreeResponse_args(this);
+    public submitRebuildResponse_args deepCopy() {
+      return new submitRebuildResponse_args(this);
     }
 
     @Override
     public void clear() {
-      this.sn = null;
-      setTreeIdIsSet(false);
-      this.treeId = 0;
-      setTokenNoIsSet(false);
-      this.tokenNo = 0;
+      this.response = null;
     }
 
-    public ServerName getSn() {
-      return this.sn;
+    public RebuildHashTreeResponse getResponse() {
+      return this.response;
     }
 
-    public postRebuildHashTreeResponse_args setSn(ServerName sn) {
-      this.sn = sn;
+    public submitRebuildResponse_args setResponse(RebuildHashTreeResponse response) {
+      this.response = response;
       return this;
     }
 
-    public void unsetSn() {
-      this.sn = null;
+    public void unsetResponse() {
+      this.response = null;
     }
 
-    /** Returns true if field sn is set (has been assigned a value) and false otherwise */
-    public boolean isSetSn() {
-      return this.sn != null;
+    /** Returns true if field response is set (has been assigned a value) and false otherwise */
+    public boolean isSetResponse() {
+      return this.response != null;
     }
 
-    public void setSnIsSet(boolean value) {
+    public void setResponseIsSet(boolean value) {
       if (!value) {
-        this.sn = null;
+        this.response = null;
       }
-    }
-
-    public long getTreeId() {
-      return this.treeId;
-    }
-
-    public postRebuildHashTreeResponse_args setTreeId(long treeId) {
-      this.treeId = treeId;
-      setTreeIdIsSet(true);
-      return this;
-    }
-
-    public void unsetTreeId() {
-      __isset_bit_vector.clear(__TREEID_ISSET_ID);
-    }
-
-    /** Returns true if field treeId is set (has been assigned a value) and false otherwise */
-    public boolean isSetTreeId() {
-      return __isset_bit_vector.get(__TREEID_ISSET_ID);
-    }
-
-    public void setTreeIdIsSet(boolean value) {
-      __isset_bit_vector.set(__TREEID_ISSET_ID, value);
-    }
-
-    public long getTokenNo() {
-      return this.tokenNo;
-    }
-
-    public postRebuildHashTreeResponse_args setTokenNo(long tokenNo) {
-      this.tokenNo = tokenNo;
-      setTokenNoIsSet(true);
-      return this;
-    }
-
-    public void unsetTokenNo() {
-      __isset_bit_vector.clear(__TOKENNO_ISSET_ID);
-    }
-
-    /** Returns true if field tokenNo is set (has been assigned a value) and false otherwise */
-    public boolean isSetTokenNo() {
-      return __isset_bit_vector.get(__TOKENNO_ISSET_ID);
-    }
-
-    public void setTokenNoIsSet(boolean value) {
-      __isset_bit_vector.set(__TOKENNO_ISSET_ID, value);
     }
 
     public void setFieldValue(_Fields field, Object value) {
       switch (field) {
-      case SN:
+      case RESPONSE:
         if (value == null) {
-          unsetSn();
+          unsetResponse();
         } else {
-          setSn((ServerName)value);
-        }
-        break;
-
-      case TREE_ID:
-        if (value == null) {
-          unsetTreeId();
-        } else {
-          setTreeId((Long)value);
-        }
-        break;
-
-      case TOKEN_NO:
-        if (value == null) {
-          unsetTokenNo();
-        } else {
-          setTokenNo((Long)value);
+          setResponse((RebuildHashTreeResponse)value);
         }
         break;
 
@@ -7719,14 +7306,8 @@ public class HashTreesSyncInterface {
 
     public Object getFieldValue(_Fields field) {
       switch (field) {
-      case SN:
-        return getSn();
-
-      case TREE_ID:
-        return Long.valueOf(getTreeId());
-
-      case TOKEN_NO:
-        return Long.valueOf(getTokenNo());
+      case RESPONSE:
+        return getResponse();
 
       }
       throw new IllegalStateException();
@@ -7739,12 +7320,8 @@ public class HashTreesSyncInterface {
       }
 
       switch (field) {
-      case SN:
-        return isSetSn();
-      case TREE_ID:
-        return isSetTreeId();
-      case TOKEN_NO:
-        return isSetTokenNo();
+      case RESPONSE:
+        return isSetResponse();
       }
       throw new IllegalStateException();
     }
@@ -7753,39 +7330,21 @@ public class HashTreesSyncInterface {
     public boolean equals(Object that) {
       if (that == null)
         return false;
-      if (that instanceof postRebuildHashTreeResponse_args)
-        return this.equals((postRebuildHashTreeResponse_args)that);
+      if (that instanceof submitRebuildResponse_args)
+        return this.equals((submitRebuildResponse_args)that);
       return false;
     }
 
-    public boolean equals(postRebuildHashTreeResponse_args that) {
+    public boolean equals(submitRebuildResponse_args that) {
       if (that == null)
         return false;
 
-      boolean this_present_sn = true && this.isSetSn();
-      boolean that_present_sn = true && that.isSetSn();
-      if (this_present_sn || that_present_sn) {
-        if (!(this_present_sn && that_present_sn))
+      boolean this_present_response = true && this.isSetResponse();
+      boolean that_present_response = true && that.isSetResponse();
+      if (this_present_response || that_present_response) {
+        if (!(this_present_response && that_present_response))
           return false;
-        if (!this.sn.equals(that.sn))
-          return false;
-      }
-
-      boolean this_present_treeId = true;
-      boolean that_present_treeId = true;
-      if (this_present_treeId || that_present_treeId) {
-        if (!(this_present_treeId && that_present_treeId))
-          return false;
-        if (this.treeId != that.treeId)
-          return false;
-      }
-
-      boolean this_present_tokenNo = true;
-      boolean that_present_tokenNo = true;
-      if (this_present_tokenNo || that_present_tokenNo) {
-        if (!(this_present_tokenNo && that_present_tokenNo))
-          return false;
-        if (this.tokenNo != that.tokenNo)
+        if (!this.response.equals(that.response))
           return false;
       }
 
@@ -7797,40 +7356,20 @@ public class HashTreesSyncInterface {
       return 0;
     }
 
-    public int compareTo(postRebuildHashTreeResponse_args other) {
+    public int compareTo(submitRebuildResponse_args other) {
       if (!getClass().equals(other.getClass())) {
         return getClass().getName().compareTo(other.getClass().getName());
       }
 
       int lastComparison = 0;
-      postRebuildHashTreeResponse_args typedOther = (postRebuildHashTreeResponse_args)other;
+      submitRebuildResponse_args typedOther = (submitRebuildResponse_args)other;
 
-      lastComparison = Boolean.valueOf(isSetSn()).compareTo(typedOther.isSetSn());
+      lastComparison = Boolean.valueOf(isSetResponse()).compareTo(typedOther.isSetResponse());
       if (lastComparison != 0) {
         return lastComparison;
       }
-      if (isSetSn()) {
-        lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.sn, typedOther.sn);
-        if (lastComparison != 0) {
-          return lastComparison;
-        }
-      }
-      lastComparison = Boolean.valueOf(isSetTreeId()).compareTo(typedOther.isSetTreeId());
-      if (lastComparison != 0) {
-        return lastComparison;
-      }
-      if (isSetTreeId()) {
-        lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.treeId, typedOther.treeId);
-        if (lastComparison != 0) {
-          return lastComparison;
-        }
-      }
-      lastComparison = Boolean.valueOf(isSetTokenNo()).compareTo(typedOther.isSetTokenNo());
-      if (lastComparison != 0) {
-        return lastComparison;
-      }
-      if (isSetTokenNo()) {
-        lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.tokenNo, typedOther.tokenNo);
+      if (isSetResponse()) {
+        lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.response, typedOther.response);
         if (lastComparison != 0) {
           return lastComparison;
         }
@@ -7852,23 +7391,15 @@ public class HashTreesSyncInterface {
 
     @Override
     public String toString() {
-      StringBuilder sb = new StringBuilder("postRebuildHashTreeResponse_args(");
+      StringBuilder sb = new StringBuilder("submitRebuildResponse_args(");
       boolean first = true;
 
-      sb.append("sn:");
-      if (this.sn == null) {
+      sb.append("response:");
+      if (this.response == null) {
         sb.append("null");
       } else {
-        sb.append(this.sn);
+        sb.append(this.response);
       }
-      first = false;
-      if (!first) sb.append(", ");
-      sb.append("treeId:");
-      sb.append(this.treeId);
-      first = false;
-      if (!first) sb.append(", ");
-      sb.append("tokenNo:");
-      sb.append(this.tokenNo);
       first = false;
       sb.append(")");
       return sb.toString();
@@ -7894,15 +7425,15 @@ public class HashTreesSyncInterface {
       }
     }
 
-    private static class postRebuildHashTreeResponse_argsStandardSchemeFactory implements SchemeFactory {
-      public postRebuildHashTreeResponse_argsStandardScheme getScheme() {
-        return new postRebuildHashTreeResponse_argsStandardScheme();
+    private static class submitRebuildResponse_argsStandardSchemeFactory implements SchemeFactory {
+      public submitRebuildResponse_argsStandardScheme getScheme() {
+        return new submitRebuildResponse_argsStandardScheme();
       }
     }
 
-    private static class postRebuildHashTreeResponse_argsStandardScheme extends StandardScheme<postRebuildHashTreeResponse_args> {
+    private static class submitRebuildResponse_argsStandardScheme extends StandardScheme<submitRebuildResponse_args> {
 
-      public void read(org.apache.thrift.protocol.TProtocol iprot, postRebuildHashTreeResponse_args struct) throws org.apache.thrift.TException {
+      public void read(org.apache.thrift.protocol.TProtocol iprot, submitRebuildResponse_args struct) throws org.apache.thrift.TException {
         org.apache.thrift.protocol.TField schemeField;
         iprot.readStructBegin();
         while (true)
@@ -7912,27 +7443,11 @@ public class HashTreesSyncInterface {
             break;
           }
           switch (schemeField.id) {
-            case 1: // SN
+            case 1: // RESPONSE
               if (schemeField.type == org.apache.thrift.protocol.TType.STRUCT) {
-                struct.sn = new ServerName();
-                struct.sn.read(iprot);
-                struct.setSnIsSet(true);
-              } else { 
-                org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
-              }
-              break;
-            case 2: // TREE_ID
-              if (schemeField.type == org.apache.thrift.protocol.TType.I64) {
-                struct.treeId = iprot.readI64();
-                struct.setTreeIdIsSet(true);
-              } else { 
-                org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
-              }
-              break;
-            case 3: // TOKEN_NO
-              if (schemeField.type == org.apache.thrift.protocol.TType.I64) {
-                struct.tokenNo = iprot.readI64();
-                struct.setTokenNoIsSet(true);
+                struct.response = new RebuildHashTreeResponse();
+                struct.response.read(iprot);
+                struct.setResponseIsSet(true);
               } else { 
                 org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
               }
@@ -7948,90 +7463,64 @@ public class HashTreesSyncInterface {
         struct.validate();
       }
 
-      public void write(org.apache.thrift.protocol.TProtocol oprot, postRebuildHashTreeResponse_args struct) throws org.apache.thrift.TException {
+      public void write(org.apache.thrift.protocol.TProtocol oprot, submitRebuildResponse_args struct) throws org.apache.thrift.TException {
         struct.validate();
 
         oprot.writeStructBegin(STRUCT_DESC);
-        if (struct.sn != null) {
-          oprot.writeFieldBegin(SN_FIELD_DESC);
-          struct.sn.write(oprot);
+        if (struct.response != null) {
+          oprot.writeFieldBegin(RESPONSE_FIELD_DESC);
+          struct.response.write(oprot);
           oprot.writeFieldEnd();
         }
-        oprot.writeFieldBegin(TREE_ID_FIELD_DESC);
-        oprot.writeI64(struct.treeId);
-        oprot.writeFieldEnd();
-        oprot.writeFieldBegin(TOKEN_NO_FIELD_DESC);
-        oprot.writeI64(struct.tokenNo);
-        oprot.writeFieldEnd();
         oprot.writeFieldStop();
         oprot.writeStructEnd();
       }
 
     }
 
-    private static class postRebuildHashTreeResponse_argsTupleSchemeFactory implements SchemeFactory {
-      public postRebuildHashTreeResponse_argsTupleScheme getScheme() {
-        return new postRebuildHashTreeResponse_argsTupleScheme();
+    private static class submitRebuildResponse_argsTupleSchemeFactory implements SchemeFactory {
+      public submitRebuildResponse_argsTupleScheme getScheme() {
+        return new submitRebuildResponse_argsTupleScheme();
       }
     }
 
-    private static class postRebuildHashTreeResponse_argsTupleScheme extends TupleScheme<postRebuildHashTreeResponse_args> {
+    private static class submitRebuildResponse_argsTupleScheme extends TupleScheme<submitRebuildResponse_args> {
 
       @Override
-      public void write(org.apache.thrift.protocol.TProtocol prot, postRebuildHashTreeResponse_args struct) throws org.apache.thrift.TException {
+      public void write(org.apache.thrift.protocol.TProtocol prot, submitRebuildResponse_args struct) throws org.apache.thrift.TException {
         TTupleProtocol oprot = (TTupleProtocol) prot;
         BitSet optionals = new BitSet();
-        if (struct.isSetSn()) {
+        if (struct.isSetResponse()) {
           optionals.set(0);
         }
-        if (struct.isSetTreeId()) {
-          optionals.set(1);
-        }
-        if (struct.isSetTokenNo()) {
-          optionals.set(2);
-        }
-        oprot.writeBitSet(optionals, 3);
-        if (struct.isSetSn()) {
-          struct.sn.write(oprot);
-        }
-        if (struct.isSetTreeId()) {
-          oprot.writeI64(struct.treeId);
-        }
-        if (struct.isSetTokenNo()) {
-          oprot.writeI64(struct.tokenNo);
+        oprot.writeBitSet(optionals, 1);
+        if (struct.isSetResponse()) {
+          struct.response.write(oprot);
         }
       }
 
       @Override
-      public void read(org.apache.thrift.protocol.TProtocol prot, postRebuildHashTreeResponse_args struct) throws org.apache.thrift.TException {
+      public void read(org.apache.thrift.protocol.TProtocol prot, submitRebuildResponse_args struct) throws org.apache.thrift.TException {
         TTupleProtocol iprot = (TTupleProtocol) prot;
-        BitSet incoming = iprot.readBitSet(3);
+        BitSet incoming = iprot.readBitSet(1);
         if (incoming.get(0)) {
-          struct.sn = new ServerName();
-          struct.sn.read(iprot);
-          struct.setSnIsSet(true);
-        }
-        if (incoming.get(1)) {
-          struct.treeId = iprot.readI64();
-          struct.setTreeIdIsSet(true);
-        }
-        if (incoming.get(2)) {
-          struct.tokenNo = iprot.readI64();
-          struct.setTokenNoIsSet(true);
+          struct.response = new RebuildHashTreeResponse();
+          struct.response.read(iprot);
+          struct.setResponseIsSet(true);
         }
       }
     }
 
   }
 
-  public static class postRebuildHashTreeResponse_result implements org.apache.thrift.TBase<postRebuildHashTreeResponse_result, postRebuildHashTreeResponse_result._Fields>, java.io.Serializable, Cloneable   {
-    private static final org.apache.thrift.protocol.TStruct STRUCT_DESC = new org.apache.thrift.protocol.TStruct("postRebuildHashTreeResponse_result");
+  public static class submitRebuildResponse_result implements org.apache.thrift.TBase<submitRebuildResponse_result, submitRebuildResponse_result._Fields>, java.io.Serializable, Cloneable   {
+    private static final org.apache.thrift.protocol.TStruct STRUCT_DESC = new org.apache.thrift.protocol.TStruct("submitRebuildResponse_result");
 
 
     private static final Map<Class<? extends IScheme>, SchemeFactory> schemes = new HashMap<Class<? extends IScheme>, SchemeFactory>();
     static {
-      schemes.put(StandardScheme.class, new postRebuildHashTreeResponse_resultStandardSchemeFactory());
-      schemes.put(TupleScheme.class, new postRebuildHashTreeResponse_resultTupleSchemeFactory());
+      schemes.put(StandardScheme.class, new submitRebuildResponse_resultStandardSchemeFactory());
+      schemes.put(TupleScheme.class, new submitRebuildResponse_resultTupleSchemeFactory());
     }
 
 
@@ -8094,20 +7583,20 @@ public class HashTreesSyncInterface {
     static {
       Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> tmpMap = new EnumMap<_Fields, org.apache.thrift.meta_data.FieldMetaData>(_Fields.class);
       metaDataMap = Collections.unmodifiableMap(tmpMap);
-      org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(postRebuildHashTreeResponse_result.class, metaDataMap);
+      org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(submitRebuildResponse_result.class, metaDataMap);
     }
 
-    public postRebuildHashTreeResponse_result() {
+    public submitRebuildResponse_result() {
     }
 
     /**
      * Performs a deep copy on <i>other</i>.
      */
-    public postRebuildHashTreeResponse_result(postRebuildHashTreeResponse_result other) {
+    public submitRebuildResponse_result(submitRebuildResponse_result other) {
     }
 
-    public postRebuildHashTreeResponse_result deepCopy() {
-      return new postRebuildHashTreeResponse_result(this);
+    public submitRebuildResponse_result deepCopy() {
+      return new submitRebuildResponse_result(this);
     }
 
     @Override
@@ -8140,12 +7629,12 @@ public class HashTreesSyncInterface {
     public boolean equals(Object that) {
       if (that == null)
         return false;
-      if (that instanceof postRebuildHashTreeResponse_result)
-        return this.equals((postRebuildHashTreeResponse_result)that);
+      if (that instanceof submitRebuildResponse_result)
+        return this.equals((submitRebuildResponse_result)that);
       return false;
     }
 
-    public boolean equals(postRebuildHashTreeResponse_result that) {
+    public boolean equals(submitRebuildResponse_result that) {
       if (that == null)
         return false;
 
@@ -8157,13 +7646,13 @@ public class HashTreesSyncInterface {
       return 0;
     }
 
-    public int compareTo(postRebuildHashTreeResponse_result other) {
+    public int compareTo(submitRebuildResponse_result other) {
       if (!getClass().equals(other.getClass())) {
         return getClass().getName().compareTo(other.getClass().getName());
       }
 
       int lastComparison = 0;
-      postRebuildHashTreeResponse_result typedOther = (postRebuildHashTreeResponse_result)other;
+      submitRebuildResponse_result typedOther = (submitRebuildResponse_result)other;
 
       return 0;
     }
@@ -8182,7 +7671,7 @@ public class HashTreesSyncInterface {
 
     @Override
     public String toString() {
-      StringBuilder sb = new StringBuilder("postRebuildHashTreeResponse_result(");
+      StringBuilder sb = new StringBuilder("submitRebuildResponse_result(");
       boolean first = true;
 
       sb.append(")");
@@ -8209,15 +7698,15 @@ public class HashTreesSyncInterface {
       }
     }
 
-    private static class postRebuildHashTreeResponse_resultStandardSchemeFactory implements SchemeFactory {
-      public postRebuildHashTreeResponse_resultStandardScheme getScheme() {
-        return new postRebuildHashTreeResponse_resultStandardScheme();
+    private static class submitRebuildResponse_resultStandardSchemeFactory implements SchemeFactory {
+      public submitRebuildResponse_resultStandardScheme getScheme() {
+        return new submitRebuildResponse_resultStandardScheme();
       }
     }
 
-    private static class postRebuildHashTreeResponse_resultStandardScheme extends StandardScheme<postRebuildHashTreeResponse_result> {
+    private static class submitRebuildResponse_resultStandardScheme extends StandardScheme<submitRebuildResponse_result> {
 
-      public void read(org.apache.thrift.protocol.TProtocol iprot, postRebuildHashTreeResponse_result struct) throws org.apache.thrift.TException {
+      public void read(org.apache.thrift.protocol.TProtocol iprot, submitRebuildResponse_result struct) throws org.apache.thrift.TException {
         org.apache.thrift.protocol.TField schemeField;
         iprot.readStructBegin();
         while (true)
@@ -8238,7 +7727,7 @@ public class HashTreesSyncInterface {
         struct.validate();
       }
 
-      public void write(org.apache.thrift.protocol.TProtocol oprot, postRebuildHashTreeResponse_result struct) throws org.apache.thrift.TException {
+      public void write(org.apache.thrift.protocol.TProtocol oprot, submitRebuildResponse_result struct) throws org.apache.thrift.TException {
         struct.validate();
 
         oprot.writeStructBegin(STRUCT_DESC);
@@ -8248,21 +7737,21 @@ public class HashTreesSyncInterface {
 
     }
 
-    private static class postRebuildHashTreeResponse_resultTupleSchemeFactory implements SchemeFactory {
-      public postRebuildHashTreeResponse_resultTupleScheme getScheme() {
-        return new postRebuildHashTreeResponse_resultTupleScheme();
+    private static class submitRebuildResponse_resultTupleSchemeFactory implements SchemeFactory {
+      public submitRebuildResponse_resultTupleScheme getScheme() {
+        return new submitRebuildResponse_resultTupleScheme();
       }
     }
 
-    private static class postRebuildHashTreeResponse_resultTupleScheme extends TupleScheme<postRebuildHashTreeResponse_result> {
+    private static class submitRebuildResponse_resultTupleScheme extends TupleScheme<submitRebuildResponse_result> {
 
       @Override
-      public void write(org.apache.thrift.protocol.TProtocol prot, postRebuildHashTreeResponse_result struct) throws org.apache.thrift.TException {
+      public void write(org.apache.thrift.protocol.TProtocol prot, submitRebuildResponse_result struct) throws org.apache.thrift.TException {
         TTupleProtocol oprot = (TTupleProtocol) prot;
       }
 
       @Override
-      public void read(org.apache.thrift.protocol.TProtocol prot, postRebuildHashTreeResponse_result struct) throws org.apache.thrift.TException {
+      public void read(org.apache.thrift.protocol.TProtocol prot, submitRebuildResponse_result struct) throws org.apache.thrift.TException {
         TTupleProtocol iprot = (TTupleProtocol) prot;
       }
     }

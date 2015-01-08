@@ -30,6 +30,38 @@ struct ServerName
 	2: required i32 portNo;
 }
 
+/**
+* Rebuild hashtree request object.
+*
+* @param requester, server name which requests for the rebuild 
+* @param treeId
+* @param tokenNo, a unique tokenNo to differentiate similar requests.
+* @param expFullRebuildTimeInt, if the remote tree is not fully rebuilt
+*        within this interval, then remote tree is expected to do a full
+*        rebuild, otherwise just dirty segments rebuild.
+*/
+struct RebuildHashTreeRequest
+{
+	1: required ServerName requester;
+	2: required i64 treeId;
+	3: required i64 tokenNo;
+	4: required i64 expFullRebuildTimeInt;
+}
+
+/**
+* Response after a hashtree has been rebuilt.
+
+* @param sn, server which has executed the rebuild of the tree. 
+* @param treeId, which treeId was rebuilt.
+* @param tokenNo, the tokenNo from previous hashtree rebuild request.
+**/
+struct RebuildHashTreeResponse
+{
+	1: required ServerName sn;
+	2: required i64 treeId;
+	3: required i64 tokenNo;
+}
+
 service HashTreesSyncInterface
 {
 	
@@ -91,26 +123,16 @@ service HashTreesSyncInterface
 	void deleteTreeNodes(1:i64 treeId, 2:list<i32> nodeIds);
 	
 	/**
-     * Requests a rebuild of the hash tree on the remote node.
-     *
-     * @param sn, servername which requests for the rebuild 
-     * @param treeId
-     * @param tokenNo a unique tokenNo to differentiate similar requests.
-     * @param expFullRebuildTimeInt, if the remote tree is not fully rebuilt
-     *        within this interval, then remote tree is expected to do a full
-     *        rebuild, otherwise just dirty segments rebuild.
-     */
-    void rebuildHashTree(1:ServerName sn, 2:i64 treeId, 3:i64 tokenNo, 4:i64 expFullRebuildTimeInt);
+	 * Requests a rebuild of the hashtree.
+	 *
+	 */
+    void submitRebuildRequest(1:RebuildHashTreeRequest request);
 
     /**
-     * This method posts a response on completion of the rebuild of the hash
-     * tree.
+     * Submits the response to the server.
      * 
-     * @param sn, the server which posts the response
-     * @param treeId, 
-     * @param tokenNo which was passed in the request for rebuild.
      */
-    void postRebuildHashTreeResponse(1:ServerName sn, 2:i64 treeId,  3:i64 tokenNo);
+    void submitRebuildResponse(1:RebuildHashTreeResponse response);
     
     /**
 	 * Adds server to sync list. Hashtrees on the local server will be synched

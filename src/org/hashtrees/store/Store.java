@@ -22,5 +22,5 @@ public interface Store {
 
 	ByteBuffer remove(ByteBuffer key) throws Exception;
 
-	Iterator<Pair<ByteBuffer, ByteBuffer>> iterator();
+	Iterator<Pair<ByteBuffer, ByteBuffer>> iterator(long treeId);
 }

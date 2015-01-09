@@ -32,7 +32,7 @@ import org.slf4j.LoggerFactory;
  * 
  * @param requester, server name which requests for the rebuild
  * @param treeId
- * @param tokenNo a unique tokenNo to differentiate similar requests.
+ * @param tokenNo, a unique tokenNo to differentiate similar requests.
  * @param expFullRebuildTimeInt, if the remote tree is not fully rebuilt
  *        within this interval, then remote tree is expected to do a full
  *        rebuild, otherwise just dirty segments rebuild.

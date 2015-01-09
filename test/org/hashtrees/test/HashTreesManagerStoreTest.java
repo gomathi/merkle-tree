@@ -6,38 +6,39 @@ import java.util.List;
 
 import junit.framework.Assert;
 
-import org.hashtrees.store.HashTreeSyncManagerStore;
+import org.hashtrees.store.HashTreesManagerStore;
 import org.hashtrees.test.utils.HashTreesImplTestUtils;
+import org.hashtrees.thrift.generated.RemoteTreeInfo;
 import org.hashtrees.thrift.generated.ServerName;
 import org.junit.Test;
 
-public class HashTreeSyncManagerStoreTest {
+public class HashTreesManagerStoreTest {
 
 	@Test
 	public void testAddServer() throws Exception {
-		HashTreeSyncManagerStore[] syncMgrStores = HashTreesImplTestUtils
+		HashTreesManagerStore[] syncMgrStores = HashTreesImplTestUtils
 				.generateInMemoryAndPersistentSyncMgrStores();
 		try {
-			for (HashTreeSyncManagerStore syncMgrStore : syncMgrStores) {
+			for (HashTreesManagerStore syncMgrStore : syncMgrStores) {
 
-				List<ServerName> expected = new ArrayList<>();
+				List<RemoteTreeInfo> expected = new ArrayList<>();
 				for (int i = 0; i < 10; i++)
-					expected.add(new ServerName(HashTreesImplTestUtils
-							.randomDirName(), 6000));
+					expected.add(new RemoteTreeInfo(new ServerName(
+							HashTreesImplTestUtils.randomDirName(), 6000), i));
 
-				for (ServerName sn : expected)
-					syncMgrStore.addServerToSyncList(sn);
+				for (RemoteTreeInfo rTree : expected)
+					syncMgrStore.addToSyncList(rTree);
 
-				List<ServerName> actual = syncMgrStore.getAllServers();
+				List<RemoteTreeInfo> actual = syncMgrStore.getSyncList();
 				Assert.assertNotNull(actual);
 				Assert.assertEquals(expected.size(), actual.size());
 				Collections.sort(actual);
 				Collections.sort(expected);
 				Assert.assertEquals(expected, actual);
 
-				for (ServerName sn : expected)
-					syncMgrStore.removeServerFromSyncList(sn);
-				actual = syncMgrStore.getAllServers();
+				for (RemoteTreeInfo sn : expected)
+					syncMgrStore.removeFromSyncList(sn);
+				actual = syncMgrStore.getSyncList();
 				Assert.assertNotNull(actual);
 				Assert.assertEquals(0, actual.size());
 			}

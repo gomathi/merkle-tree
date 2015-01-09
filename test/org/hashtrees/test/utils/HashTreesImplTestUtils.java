@@ -15,7 +15,7 @@ import org.hashtrees.HashTreesIdProvider;
 import org.hashtrees.HashTreesImpl;
 import org.hashtrees.ModuloSegIdProvider;
 import org.hashtrees.SegmentIdProvider;
-import org.hashtrees.store.HashTreeSyncManagerStore;
+import org.hashtrees.store.HashTreesManagerStore;
 import org.hashtrees.store.HashTreesMemStore;
 import org.hashtrees.store.HashTreesPersistentStore;
 import org.hashtrees.store.HashTreesStore;
@@ -189,9 +189,9 @@ public class HashTreesImplTestUtils {
 		return new HashTreesPersistentStore(randomDirName());
 	}
 
-	public static HashTreeSyncManagerStore[] generateInMemoryAndPersistentSyncMgrStores()
+	public static HashTreesManagerStore[] generateInMemoryAndPersistentSyncMgrStores()
 			throws Exception {
-		HashTreeSyncManagerStore[] stores = new HashTreeSyncManagerStore[2];
+		HashTreesManagerStore[] stores = new HashTreesManagerStore[2];
 		stores[0] = generateInMemoryStore();
 		stores[1] = generatePersistentStore();
 		return stores;
@@ -205,8 +205,8 @@ public class HashTreesImplTestUtils {
 		return stores;
 	}
 
-	public static void closeStores(HashTreeSyncManagerStore... stores) {
-		for (HashTreeSyncManagerStore store : stores) {
+	public static void closeStores(HashTreesManagerStore... stores) {
+		for (HashTreesManagerStore store : stores) {
 			if (store instanceof HashTreesPersistentStore) {
 				HashTreesPersistentStore pStore = (HashTreesPersistentStore) store;
 				FileUtils.deleteQuietly(new File(pStore.getDbDir()));

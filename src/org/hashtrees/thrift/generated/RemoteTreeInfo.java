@@ -27,36 +27,25 @@ import java.util.Arrays;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- * Response after a hashtree has been rebuilt.
- * 
- * @param responder, server which has executed the rebuild of the tree.
- * @param treeId, which treeId was rebuilt.
- * @param tokenNo, the tokenNo from previous hashtree rebuild request.
- * 
- */
-public class RebuildHashTreeResponse implements org.apache.thrift.TBase<RebuildHashTreeResponse, RebuildHashTreeResponse._Fields>, java.io.Serializable, Cloneable {
-  private static final org.apache.thrift.protocol.TStruct STRUCT_DESC = new org.apache.thrift.protocol.TStruct("RebuildHashTreeResponse");
+public class RemoteTreeInfo implements org.apache.thrift.TBase<RemoteTreeInfo, RemoteTreeInfo._Fields>, java.io.Serializable, Cloneable {
+  private static final org.apache.thrift.protocol.TStruct STRUCT_DESC = new org.apache.thrift.protocol.TStruct("RemoteTreeInfo");
 
-  private static final org.apache.thrift.protocol.TField RESPONDER_FIELD_DESC = new org.apache.thrift.protocol.TField("responder", org.apache.thrift.protocol.TType.STRUCT, (short)1);
+  private static final org.apache.thrift.protocol.TField SN_FIELD_DESC = new org.apache.thrift.protocol.TField("sn", org.apache.thrift.protocol.TType.STRUCT, (short)1);
   private static final org.apache.thrift.protocol.TField TREE_ID_FIELD_DESC = new org.apache.thrift.protocol.TField("treeId", org.apache.thrift.protocol.TType.I64, (short)2);
-  private static final org.apache.thrift.protocol.TField TOKEN_NO_FIELD_DESC = new org.apache.thrift.protocol.TField("tokenNo", org.apache.thrift.protocol.TType.I64, (short)3);
 
   private static final Map<Class<? extends IScheme>, SchemeFactory> schemes = new HashMap<Class<? extends IScheme>, SchemeFactory>();
   static {
-    schemes.put(StandardScheme.class, new RebuildHashTreeResponseStandardSchemeFactory());
-    schemes.put(TupleScheme.class, new RebuildHashTreeResponseTupleSchemeFactory());
+    schemes.put(StandardScheme.class, new RemoteTreeInfoStandardSchemeFactory());
+    schemes.put(TupleScheme.class, new RemoteTreeInfoTupleSchemeFactory());
   }
 
-  public ServerName responder; // required
+  public ServerName sn; // required
   public long treeId; // required
-  public long tokenNo; // required
 
   /** The set of fields this struct contains, along with convenience methods for finding and manipulating them. */
   public enum _Fields implements org.apache.thrift.TFieldIdEnum {
-    RESPONDER((short)1, "responder"),
-    TREE_ID((short)2, "treeId"),
-    TOKEN_NO((short)3, "tokenNo");
+    SN((short)1, "sn"),
+    TREE_ID((short)2, "treeId");
 
     private static final Map<String, _Fields> byName = new HashMap<String, _Fields>();
 
@@ -71,12 +60,10 @@ public class RebuildHashTreeResponse implements org.apache.thrift.TBase<RebuildH
      */
     public static _Fields findByThriftId(int fieldId) {
       switch(fieldId) {
-        case 1: // RESPONDER
-          return RESPONDER;
+        case 1: // SN
+          return SN;
         case 2: // TREE_ID
           return TREE_ID;
-        case 3: // TOKEN_NO
-          return TOKEN_NO;
         default:
           return null;
       }
@@ -118,84 +105,75 @@ public class RebuildHashTreeResponse implements org.apache.thrift.TBase<RebuildH
 
   // isset id assignments
   private static final int __TREEID_ISSET_ID = 0;
-  private static final int __TOKENNO_ISSET_ID = 1;
-  private BitSet __isset_bit_vector = new BitSet(2);
+  private BitSet __isset_bit_vector = new BitSet(1);
   public static final Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> metaDataMap;
   static {
     Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> tmpMap = new EnumMap<_Fields, org.apache.thrift.meta_data.FieldMetaData>(_Fields.class);
-    tmpMap.put(_Fields.RESPONDER, new org.apache.thrift.meta_data.FieldMetaData("responder", org.apache.thrift.TFieldRequirementType.REQUIRED, 
+    tmpMap.put(_Fields.SN, new org.apache.thrift.meta_data.FieldMetaData("sn", org.apache.thrift.TFieldRequirementType.REQUIRED, 
         new org.apache.thrift.meta_data.StructMetaData(org.apache.thrift.protocol.TType.STRUCT, ServerName.class)));
     tmpMap.put(_Fields.TREE_ID, new org.apache.thrift.meta_data.FieldMetaData("treeId", org.apache.thrift.TFieldRequirementType.REQUIRED, 
         new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.I64)));
-    tmpMap.put(_Fields.TOKEN_NO, new org.apache.thrift.meta_data.FieldMetaData("tokenNo", org.apache.thrift.TFieldRequirementType.REQUIRED, 
-        new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.I64)));
     metaDataMap = Collections.unmodifiableMap(tmpMap);
-    org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(RebuildHashTreeResponse.class, metaDataMap);
+    org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(RemoteTreeInfo.class, metaDataMap);
   }
 
-  public RebuildHashTreeResponse() {
+  public RemoteTreeInfo() {
   }
 
-  public RebuildHashTreeResponse(
-    ServerName responder,
-    long treeId,
-    long tokenNo)
+  public RemoteTreeInfo(
+    ServerName sn,
+    long treeId)
   {
     this();
-    this.responder = responder;
+    this.sn = sn;
     this.treeId = treeId;
     setTreeIdIsSet(true);
-    this.tokenNo = tokenNo;
-    setTokenNoIsSet(true);
   }
 
   /**
    * Performs a deep copy on <i>other</i>.
    */
-  public RebuildHashTreeResponse(RebuildHashTreeResponse other) {
+  public RemoteTreeInfo(RemoteTreeInfo other) {
     __isset_bit_vector.clear();
     __isset_bit_vector.or(other.__isset_bit_vector);
-    if (other.isSetResponder()) {
-      this.responder = new ServerName(other.responder);
+    if (other.isSetSn()) {
+      this.sn = new ServerName(other.sn);
     }
     this.treeId = other.treeId;
-    this.tokenNo = other.tokenNo;
   }
 
-  public RebuildHashTreeResponse deepCopy() {
-    return new RebuildHashTreeResponse(this);
+  public RemoteTreeInfo deepCopy() {
+    return new RemoteTreeInfo(this);
   }
 
   @Override
   public void clear() {
-    this.responder = null;
+    this.sn = null;
     setTreeIdIsSet(false);
     this.treeId = 0;
-    setTokenNoIsSet(false);
-    this.tokenNo = 0;
   }
 
-  public ServerName getResponder() {
-    return this.responder;
+  public ServerName getSn() {
+    return this.sn;
   }
 
-  public RebuildHashTreeResponse setResponder(ServerName responder) {
-    this.responder = responder;
+  public RemoteTreeInfo setSn(ServerName sn) {
+    this.sn = sn;
     return this;
   }
 
-  public void unsetResponder() {
-    this.responder = null;
+  public void unsetSn() {
+    this.sn = null;
   }
 
-  /** Returns true if field responder is set (has been assigned a value) and false otherwise */
-  public boolean isSetResponder() {
-    return this.responder != null;
+  /** Returns true if field sn is set (has been assigned a value) and false otherwise */
+  public boolean isSetSn() {
+    return this.sn != null;
   }
 
-  public void setResponderIsSet(boolean value) {
+  public void setSnIsSet(boolean value) {
     if (!value) {
-      this.responder = null;
+      this.sn = null;
     }
   }
 
@@ -203,7 +181,7 @@ public class RebuildHashTreeResponse implements org.apache.thrift.TBase<RebuildH
     return this.treeId;
   }
 
-  public RebuildHashTreeResponse setTreeId(long treeId) {
+  public RemoteTreeInfo setTreeId(long treeId) {
     this.treeId = treeId;
     setTreeIdIsSet(true);
     return this;
@@ -222,36 +200,13 @@ public class RebuildHashTreeResponse implements org.apache.thrift.TBase<RebuildH
     __isset_bit_vector.set(__TREEID_ISSET_ID, value);
   }
 
-  public long getTokenNo() {
-    return this.tokenNo;
-  }
-
-  public RebuildHashTreeResponse setTokenNo(long tokenNo) {
-    this.tokenNo = tokenNo;
-    setTokenNoIsSet(true);
-    return this;
-  }
-
-  public void unsetTokenNo() {
-    __isset_bit_vector.clear(__TOKENNO_ISSET_ID);
-  }
-
-  /** Returns true if field tokenNo is set (has been assigned a value) and false otherwise */
-  public boolean isSetTokenNo() {
-    return __isset_bit_vector.get(__TOKENNO_ISSET_ID);
-  }
-
-  public void setTokenNoIsSet(boolean value) {
-    __isset_bit_vector.set(__TOKENNO_ISSET_ID, value);
-  }
-
   public void setFieldValue(_Fields field, Object value) {
     switch (field) {
-    case RESPONDER:
+    case SN:
       if (value == null) {
-        unsetResponder();
+        unsetSn();
       } else {
-        setResponder((ServerName)value);
+        setSn((ServerName)value);
       }
       break;
 
@@ -263,27 +218,16 @@ public class RebuildHashTreeResponse implements org.apache.thrift.TBase<RebuildH
       }
       break;
 
-    case TOKEN_NO:
-      if (value == null) {
-        unsetTokenNo();
-      } else {
-        setTokenNo((Long)value);
-      }
-      break;
-
     }
   }
 
   public Object getFieldValue(_Fields field) {
     switch (field) {
-    case RESPONDER:
-      return getResponder();
+    case SN:
+      return getSn();
 
     case TREE_ID:
       return Long.valueOf(getTreeId());
-
-    case TOKEN_NO:
-      return Long.valueOf(getTokenNo());
 
     }
     throw new IllegalStateException();
@@ -296,12 +240,10 @@ public class RebuildHashTreeResponse implements org.apache.thrift.TBase<RebuildH
     }
 
     switch (field) {
-    case RESPONDER:
-      return isSetResponder();
+    case SN:
+      return isSetSn();
     case TREE_ID:
       return isSetTreeId();
-    case TOKEN_NO:
-      return isSetTokenNo();
     }
     throw new IllegalStateException();
   }
@@ -310,21 +252,21 @@ public class RebuildHashTreeResponse implements org.apache.thrift.TBase<RebuildH
   public boolean equals(Object that) {
     if (that == null)
       return false;
-    if (that instanceof RebuildHashTreeResponse)
-      return this.equals((RebuildHashTreeResponse)that);
+    if (that instanceof RemoteTreeInfo)
+      return this.equals((RemoteTreeInfo)that);
     return false;
   }
 
-  public boolean equals(RebuildHashTreeResponse that) {
+  public boolean equals(RemoteTreeInfo that) {
     if (that == null)
       return false;
 
-    boolean this_present_responder = true && this.isSetResponder();
-    boolean that_present_responder = true && that.isSetResponder();
-    if (this_present_responder || that_present_responder) {
-      if (!(this_present_responder && that_present_responder))
+    boolean this_present_sn = true && this.isSetSn();
+    boolean that_present_sn = true && that.isSetSn();
+    if (this_present_sn || that_present_sn) {
+      if (!(this_present_sn && that_present_sn))
         return false;
-      if (!this.responder.equals(that.responder))
+      if (!this.sn.equals(that.sn))
         return false;
     }
 
@@ -337,15 +279,6 @@ public class RebuildHashTreeResponse implements org.apache.thrift.TBase<RebuildH
         return false;
     }
 
-    boolean this_present_tokenNo = true;
-    boolean that_present_tokenNo = true;
-    if (this_present_tokenNo || that_present_tokenNo) {
-      if (!(this_present_tokenNo && that_present_tokenNo))
-        return false;
-      if (this.tokenNo != that.tokenNo)
-        return false;
-    }
-
     return true;
   }
 
@@ -354,20 +287,20 @@ public class RebuildHashTreeResponse implements org.apache.thrift.TBase<RebuildH
     return 0;
   }
 
-  public int compareTo(RebuildHashTreeResponse other) {
+  public int compareTo(RemoteTreeInfo other) {
     if (!getClass().equals(other.getClass())) {
       return getClass().getName().compareTo(other.getClass().getName());
     }
 
     int lastComparison = 0;
-    RebuildHashTreeResponse typedOther = (RebuildHashTreeResponse)other;
+    RemoteTreeInfo typedOther = (RemoteTreeInfo)other;
 
-    lastComparison = Boolean.valueOf(isSetResponder()).compareTo(typedOther.isSetResponder());
+    lastComparison = Boolean.valueOf(isSetSn()).compareTo(typedOther.isSetSn());
     if (lastComparison != 0) {
       return lastComparison;
     }
-    if (isSetResponder()) {
-      lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.responder, typedOther.responder);
+    if (isSetSn()) {
+      lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.sn, typedOther.sn);
       if (lastComparison != 0) {
         return lastComparison;
       }
@@ -378,16 +311,6 @@ public class RebuildHashTreeResponse implements org.apache.thrift.TBase<RebuildH
     }
     if (isSetTreeId()) {
       lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.treeId, typedOther.treeId);
-      if (lastComparison != 0) {
-        return lastComparison;
-      }
-    }
-    lastComparison = Boolean.valueOf(isSetTokenNo()).compareTo(typedOther.isSetTokenNo());
-    if (lastComparison != 0) {
-      return lastComparison;
-    }
-    if (isSetTokenNo()) {
-      lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.tokenNo, typedOther.tokenNo);
       if (lastComparison != 0) {
         return lastComparison;
       }
@@ -409,23 +332,19 @@ public class RebuildHashTreeResponse implements org.apache.thrift.TBase<RebuildH
 
   @Override
   public String toString() {
-    StringBuilder sb = new StringBuilder("RebuildHashTreeResponse(");
+    StringBuilder sb = new StringBuilder("RemoteTreeInfo(");
     boolean first = true;
 
-    sb.append("responder:");
-    if (this.responder == null) {
+    sb.append("sn:");
+    if (this.sn == null) {
       sb.append("null");
     } else {
-      sb.append(this.responder);
+      sb.append(this.sn);
     }
     first = false;
     if (!first) sb.append(", ");
     sb.append("treeId:");
     sb.append(this.treeId);
-    first = false;
-    if (!first) sb.append(", ");
-    sb.append("tokenNo:");
-    sb.append(this.tokenNo);
     first = false;
     sb.append(")");
     return sb.toString();
@@ -433,11 +352,10 @@ public class RebuildHashTreeResponse implements org.apache.thrift.TBase<RebuildH
 
   public void validate() throws org.apache.thrift.TException {
     // check for required fields
-    if (responder == null) {
-      throw new org.apache.thrift.protocol.TProtocolException("Required field 'responder' was not present! Struct: " + toString());
+    if (sn == null) {
+      throw new org.apache.thrift.protocol.TProtocolException("Required field 'sn' was not present! Struct: " + toString());
     }
     // alas, we cannot check 'treeId' because it's a primitive and you chose the non-beans generator.
-    // alas, we cannot check 'tokenNo' because it's a primitive and you chose the non-beans generator.
   }
 
   private void writeObject(java.io.ObjectOutputStream out) throws java.io.IOException {
@@ -458,15 +376,15 @@ public class RebuildHashTreeResponse implements org.apache.thrift.TBase<RebuildH
     }
   }
 
-  private static class RebuildHashTreeResponseStandardSchemeFactory implements SchemeFactory {
-    public RebuildHashTreeResponseStandardScheme getScheme() {
-      return new RebuildHashTreeResponseStandardScheme();
+  private static class RemoteTreeInfoStandardSchemeFactory implements SchemeFactory {
+    public RemoteTreeInfoStandardScheme getScheme() {
+      return new RemoteTreeInfoStandardScheme();
     }
   }
 
-  private static class RebuildHashTreeResponseStandardScheme extends StandardScheme<RebuildHashTreeResponse> {
+  private static class RemoteTreeInfoStandardScheme extends StandardScheme<RemoteTreeInfo> {
 
-    public void read(org.apache.thrift.protocol.TProtocol iprot, RebuildHashTreeResponse struct) throws org.apache.thrift.TException {
+    public void read(org.apache.thrift.protocol.TProtocol iprot, RemoteTreeInfo struct) throws org.apache.thrift.TException {
       org.apache.thrift.protocol.TField schemeField;
       iprot.readStructBegin();
       while (true)
@@ -476,11 +394,11 @@ public class RebuildHashTreeResponse implements org.apache.thrift.TBase<RebuildH
           break;
         }
         switch (schemeField.id) {
-          case 1: // RESPONDER
+          case 1: // SN
             if (schemeField.type == org.apache.thrift.protocol.TType.STRUCT) {
-              struct.responder = new ServerName();
-              struct.responder.read(iprot);
-              struct.setResponderIsSet(true);
+              struct.sn = new ServerName();
+              struct.sn.read(iprot);
+              struct.setSnIsSet(true);
             } else { 
               org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
             }
@@ -489,14 +407,6 @@ public class RebuildHashTreeResponse implements org.apache.thrift.TBase<RebuildH
             if (schemeField.type == org.apache.thrift.protocol.TType.I64) {
               struct.treeId = iprot.readI64();
               struct.setTreeIdIsSet(true);
-            } else { 
-              org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
-            }
-            break;
-          case 3: // TOKEN_NO
-            if (schemeField.type == org.apache.thrift.protocol.TType.I64) {
-              struct.tokenNo = iprot.readI64();
-              struct.setTokenNoIsSet(true);
             } else { 
               org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
             }
@@ -512,26 +422,20 @@ public class RebuildHashTreeResponse implements org.apache.thrift.TBase<RebuildH
       if (!struct.isSetTreeId()) {
         throw new org.apache.thrift.protocol.TProtocolException("Required field 'treeId' was not found in serialized data! Struct: " + toString());
       }
-      if (!struct.isSetTokenNo()) {
-        throw new org.apache.thrift.protocol.TProtocolException("Required field 'tokenNo' was not found in serialized data! Struct: " + toString());
-      }
       struct.validate();
     }
 
-    public void write(org.apache.thrift.protocol.TProtocol oprot, RebuildHashTreeResponse struct) throws org.apache.thrift.TException {
+    public void write(org.apache.thrift.protocol.TProtocol oprot, RemoteTreeInfo struct) throws org.apache.thrift.TException {
       struct.validate();
 
       oprot.writeStructBegin(STRUCT_DESC);
-      if (struct.responder != null) {
-        oprot.writeFieldBegin(RESPONDER_FIELD_DESC);
-        struct.responder.write(oprot);
+      if (struct.sn != null) {
+        oprot.writeFieldBegin(SN_FIELD_DESC);
+        struct.sn.write(oprot);
         oprot.writeFieldEnd();
       }
       oprot.writeFieldBegin(TREE_ID_FIELD_DESC);
       oprot.writeI64(struct.treeId);
-      oprot.writeFieldEnd();
-      oprot.writeFieldBegin(TOKEN_NO_FIELD_DESC);
-      oprot.writeI64(struct.tokenNo);
       oprot.writeFieldEnd();
       oprot.writeFieldStop();
       oprot.writeStructEnd();
@@ -539,32 +443,29 @@ public class RebuildHashTreeResponse implements org.apache.thrift.TBase<RebuildH
 
   }
 
-  private static class RebuildHashTreeResponseTupleSchemeFactory implements SchemeFactory {
-    public RebuildHashTreeResponseTupleScheme getScheme() {
-      return new RebuildHashTreeResponseTupleScheme();
+  private static class RemoteTreeInfoTupleSchemeFactory implements SchemeFactory {
+    public RemoteTreeInfoTupleScheme getScheme() {
+      return new RemoteTreeInfoTupleScheme();
     }
   }
 
-  private static class RebuildHashTreeResponseTupleScheme extends TupleScheme<RebuildHashTreeResponse> {
+  private static class RemoteTreeInfoTupleScheme extends TupleScheme<RemoteTreeInfo> {
 
     @Override
-    public void write(org.apache.thrift.protocol.TProtocol prot, RebuildHashTreeResponse struct) throws org.apache.thrift.TException {
+    public void write(org.apache.thrift.protocol.TProtocol prot, RemoteTreeInfo struct) throws org.apache.thrift.TException {
       TTupleProtocol oprot = (TTupleProtocol) prot;
-      struct.responder.write(oprot);
+      struct.sn.write(oprot);
       oprot.writeI64(struct.treeId);
-      oprot.writeI64(struct.tokenNo);
     }
 
     @Override
-    public void read(org.apache.thrift.protocol.TProtocol prot, RebuildHashTreeResponse struct) throws org.apache.thrift.TException {
+    public void read(org.apache.thrift.protocol.TProtocol prot, RemoteTreeInfo struct) throws org.apache.thrift.TException {
       TTupleProtocol iprot = (TTupleProtocol) prot;
-      struct.responder = new ServerName();
-      struct.responder.read(iprot);
-      struct.setResponderIsSet(true);
+      struct.sn = new ServerName();
+      struct.sn.read(iprot);
+      struct.setSnIsSet(true);
       struct.treeId = iprot.readI64();
       struct.setTreeIdIsSet(true);
-      struct.tokenNo = iprot.readI64();
-      struct.setTokenNoIsSet(true);
     }
   }
 

@@ -15,9 +15,9 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import javax.annotation.concurrent.ThreadSafe;
 
+import org.hashtrees.thrift.generated.RemoteTreeInfo;
 import org.hashtrees.thrift.generated.SegmentData;
 import org.hashtrees.thrift.generated.SegmentHash;
-import org.hashtrees.thrift.generated.ServerName;
 
 /**
  * In memory implementation of {@link HashTreesStore}.
@@ -25,10 +25,10 @@ import org.hashtrees.thrift.generated.ServerName;
  */
 @ThreadSafe
 public class HashTreesMemStore extends HashTreesBaseStore implements
-		HashTreeSyncManagerStore {
+		HashTreesManagerStore {
 
 	private final ConcurrentMap<Long, HashTreeMemStore> treeIdAndIndHashTree = new ConcurrentHashMap<>();
-	private final ConcurrentSkipListSet<ServerName> servers = new ConcurrentSkipListSet<>();
+	private final ConcurrentSkipListSet<RemoteTreeInfo> servers = new ConcurrentSkipListSet<>();
 
 	private static class HashTreeMemStore {
 		private final ConcurrentMap<Integer, ByteBuffer> segmentHashes = new ConcurrentSkipListMap<Integer, ByteBuffer>();
@@ -160,17 +160,17 @@ public class HashTreesMemStore extends HashTreesBaseStore implements
 	}
 
 	@Override
-	public void addServerToSyncList(ServerName sn) {
-		servers.add(sn);
+	public void addToSyncList(RemoteTreeInfo rTree) {
+		servers.add(rTree);
 	}
 
 	@Override
-	public void removeServerFromSyncList(ServerName sn) {
-		servers.remove(sn);
+	public void removeFromSyncList(RemoteTreeInfo rTree) {
+		servers.remove(rTree);
 	}
 
 	@Override
-	public List<ServerName> getAllServers() {
-		return new ArrayList<>(servers);
+	public List<RemoteTreeInfo> getSyncList() {
+		return new ArrayList<RemoteTreeInfo>(servers);
 	}
 }

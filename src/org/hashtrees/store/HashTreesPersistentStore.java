@@ -13,6 +13,7 @@ import java.util.NoSuchElementException;
 import java.util.Queue;
 
 import org.fusesource.leveldbjni.JniDBFactory;
+import org.hashtrees.thrift.generated.RemoteTreeInfo;
 import org.hashtrees.thrift.generated.SegmentData;
 import org.hashtrees.thrift.generated.SegmentHash;
 import org.hashtrees.thrift.generated.ServerName;
@@ -37,7 +38,7 @@ import org.slf4j.LoggerFactory;
  */
 
 public class HashTreesPersistentStore extends HashTreesBaseStore implements
-		HashTreeSyncManagerStore {
+		HashTreesManagerStore {
 
 	private static final Logger LOG = LoggerFactory
 			.getLogger(HashTreesPersistentStore.class);
@@ -254,58 +255,6 @@ public class HashTreesPersistentStore extends HashTreesBaseStore implements
 		return 0;
 	}
 
-	private static byte[] prepareServerName(ServerName sn) {
-		byte[] serverNameInBytes = sn.hostName.getBytes();
-		byte[] key = new byte[MetaDataKey.KEY_SERVERNAME_KEY_PREFIX.key.length
-				+ serverNameInBytes.length];
-		ByteBuffer keyBB = ByteBuffer.wrap(key);
-		keyBB.put(MetaDataKey.KEY_SERVERNAME_KEY_PREFIX.key);
-		keyBB.put(sn.hostName.getBytes());
-		return keyBB.array();
-	}
-
-	private static ServerName getServerName(byte[] key, byte[] value) {
-		int offset = MetaDataKey.KEY_SERVERNAME_KEY_PREFIX.key.length;
-		byte[] snInBytes = ByteUtils.copy(key, offset, key.length);
-		String hostName = new String(snInBytes);
-
-		ByteBuffer bb = ByteBuffer.wrap(value);
-		int portNo = bb.getInt();
-		return new ServerName(hostName, portNo);
-	}
-
-	@Override
-	public void addServerToSyncList(ServerName sn) {
-		byte[] value = new byte[ByteUtils.SIZEOF_INT];
-		ByteBuffer bb = ByteBuffer.wrap(value);
-		bb.putInt(sn.getPortNo());
-		dbObj.put(prepareServerName(sn), value);
-	}
-
-	@Override
-	public void removeServerFromSyncList(ServerName sn) {
-		dbObj.delete(prepareServerName(sn));
-	}
-
-	@Override
-	public List<ServerName> getAllServers() {
-		DBIterator itr = dbObj.iterator();
-		byte[] startKey = MetaDataKey.KEY_SERVERNAME_KEY_PREFIX.getKey();
-		itr.seek(startKey);
-
-		List<ServerName> result = new ArrayList<>();
-		while (itr.hasNext()) {
-			Entry<byte[], byte[]> entry = itr.next();
-			byte[] key = entry.getKey();
-			byte[] value = entry.getValue();
-			if (ByteUtils.compareTo(startKey, 0, startKey.length, key, 0,
-					startKey.length) != 0)
-				break;
-			result.add(getServerName(key, value));
-		}
-		return result;
-	}
-
 	@Override
 	public void deleteTree(long treeId) {
 		DBIterator dbItr;
@@ -427,5 +376,60 @@ public class HashTreesPersistentStore extends HashTreesBaseStore implements
 
 	public String getDbDir() {
 		return dbDir;
+	}
+
+	private static byte[] convertToBytes(RemoteTreeInfo rTree) {
+		byte[] serverNameInBytes = rTree.sn.hostName.getBytes();
+		byte[] key = new byte[MetaDataKey.KEY_SERVERNAME_KEY_PREFIX.key.length
+				+ serverNameInBytes.length + ByteUtils.SIZEOF_INT
+				+ ByteUtils.SIZEOF_LONG];
+
+		ByteBuffer keyBB = ByteBuffer.wrap(key);
+		keyBB.put(MetaDataKey.KEY_SERVERNAME_KEY_PREFIX.key);
+		keyBB.putInt(rTree.sn.portNo);
+		keyBB.putLong(rTree.treeId);
+		keyBB.put(serverNameInBytes);
+
+		return keyBB.array();
+	}
+
+	private static RemoteTreeInfo readFrom(byte[] key) {
+		int offset = MetaDataKey.KEY_SERVERNAME_KEY_PREFIX.key.length;
+		ByteBuffer bb = ByteBuffer.wrap(key);
+		int portNo = bb.getInt(offset);
+		offset += ByteUtils.SIZEOF_INT;
+		long treeId = bb.getLong(offset);
+		offset += ByteUtils.SIZEOF_LONG;
+		byte[] snInBytes = ByteUtils.copy(key, offset, key.length);
+		String hostName = new String(snInBytes);
+		return new RemoteTreeInfo(new ServerName(hostName, portNo), treeId);
+	}
+
+	@Override
+	public void addToSyncList(RemoteTreeInfo rTree) {
+		dbObj.put(convertToBytes(rTree), EMPTY_VALUE);
+	}
+
+	@Override
+	public void removeFromSyncList(RemoteTreeInfo rTree) {
+		dbObj.delete(convertToBytes(rTree));
+	}
+
+	@Override
+	public List<RemoteTreeInfo> getSyncList() {
+		DBIterator itr = dbObj.iterator();
+		byte[] startKey = MetaDataKey.KEY_SERVERNAME_KEY_PREFIX.getKey();
+		itr.seek(startKey);
+
+		List<RemoteTreeInfo> result = new ArrayList<>();
+		while (itr.hasNext()) {
+			Entry<byte[], byte[]> entry = itr.next();
+			byte[] key = entry.getKey();
+			if (ByteUtils.compareTo(startKey, 0, startKey.length, key, 0,
+					startKey.length) != 0)
+				break;
+			result.add(readFrom(key));
+		}
+		return result;
 	}
 }

@@ -3,7 +3,7 @@ package org.hashtrees;
 import java.nio.ByteBuffer;
 import java.util.Iterator;
 
-import org.hashtrees.synch.HashTreesSyncManager;
+import org.hashtrees.synch.HashTreesManager;
 
 /**
  * There can be multiple hash trees. Given a key we need to know which hash tree
@@ -12,7 +12,7 @@ import org.hashtrees.synch.HashTreesSyncManager;
  * 
  * Also some nodes may act as replica nodes for some of the hash trees. In that
  * case replica nodes should not synch primary nodes of those hash trees. To
- * avoid this problem, {@link HashTreesSyncManager} should know which hash trees
+ * avoid this problem, {@link HashTreesManager} should know which hash trees
  * are managed by the local node. {@link #getAllPrimaryTreeIds()} serves this
  * purpose.
  * 

@@ -9,9 +9,9 @@ import org.hashtrees.HashTrees;
 import org.hashtrees.thrift.generated.HashTreesSyncInterface;
 import org.hashtrees.thrift.generated.RebuildHashTreeRequest;
 import org.hashtrees.thrift.generated.RebuildHashTreeResponse;
+import org.hashtrees.thrift.generated.RemoteTreeInfo;
 import org.hashtrees.thrift.generated.SegmentData;
 import org.hashtrees.thrift.generated.SegmentHash;
-import org.hashtrees.thrift.generated.ServerName;
 
 /**
  * Just wraps up {@link HashTrees} and provides a view as
@@ -119,12 +119,17 @@ public class HashTreesThriftServer implements HashTreesSyncInterface.Iface {
 	}
 
 	@Override
-	public void addServerToSyncList(ServerName sn) throws TException {
-		syncCallsObserver.addServerToSyncList(sn);
+	public void addToSyncList(RemoteTreeInfo rTree) throws TException {
+		syncCallsObserver.addToSyncList(rTree);
 	}
 
 	@Override
-	public void removeServerFromSyncList(ServerName sn) throws TException {
-		syncCallsObserver.removeServerFromSyncList(sn);
+	public void removeFromSyncList(RemoteTreeInfo rTree) throws TException {
+		syncCallsObserver.removeFromSyncList(rTree);
+	}
+
+	@Override
+	public List<RemoteTreeInfo> getSyncList() throws TException {
+		return syncCallsObserver.getSyncList();
 	}
 }

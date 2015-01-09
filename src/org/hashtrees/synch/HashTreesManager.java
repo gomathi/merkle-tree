@@ -16,14 +16,17 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import javax.annotation.concurrent.NotThreadSafe;
+
 import org.apache.thrift.TException;
 import org.apache.thrift.transport.TTransportException;
 import org.hashtrees.HashTrees;
 import org.hashtrees.HashTreesIdProvider;
-import org.hashtrees.store.HashTreeSyncManagerStore;
+import org.hashtrees.store.HashTreesManagerStore;
 import org.hashtrees.thrift.generated.HashTreesSyncInterface;
 import org.hashtrees.thrift.generated.RebuildHashTreeRequest;
 import org.hashtrees.thrift.generated.RebuildHashTreeResponse;
+import org.hashtrees.thrift.generated.RemoteTreeInfo;
 import org.hashtrees.thrift.generated.ServerName;
 import org.hashtrees.util.CustomThreadFactory;
 import org.hashtrees.util.Pair;
@@ -36,21 +39,21 @@ import com.google.common.base.Function;
 import com.google.common.collect.Collections2;
 
 /**
- * A state machine based manager which runs background tasks to rebuild hash
- * trees, and synch remote hash trees.
+ * A hashtrees manager which runs background tasks to rebuild hash trees, and
+ * synch remote hash trees.
  * 
  * HashTrees updates tree hashes at regular intervals, not on every update of
  * the key. Hence if two hash trees are continuously updating their hashes at
- * different intervals, synch operation between these trees will always cause a
+ * different intervals, synch operation between two trees will always cause a
  * mismatch even though underlying data is same. We should avoid unnecessary
- * network transfers. Thus a state machine based approach is used where whenever
- * the primary hash tree rebuilds its hash tree, it requests the remote hash
- * tree to rebuild the hash tree as well.
+ * network transfers. Thus a different approach is used where whenever the
+ * primary hash tree rebuilds its hash tree, it requests the remote hash tree to
+ * rebuild the hash tree as well. So the following synch operation will not
+ * differ much in segment hash.
  * 
- * HashTreeManager goes through the following states.
+ * HashTreesManager goes through the following states.
  * 
- * START -> REBUILD -> SYNCH -> REBUILD -> STOP(when requested). STOP state can
- * be reached from REBUILD or SYNCH state.
+ * START -> (REBUILD followed by SYNCH -> (pause) *) -> STOP(when requested).
  * 
  * At any time, the manager can be asked to shutdown, by requesting stop.
  * 
@@ -59,89 +62,60 @@ import com.google.common.collect.Collections2;
  * functions.
  * 
  */
-public class HashTreesSyncManager extends StoppableTask implements
+public class HashTreesManager extends StoppableTask implements
 		HashTreesSyncCallsObserver {
 
-	private enum STATE {
-		START, REBUILD, SYNCH
-	}
-
 	private final static Logger LOG = LoggerFactory
-			.getLogger(HashTreesSyncManager.class);
-	private final static String SYNC_THREADS_NAME = "SyncManagerThreads";
-	private final static String STATE_MACHINE_THREAD_NAME = "StateMachineThread";
+			.getLogger(HashTreesManager.class);
+	private final static String MGR_TPOOL_NAME = "HTMgrWorkerThreadPool";
+	private final static String MGR_SCHED_THREAD = "HTMgrThread";
+	private final static long MAX_UNSYNCED_TIME = 15 * 60 * 1000;
 
-	public final static int DEF_NO_OF_THREADS = 10;
-	// Expected time interval between two consecutive tree full rebuilds.
-	public final static long DEF_FULL_REBUILD_TIME_INTERVAL = 30 * 60 * 1000;
-	// If local hash tree do not receive rebuilt confirmation from remote node,
-	// then it will not synch remote node. To handle worst case scenarios, we
-	// will synch remote node after a specific period of time.
-	public final static long DEF_MAX_UNSYNCED_TIME_INTERVAL = 15 * 60 * 1000;
-	// Synch and Rebuild events are executed alternatively. This specifies the
-	// lapse between these two events.
-	public final static long DEF_INTERVAL_BW_SYNCH_AND_REBUILD = 5 * 60 * 1000;
-
-	private final String syncThreadsName;
-	private final String stateMachineThreadName;
+	private final int noOfThreads;
+	private final long fullRebuildPeriod, period;
+	private final boolean synchEnabled, rebuildEnabled;
+	private final ServerName localServer;
 	private final HashTrees hashTrees;
 	private final HashTreesIdProvider treeIdProvider;
-	private final HashTreeSyncManagerStore syncManagerStore;
-	private final ServerName localServer;
-	private final int noOfThreads;
-	private final long fullRebuildTimeInterval;
-	private final long intBetweenSynchAndRebuild;
+	private final HashTreesManagerStore syncManagerStore;
 
 	private final ConcurrentSkipListMap<ServerName, HashTreesSyncInterface.Iface> servers = new ConcurrentSkipListMap<>();
-	private final ConcurrentSkipListSet<ServerName> serversToSync = new ConcurrentSkipListSet<>();
+	private final ConcurrentSkipListMap<Long, ConcurrentSkipListSet<ServerName>> serversToSync = new ConcurrentSkipListMap<>();
 	private final ConcurrentMap<Pair<ServerName, Long>, Pair<Long, Boolean>> remoteTreeAndLastBuildReqTS = new ConcurrentHashMap<>();
 	private final ConcurrentMap<Pair<ServerName, Long>, Long> remoteTreeAndLastSyncedTS = new ConcurrentHashMap<>();
-	private final ScheduledExecutorService stateMgrExecutor;
+
 	private final AtomicBoolean initialized = new AtomicBoolean(false);
 	private final AtomicBoolean stopped = new AtomicBoolean(false);
 
-	private volatile ExecutorService fixedExecutors;
-	private volatile STATE currState = STATE.START;
+	private volatile ExecutorService threadPool;
+	private volatile ScheduledExecutorService scheduledExecutor;
 	private volatile HashTreesThriftServerTask htThriftServer;
 
-	private static String getHostNameAndPortNoString(String hostName, int portNo) {
-		return hostName + "," + portNo;
-	}
-
-	public HashTreesSyncManager(String localHostName, int localServerPortNo,
-			HashTrees hashTrees, HashTreesIdProvider treeIdProvider,
-			HashTreeSyncManagerStore syncMgrStore) {
-		this(hashTrees, treeIdProvider, syncMgrStore, localHostName,
-				localServerPortNo, DEF_FULL_REBUILD_TIME_INTERVAL,
-				DEF_INTERVAL_BW_SYNCH_AND_REBUILD, DEF_NO_OF_THREADS);
-	}
-
-	public HashTreesSyncManager(HashTrees hashTrees,
+	public HashTreesManager(int noOfThreads, long period,
+			long fullRebuildPeriod, boolean rebuildEnabled,
+			boolean synchEnabled, ServerName localServer, HashTrees hashTrees,
 			HashTreesIdProvider treeIdProvider,
-			HashTreeSyncManagerStore syncMgrStore, String localHostName,
-			int localServerPortNo, long fullRebuildTimeInterval,
-			long intBWSynchAndRebuild, int noOfBGThreads) {
-		this.localServer = new ServerName(localHostName, localServerPortNo);
-		this.syncThreadsName = SYNC_THREADS_NAME + ","
-				+ getHostNameAndPortNoString(localHostName, localServerPortNo);
-		this.stateMachineThreadName = STATE_MACHINE_THREAD_NAME + ","
-				+ getHostNameAndPortNoString(localHostName, localServerPortNo);
-		this.hashTrees = hashTrees;
+			HashTreesManagerStore syncMgrStore) {
+		this.noOfThreads = noOfThreads;
+		this.period = period;
+		this.fullRebuildPeriod = fullRebuildPeriod;
+		this.synchEnabled = synchEnabled;
+		this.rebuildEnabled = rebuildEnabled;
+		this.localServer = localServer;
 		this.syncManagerStore = syncMgrStore;
+		this.hashTrees = hashTrees;
 		this.treeIdProvider = treeIdProvider;
-		this.fullRebuildTimeInterval = fullRebuildTimeInterval;
-		this.noOfThreads = noOfBGThreads;
-		this.intBetweenSynchAndRebuild = intBWSynchAndRebuild;
-		List<ServerName> serversToSyncInStore = syncMgrStore.getAllServers();
-		for (ServerName sn : serversToSyncInStore)
-			addServerToSyncList(sn);
-		stateMgrExecutor = Executors.newScheduledThreadPool(1,
-				new CustomThreadFactory(stateMachineThreadName));
+		addServersToSyncList(syncMgrStore.getSyncList());
+	}
+
+	private void addServersToSyncList(List<RemoteTreeInfo> syncList) {
+		for (RemoteTreeInfo rTree : syncList)
+			addToSyncList(rTree);
 	}
 
 	@Override
 	public void onRebuildHashTreeResponse(RebuildHashTreeResponse response) {
-		Pair<ServerName, Long> snAndTid = Pair.create(response.sn,
+		Pair<ServerName, Long> snAndTid = Pair.create(response.responder,
 				response.treeId);
 		Pair<Long, Boolean> tsAndResponse = remoteTreeAndLastBuildReqTS
 				.get(snAndTid);
@@ -157,9 +131,7 @@ public class HashTreesSyncManager extends StoppableTask implements
 	@Override
 	public void onRebuildHashTreeRequest(RebuildHashTreeRequest request)
 			throws Exception {
-		boolean fullRebuild = (System.currentTimeMillis() - hashTrees
-				.getLastFullyRebuiltTimeStamp(request.treeId)) > request.expFullRebuildTimeInt ? true
-				: false;
+		boolean fullRebuild = isFullRebuildRequired(request.treeId);
 		hashTrees.rebuildHashTree(request.treeId, fullRebuild);
 		HashTreesSyncInterface.Iface client = getHashTreeSyncClient(request.requester);
 		RebuildHashTreeResponse response = new RebuildHashTreeResponse(
@@ -167,7 +139,17 @@ public class HashTreesSyncManager extends StoppableTask implements
 		client.submitRebuildResponse(response);
 	}
 
-	private void rebuildAllLocallyManagedTrees() {
+	private boolean isFullRebuildRequired(long treeId) throws Exception {
+		if (fullRebuildPeriod != -1) {
+			long lastFullyRebuiltTS = hashTrees
+					.getLastFullyRebuiltTimeStamp(treeId);
+			return ((System.currentTimeMillis() - lastFullyRebuiltTS) > fullRebuildPeriod) ? true
+					: false;
+		}
+		return false;
+	}
+
+	private void rebuildAllLocalTrees() {
 		Iterator<Long> treeIdItr = treeIdProvider.getAllPrimaryTreeIds();
 		if (!treeIdItr.hasNext()) {
 			LOG.info("There are no locally managed trees. So skipping rebuild operation.");
@@ -177,9 +159,7 @@ public class HashTreesSyncManager extends StoppableTask implements
 		while (treeIdItr.hasNext()) {
 			long treeId = treeIdItr.next();
 			try {
-				boolean isFullRebuild = (System.currentTimeMillis() - hashTrees
-						.getLastFullyRebuiltTimeStamp(treeId)) > fullRebuildTimeInterval ? true
-						: false;
+				boolean isFullRebuild = isFullRebuildRequired(treeId);
 				treeIdAndRebuildType.add(Pair.create(treeId, isFullRebuild));
 			} catch (Exception e) {
 				LOG.error("Exception occurred while rebuilding.", e);
@@ -199,7 +179,8 @@ public class HashTreesSyncManager extends StoppableTask implements
 
 							@Override
 							public Void call() throws Exception {
-								sendRequestForRebuild(input.getFirst());
+								sendRebuildRequestToRemoteTrees(input
+										.getFirst());
 								hashTrees.rebuildHashTree(input.getFirst(),
 										input.getSecond());
 								return null;
@@ -208,7 +189,7 @@ public class HashTreesSyncManager extends StoppableTask implements
 					}
 				});
 		LOG.info("Building locally managed trees.");
-		TaskQueue<Void> taskQueue = new TaskQueue<Void>(fixedExecutors,
+		TaskQueue<Void> taskQueue = new TaskQueue<Void>(threadPool,
 				rebuildTasks.iterator(), noOfThreads);
 		while (taskQueue.hasNext()) {
 			taskQueue.next();
@@ -219,8 +200,8 @@ public class HashTreesSyncManager extends StoppableTask implements
 		LOG.info("Building locally managed trees - Done");
 	}
 
-	private void sendRequestForRebuild(long treeId) {
-		for (ServerName sn : serversToSync) {
+	private void sendRebuildRequestToRemoteTrees(long treeId) {
+		for (ServerName sn : getSyncList(treeId)) {
 			Pair<ServerName, Long> serverNameWTreeId = Pair.create(sn, treeId);
 			try {
 				long buildReqTS = System.currentTimeMillis();
@@ -230,8 +211,7 @@ public class HashTreesSyncManager extends StoppableTask implements
 				remoteTreeAndLastBuildReqTS.put(serverNameWTreeId,
 						Pair.create(buildReqTS, false));
 				RebuildHashTreeRequest request = new RebuildHashTreeRequest(
-						localServer, treeId, buildReqTS,
-						DEF_FULL_REBUILD_TIME_INTERVAL);
+						localServer, treeId, buildReqTS, fullRebuildPeriod);
 				client.submitRebuildRequest(request);
 			} catch (TException e) {
 				LOG.error("Unable to send rebuild notification to "
@@ -247,7 +227,7 @@ public class HashTreesSyncManager extends StoppableTask implements
 		while (treeIds.hasNext()) {
 			long treeId = treeIds.next();
 
-			for (ServerName sn : serversToSync) {
+			for (ServerName sn : getSyncList(treeId)) {
 				Pair<ServerName, Long> serverNameATreeId = Pair.create(sn,
 						treeId);
 				Pair<Long, Boolean> lastBuildReqTSAndResponse = remoteTreeAndLastBuildReqTS
@@ -263,7 +243,7 @@ public class HashTreesSyncManager extends StoppableTask implements
 
 				try {
 					if ((lastBuildReqTSAndResponse.getSecond())
-							|| ((System.currentTimeMillis() - unsyncedTime) > DEF_MAX_UNSYNCED_TIME_INTERVAL)) {
+							|| ((System.currentTimeMillis() - unsyncedTime) > MAX_UNSYNCED_TIME)) {
 						remoteTrees.add(serverNameATreeId);
 						remoteTreeAndLastSyncedTS.remove(serverNameATreeId);
 					} else {
@@ -305,7 +285,7 @@ public class HashTreesSyncManager extends StoppableTask implements
 					}
 				});
 
-		TaskQueue<Void> taskQueue = new TaskQueue<Void>(fixedExecutors,
+		TaskQueue<Void> taskQueue = new TaskQueue<Void>(threadPool,
 				syncTasks.iterator(), noOfThreads);
 		while (taskQueue.hasNext()) {
 			taskQueue.next();
@@ -343,8 +323,16 @@ public class HashTreesSyncManager extends StoppableTask implements
 
 	public void init() {
 		if (initialized.compareAndSet(false, true)) {
-			this.fixedExecutors = Executors.newFixedThreadPool(noOfThreads,
-					new CustomThreadFactory(syncThreadsName));
+
+			String hostNameAndPortNo = "," + localServer.hostName + ","
+					+ localServer.portNo;
+			String threadPoolName = MGR_TPOOL_NAME + hostNameAndPortNo;
+			String executorThreadName = MGR_SCHED_THREAD + hostNameAndPortNo;
+			threadPool = Executors.newFixedThreadPool(noOfThreads,
+					new CustomThreadFactory(threadPoolName));
+			scheduledExecutor = Executors.newScheduledThreadPool(1,
+					new CustomThreadFactory(executorThreadName));
+
 			CountDownLatch initializedLatch = new CountDownLatch(1);
 			htThriftServer = new HashTreesThriftServerTask(hashTrees, this,
 					localServer.getPortNo(), initializedLatch);
@@ -356,62 +344,54 @@ public class HashTreesSyncManager extends StoppableTask implements
 						"Exception occurred while waiting for the server to start",
 						e);
 			}
-			stateMgrExecutor.scheduleWithFixedDelay(this, 0,
-					intBetweenSynchAndRebuild, TimeUnit.MILLISECONDS);
+			scheduledExecutor.scheduleWithFixedDelay(this, 0, period,
+					TimeUnit.MILLISECONDS);
 		} else {
 			LOG.info("HashTreeSyncManager initialized already.");
 			return;
 		}
 	}
 
-	private static STATE getNextState(STATE currState) {
-		switch (currState) {
-		case START:
-		case SYNCH:
-			return STATE.REBUILD;
-		case REBUILD:
-			return STATE.SYNCH;
-		default:
-			throw new IllegalStateException();
-		}
-	}
-
 	@Override
 	public void runImpl() {
-		currState = getNextState(currState);
-		LOG.info("Executing actions for state " + currState);
-		switch (currState) {
-		case REBUILD:
-			rebuildAllLocallyManagedTrees();
-			break;
-		case SYNCH:
+		LOG.info("Executing rebuild/synch operations.");
+		if (rebuildEnabled)
+			rebuildAllLocalTrees();
+		if (synchEnabled)
 			synch();
-			break;
-		case START:
-		default:
-			break;
-		}
-		LOG.info("Executing actions for state " + currState + " - Done.");
+		LOG.info("Executing rebuild/synch operations - Done.");
+	}
+
+	private ConcurrentSkipListSet<ServerName> getSyncList(long treeId) {
+		if (!serversToSync.containsKey(treeId))
+			serversToSync.putIfAbsent(treeId,
+					new ConcurrentSkipListSet<ServerName>());
+		return serversToSync.get(treeId);
 	}
 
 	@Override
-	public void addServerToSyncList(ServerName sn) {
-		syncManagerStore.addServerToSyncList(sn);
-		boolean added = serversToSync.add(sn);
+	public void addToSyncList(RemoteTreeInfo rTree) {
+		syncManagerStore.addToSyncList(rTree);
+		boolean added = getSyncList(rTree.treeId).add(rTree.sn);
 		if (added) {
-			LOG.info(sn + " has been added to sync list.");
+			LOG.info(rTree + " has been added to sync list.");
 		} else
-			LOG.info(sn + "has been already on the sync list.");
+			LOG.info(rTree + "has been already on the sync list.");
 	}
 
 	@Override
-	public void removeServerFromSyncList(ServerName sn) {
-		syncManagerStore.removeServerFromSyncList(sn);
-		boolean removed = serversToSync.remove(sn);
+	public void removeFromSyncList(RemoteTreeInfo rTree) {
+		syncManagerStore.removeFromSyncList(rTree);
+		boolean removed = getSyncList(rTree.treeId).remove(rTree.sn);
 		if (removed)
-			LOG.info(sn + "has been removed from sync list.");
+			LOG.info(rTree + "has been removed from sync list.");
 		else
-			LOG.info(sn + " was not in the sync list to be removed.");
+			LOG.info(rTree + " was not in the sync list to be removed.");
+	}
+
+	@Override
+	public List<RemoteTreeInfo> getSyncList() {
+		return syncManagerStore.getSyncList();
 	}
 
 	public void shutdown() {
@@ -424,14 +404,109 @@ public class HashTreesSyncManager extends StoppableTask implements
 				LOG.error("Exception occurred while stopping the operations.",
 						e);
 			}
-			if (stateMgrExecutor != null)
-				stateMgrExecutor.shutdown();
+			if (scheduledExecutor != null)
+				scheduledExecutor.shutdown();
 			if (htThriftServer != null)
 				htThriftServer.stop();
-			if (fixedExecutors != null)
-				fixedExecutors.shutdown();
+			if (threadPool != null)
+				threadPool.shutdown();
 			LOG.info("Hash tree sync manager operations stopped.");
 		} else
 			LOG.info("Hash tree sync manager operations stopped already. No actions were taken.");
+	}
+
+	@NotThreadSafe
+	public static class Builder {
+
+		public final static int DEF_NO_OF_THREADS = 10;
+		// Default scheduling time interval
+		public final static long DEF_SCHEDULE_PERIOD = 5 * 60 * 1000;
+
+		private final ServerName localServer;
+		private final HashTrees hashTrees;
+		private final HashTreesIdProvider treeIdProvider;
+		private final HashTreesManagerStore syncMgrStore;
+
+		private long period = DEF_SCHEDULE_PERIOD, fullRebuildPeriod = -1;
+		private int noOfThreads = DEF_NO_OF_THREADS;
+		private boolean rebuildEnabled = true, syncEnabled = true;
+
+		public Builder(String serverName, int portNo, HashTrees hashTrees,
+				HashTreesIdProvider treeIdProvider,
+				HashTreesManagerStore syncMgrStore) {
+			this.localServer = new ServerName(serverName, portNo);
+			this.hashTrees = hashTrees;
+			this.treeIdProvider = treeIdProvider;
+			this.syncMgrStore = syncMgrStore;
+		}
+
+		/**
+		 * Schedules rebuild and synch operation periodically. First execution
+		 * will begin after calling {@link HashTreesManager#init()}. The
+		 * following execution will begin after 'period' time interval from the
+		 * first task's completion.
+		 * 
+		 * Default value is 5 minutes.
+		 * 
+		 * @param period
+		 *            , in milliseconds.
+		 * @return
+		 */
+		public Builder schedule(long period) {
+			this.period = period;
+			return this;
+		}
+
+		/**
+		 * Allows to execute full rebuild on hash trees.This will be triggered
+		 * if a tree is not fully rebuilt for more than fullRebuildPeriod. By
+		 * default fullRebuild is never called on {@link HashTrees}.
+		 * 
+		 * @param fullRebuildPeriod
+		 * @return
+		 */
+		public Builder setFullRebuildPeriod(long fullRebuildPeriod) {
+			this.fullRebuildPeriod = fullRebuildPeriod;
+			return this;
+		}
+
+		/**
+		 * Sets no of threads to be created by thread pool. Thread pool is used
+		 * for rebuild/synch operations. By default 10 threads are used.
+		 * 
+		 * @param noOfThreads
+		 * @return
+		 */
+		public Builder setNoOfThreads(int noOfThreads) {
+			this.noOfThreads = noOfThreads;
+			return this;
+		}
+
+		/**
+		 * Disables rebuild operation. By default this is enabled.
+		 * 
+		 * @return
+		 */
+		public Builder disableRebuild() {
+			this.rebuildEnabled = false;
+			return this;
+		}
+
+		/**
+		 * Disables synch operation. By default this is enabled.
+		 * 
+		 * @param enable
+		 * @return
+		 */
+		public Builder disableSync() {
+			this.syncEnabled = false;
+			return this;
+		}
+
+		public HashTreesManager build() {
+			return new HashTreesManager(noOfThreads, period, fullRebuildPeriod,
+					rebuildEnabled, syncEnabled, localServer, hashTrees,
+					treeIdProvider, syncMgrStore);
+		}
 	}
 }

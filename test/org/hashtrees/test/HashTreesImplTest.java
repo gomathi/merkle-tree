@@ -20,10 +20,10 @@ import org.apache.commons.codec.binary.Hex;
 import org.hashtrees.HashTrees;
 import org.hashtrees.HashTreesConstants;
 import org.hashtrees.HashTreesImpl;
-import org.hashtrees.store.HashTreeSyncManagerStore;
+import org.hashtrees.store.HashTreesManagerStore;
 import org.hashtrees.store.HashTreesMemStore;
 import org.hashtrees.store.HashTreesStore;
-import org.hashtrees.synch.HashTreesSyncManager;
+import org.hashtrees.synch.HashTreesManager;
 import org.hashtrees.synch.HashTreesThriftClientProvider;
 import org.hashtrees.test.utils.HashTreesImplTestUtils;
 import org.hashtrees.test.utils.HashTreesImplTestUtils.HTreeComponents;
@@ -325,17 +325,18 @@ public class HashTreesImplTest {
 	public void testHashTreeServerAndClient() throws Exception {
 		HashTreesStore store = generateInMemoryStore();
 		HashTreesStore remoteStore = generateInMemoryStore();
-		HashTreeSyncManagerStore syncMgrStore = generateInMemoryStore();
+		HashTreesManagerStore syncMgrStore = generateInMemoryStore();
 
 		try {
 			HTreeComponents localHTreeComp = createHashTree(
 					DEFAULT_SEG_DATA_BLOCKS_COUNT, store);
 			HTreeComponents remoteHTreeComp = createHashTree(
 					DEFAULT_SEG_DATA_BLOCKS_COUNT, remoteStore);
-			HashTreesSyncManager hTreeManager = new HashTreesSyncManager(
+			HashTreesManager hTreeManager = new HashTreesManager.Builder(
 					"test",
 					HashTreesConstants.DEFAULT_HASH_TREE_SERVER_PORT_NO,
-					remoteHTreeComp.hTree, TREE_ID_PROVIDER, syncMgrStore);
+					remoteHTreeComp.hTree, TREE_ID_PROVIDER, syncMgrStore)
+					.build();
 
 			hTreeManager.init();
 			Thread.sleep(100);

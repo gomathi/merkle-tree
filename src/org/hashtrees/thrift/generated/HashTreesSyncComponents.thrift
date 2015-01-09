@@ -30,6 +30,12 @@ struct ServerName
 	2: required i32 portNo;
 }
 
+struct RemoteTreeInfo
+{
+	1: required ServerName sn;
+	2: required i64 treeId;
+}
+
 /**
 * Rebuild hashtree request object.
 *
@@ -51,13 +57,13 @@ struct RebuildHashTreeRequest
 /**
 * Response after a hashtree has been rebuilt.
 
-* @param sn, server which has executed the rebuild of the tree. 
+* @param responder, server which has executed the rebuild of the tree. 
 * @param treeId, which treeId was rebuilt.
 * @param tokenNo, the tokenNo from previous hashtree rebuild request.
 **/
 struct RebuildHashTreeResponse
 {
-	1: required ServerName sn;
+	1: required ServerName responder;
 	2: required i64 treeId;
 	3: required i64 tokenNo;
 }
@@ -135,18 +141,22 @@ service HashTreesSyncInterface
     void submitRebuildResponse(1:RebuildHashTreeResponse response);
     
     /**
-	 * Adds server to sync list. Hashtrees on the local server will be synched
-	 * against the remote server.
-	 * 
-	 * @param sn
+	 * Adds a remote tree to sync list. Hashtrees on the local server will be synched
+	 * against the remote tree.
+	 *
 	 */
-	void addServerToSyncList(1:ServerName sn);
+	void addToSyncList(1:RemoteTreeInfo rTree);
 
 	/**
-	 * Removes a server from sync list. From the next iteration, the remote
-	 * server will not be synched by the local server.
+	 * Removes a remote tree from sync list. From the next iteration, the remote
+	 * tree will not be synched by the local server.
 	 * 
-	 * @param sn
 	 */
-	void removeServerFromSyncList(1:ServerName sn);
+	void removeFromSyncList(1:RemoteTreeInfo rTree);
+	
+	/**
+	* Returns which remote trees are synced by this instance.
+	*
+	*/
+	list<RemoteTreeInfo> getSyncList();
 }

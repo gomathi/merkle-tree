@@ -108,12 +108,6 @@ public class HashTreesRemoteClient implements HashTrees {
 	}
 
 	@Override
-	public boolean disableNonblockingOperations() {
-		throw new UnsupportedOperationException(
-				"Remote tree does not support this operation.");
-	}
-
-	@Override
 	public void stop() {
 		throw new UnsupportedOperationException(
 				"Remote tree does not support this operation.");

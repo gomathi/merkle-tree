@@ -398,18 +398,6 @@ public class HashTreesImplTest {
 	}
 
 	@Test
-	public void testDisableNonBlockingCalls() {
-		HashTreesStore htStore = generateInMemoryStore();
-		StoreImplTest store = new StoreImplTest();
-		HashTrees hTrees = new HashTreesImpl(DEFAULT_SEG_DATA_BLOCKS_COUNT,
-				TREE_ID_PROVIDER, SEG_ID_PROVIDER, htStore, store);
-		Assert.assertTrue(hTrees.disableNonblockingOperations());
-		Assert.assertFalse(hTrees.isNonBlockingCallsEnabled());
-		hTrees.enableNonblockingOperations();
-		Assert.assertFalse(hTrees.disableNonblockingOperations());
-	}
-
-	@Test
 	public void testNonBlockingCalls() throws Exception {
 		int maxQueueSize = 5;
 		final CountDownLatch putLatch = new CountDownLatch(1);

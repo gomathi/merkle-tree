@@ -67,9 +67,11 @@ public class HashTreesManager extends StoppableTask implements
 
 	private final static Logger LOG = LoggerFactory
 			.getLogger(HashTreesManager.class);
-	private final static String MGR_TPOOL_NAME = "HTMgrWorkerThreadPool";
-	private final static String MGR_SCHED_THREAD = "HTMgrThread";
-	private final static long MAX_UNSYNCED_TIME = 15 * 60 * 1000;
+	private final static String HT_MGR_TPOOL = "HTMgrWorkerThreadPool";
+	private final static String HT_MGR_SCHED_THREAD = "HTMgrSchedulerThread";
+	private final static String HT_THRIFT_SERVER_THREAD = "HTThriftServerThread";
+	private final static long MAX_UNSYNCED_TIME = 15 * 60 * 1000; // in
+																	// milliseconds
 
 	private final int noOfThreads;
 	private final long fullRebuildPeriod, period;
@@ -105,10 +107,10 @@ public class HashTreesManager extends StoppableTask implements
 		this.syncManagerStore = syncMgrStore;
 		this.hashTrees = hashTrees;
 		this.treeIdProvider = treeIdProvider;
-		addServersToSyncList(syncMgrStore.getSyncList());
+		initServersToSyncList(syncMgrStore.getSyncList());
 	}
 
-	private void addServersToSyncList(List<RemoteTreeInfo> syncList) {
+	private void initServersToSyncList(List<RemoteTreeInfo> syncList) {
 		for (RemoteTreeInfo rTree : syncList)
 			addToSyncList(rTree);
 	}
@@ -131,7 +133,8 @@ public class HashTreesManager extends StoppableTask implements
 	@Override
 	public void onRebuildHashTreeRequest(RebuildHashTreeRequest request)
 			throws Exception {
-		boolean fullRebuild = isFullRebuildRequired(request.treeId);
+		boolean fullRebuild = isFullRebuildRequired(request.treeId,
+				request.expFullRebuildTimeInt);
 		hashTrees.rebuildHashTree(request.treeId, fullRebuild);
 		HashTreesSyncInterface.Iface client = getHashTreeSyncClient(request.requester);
 		RebuildHashTreeResponse response = new RebuildHashTreeResponse(
@@ -139,14 +142,19 @@ public class HashTreesManager extends StoppableTask implements
 		client.submitRebuildResponse(response);
 	}
 
-	private boolean isFullRebuildRequired(long treeId) throws Exception {
-		if (fullRebuildPeriod != -1) {
+	private boolean isFullRebuildRequired(long treeId, long expFullRebuildPeriod)
+			throws Exception {
+		if (expFullRebuildPeriod != -1) {
 			long lastFullyRebuiltTS = hashTrees
 					.getLastFullyRebuiltTimeStamp(treeId);
-			return ((System.currentTimeMillis() - lastFullyRebuiltTS) > fullRebuildPeriod) ? true
+			return ((System.currentTimeMillis() - lastFullyRebuiltTS) > expFullRebuildPeriod) ? true
 					: false;
 		}
 		return false;
+	}
+
+	private boolean isFullRebuildRequired(long treeId) throws Exception {
+		return isFullRebuildRequired(treeId, fullRebuildPeriod);
 	}
 
 	private void rebuildAllLocalTrees() {
@@ -326,8 +334,8 @@ public class HashTreesManager extends StoppableTask implements
 
 			String hostNameAndPortNo = "," + localServer.hostName + ","
 					+ localServer.portNo;
-			String threadPoolName = MGR_TPOOL_NAME + hostNameAndPortNo;
-			String executorThreadName = MGR_SCHED_THREAD + hostNameAndPortNo;
+			String threadPoolName = HT_MGR_TPOOL + hostNameAndPortNo;
+			String executorThreadName = HT_MGR_SCHED_THREAD + hostNameAndPortNo;
 			threadPool = Executors.newFixedThreadPool(noOfThreads,
 					new CustomThreadFactory(threadPoolName));
 			scheduledExecutor = Executors.newScheduledThreadPool(1,
@@ -336,7 +344,7 @@ public class HashTreesManager extends StoppableTask implements
 			CountDownLatch initializedLatch = new CountDownLatch(1);
 			htThriftServer = new HashTreesThriftServerTask(hashTrees, this,
 					localServer.getPortNo(), initializedLatch);
-			new Thread(htThriftServer).start();
+			new Thread(htThriftServer, HT_THRIFT_SERVER_THREAD).start();
 			try {
 				initializedLatch.await();
 			} catch (InterruptedException e) {

@@ -24,9 +24,11 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
+import javax.annotation.concurrent.NotThreadSafe;
 import javax.annotation.concurrent.ThreadSafe;
 
 import org.apache.commons.codec.binary.Hex;
+import org.hashtrees.store.HashTreesPersistentStore;
 import org.hashtrees.store.HashTreesStore;
 import org.hashtrees.store.Store;
 import org.hashtrees.thrift.generated.SegmentData;
@@ -92,14 +94,18 @@ public class HashTreesImpl implements HashTrees {
 			final SegmentIdProvider segIdProvider,
 			final HashTreesStore htStore, final Store store) {
 		this.noOfChildren = BINARY_TREE;
-		this.segmentsCount = ((noOfSegments > MAX_NO_OF_BUCKETS) || (noOfSegments < 0)) ? MAX_NO_OF_BUCKETS
-				: roundUpToPowerOf2(noOfSegments);
+		this.segmentsCount = getValidSegmentsCount(noOfSegments);
 		this.internalNodesCount = getNoOfNodes(
 				(height(this.segmentsCount, noOfChildren) - 1), noOfChildren);
 		this.treeIdProvider = treeIdProvider;
 		this.segIdProvider = segIdProvider;
 		this.htStore = htStore;
 		this.store = store;
+	}
+
+	private static int getValidSegmentsCount(int noOfSegments) {
+		return ((noOfSegments > MAX_NO_OF_BUCKETS) || (noOfSegments < 0)) ? MAX_NO_OF_BUCKETS
+				: roundUpToPowerOf2(noOfSegments);
 	}
 
 	@Override
@@ -614,8 +620,7 @@ public class HashTreesImpl implements HashTrees {
 		return result;
 	}
 
-	@Override
-	public boolean disableNonblockingOperations() {
+	private boolean disableNonblockingOperations() {
 		boolean result;
 		synchronized (nonBlockingCallsLock) {
 			result = !enabledNonBlockingCalls;
@@ -651,5 +656,56 @@ public class HashTreesImpl implements HashTrees {
 	@Override
 	public void stop() {
 		disableNonblockingOperations();
+	}
+
+	@NotThreadSafe
+	public static class Builder {
+
+		private final Store store;
+		private final HashTreesStore htStore;
+		private final HashTreesIdProvider treeIdProvider;
+
+		private SegmentIdProvider segIdProvider;
+		private int noOfSegments = MAX_NO_OF_BUCKETS;
+
+		public Builder(Store store, HashTreesIdProvider treeIdProvider,
+				HashTreesStore htStore) {
+			this.store = store;
+			this.htStore = htStore;
+			this.treeIdProvider = treeIdProvider;
+		}
+
+		/**
+		 * Creates a LevelDB based store for storing hash tree contents. LevelDB
+		 * files are stored in htStoreDirName. Look at
+		 * {@link HashTreesPersistentStore}.
+		 * 
+		 * @param store
+		 * @param treeIdProvider
+		 * @param htStoreDirName
+		 * @throws Exception
+		 */
+		public Builder(Store store, HashTreesIdProvider treeIdProvider,
+				String htStoreDirName) throws Exception {
+			this(store, treeIdProvider, new HashTreesPersistentStore(
+					htStoreDirName));
+		}
+
+		public Builder setSegmentIdProvider(SegmentIdProvider segIdProvider) {
+			this.segIdProvider = segIdProvider;
+			return this;
+		}
+
+		public Builder setNoOfSegments(int noOfSegments) {
+			this.noOfSegments = getValidSegmentsCount(noOfSegments);
+			return this;
+		}
+
+		public HashTreesImpl build() {
+			if (segIdProvider == null)
+				segIdProvider = new ModuloSegIdProvider(noOfSegments);
+			return new HashTreesImpl(noOfSegments, treeIdProvider,
+					segIdProvider, htStore, store);
+		}
 	}
 }

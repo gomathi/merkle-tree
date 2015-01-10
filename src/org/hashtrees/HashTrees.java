@@ -178,15 +178,6 @@ public interface HashTrees {
 	boolean enableNonblockingOperations(int maxElementsToQue);
 
 	/**
-	 * Disable non blocking puts and removes operations. By default hashtree
-	 * runs with blocking operations on puts and removes.
-	 * 
-	 * @return a value indicates whether non blocking operations were disabled
-	 *         before.
-	 */
-	boolean disableNonblockingOperations();
-
-	/**
 	 * Stops all operations if there are any background jobs are running.
 	 */
 	void stop();

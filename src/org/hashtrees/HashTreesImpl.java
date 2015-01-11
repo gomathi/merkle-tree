@@ -692,6 +692,16 @@ public class HashTreesImpl implements HashTrees {
 			return this;
 		}
 
+		/**
+		 * Depends upon data size, this should be set. Data size and
+		 * noOfSegments should be directly proportional. With higher dataSize,
+		 * and lesser noOfSegments means each segment will get more no of data.
+		 * So when a segment is marked as dirty, the rebuild process has to read
+		 * huge data unnecessarily.
+		 * 
+		 * @param noOfSegments
+		 * @return
+		 */
 		public Builder setNoOfSegments(int noOfSegments) {
 			this.noOfSegments = getValidSegmentsCount(noOfSegments);
 			return this;

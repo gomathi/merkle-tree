@@ -82,7 +82,7 @@ public class HashTreesImplTestUtils {
 			final SegmentIdProvider segIdPro, final HashTreesStore hTStore)
 			throws Exception {
 		SimpleMemStore store = new SimpleMemStore();
-		HashTrees hTree = new HashTreesImpl(noOfSegDataBlocks, treeIdProv,
+		HashTreesImpl hTree = new HashTreesImpl(noOfSegDataBlocks, treeIdProv,
 				segIdPro, hTStore, store);
 		store.registerHashTrees(hTree);
 		hTree.rebuildHashTrees(true);

@@ -63,13 +63,14 @@ public class HashTreesUsage {
 	}
 
 	/**
-	 * After having created the {@link HashTreesImpl} object, we need to
-	 * explicitly call its initialization methods.
+	 * We need to register hashtrees with store object. So that store will
+	 * forward the necessary calls to hashtrees.
 	 * 
-	 * @param htImpl
+	 * @param hashTrees
 	 */
-	public static void initHashTreesImpl(HashTreesImpl htImpl) {
-		htImpl.init();
+	public static void registerHashTreesWithStore(Store store,
+			HashTreesImpl hashTrees) {
+		store.registerHashTrees(hashTrees);
 	}
 
 	/**
@@ -83,7 +84,7 @@ public class HashTreesUsage {
 			throws Exception {
 		Store store = buildStore();
 		HashTreesImpl hashTrees = buildHashTrees(store);
-		initHashTreesImpl(hashTrees);
+		registerHashTreesWithStore(store, hashTrees);
 		return Pair.create(store, hashTrees);
 	}
 

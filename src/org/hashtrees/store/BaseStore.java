@@ -4,6 +4,14 @@ import java.nio.ByteBuffer;
 
 import org.hashtrees.HashTrees;
 
+/**
+ * The implementations of {@link Store} can extend this class, so those dont
+ * have to implement {@link #registerHashTrees(HashTrees)} also forwarding the
+ * calls to {@link HashTrees#hPut(ByteBuffer, ByteBuffer)} and
+ * {@link HashTrees#hRemove(ByteBuffer)}.
+ * 
+ * Look at {@link SimpleMemStore} to know how this class is being used.
+ */
 public abstract class BaseStore implements Store {
 
 	private volatile HashTrees hashTrees;

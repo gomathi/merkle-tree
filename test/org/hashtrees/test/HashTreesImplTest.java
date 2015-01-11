@@ -20,15 +20,15 @@ import org.apache.commons.codec.binary.Hex;
 import org.hashtrees.HashTrees;
 import org.hashtrees.HashTreesConstants;
 import org.hashtrees.HashTreesImpl;
+import org.hashtrees.SimpleTreeIdProvider;
 import org.hashtrees.store.HashTreesManagerStore;
 import org.hashtrees.store.HashTreesMemStore;
 import org.hashtrees.store.HashTreesStore;
+import org.hashtrees.store.SimpleMemStore;
 import org.hashtrees.synch.HashTreesManager;
 import org.hashtrees.synch.HashTreesThriftClientProvider;
 import org.hashtrees.test.utils.HashTreesImplTestUtils;
 import org.hashtrees.test.utils.HashTreesImplTestUtils.HTreeComponents;
-import org.hashtrees.test.utils.HashTreesImplTestUtils.HashTreeIdProviderTest;
-import org.hashtrees.test.utils.HashTreesImplTestUtils.StoreImplTest;
 import org.hashtrees.thrift.generated.SegmentData;
 import org.hashtrees.thrift.generated.SegmentHash;
 import org.hashtrees.thrift.generated.ServerName;
@@ -78,7 +78,7 @@ public class HashTreesImplTest {
 						.sha1(value.array()));
 
 				SegmentData actualKeyAndDigest = testTree.getSegmentData(
-						HashTreeIdProviderTest.TREE_ID, segId, key);
+						SimpleTreeIdProvider.TREE_ID, segId, key);
 				Assert.assertNotNull(actualKeyAndDigest);
 				Assert.assertTrue(Arrays.equals(key.array(),
 						actualKeyAndDigest.getKey()));
@@ -86,7 +86,7 @@ public class HashTreesImplTest {
 						actualKeyAndDigest.getDigest()));
 
 				List<Integer> dirtySegs = testTreeStore
-						.clearAndGetDirtySegments(HashTreeIdProviderTest.TREE_ID);
+						.clearAndGetDirtySegments(SimpleTreeIdProvider.TREE_ID);
 				Assert.assertEquals(1, dirtySegs.size());
 				Assert.assertEquals(1, dirtySegs.get(0).intValue());
 			}
@@ -115,11 +115,11 @@ public class HashTreesImplTest {
 				testTree.hRemove(key);
 
 				SegmentData segData = testTree.getSegmentData(
-						HashTreeIdProviderTest.TREE_ID, segId, key);
+						SimpleTreeIdProvider.TREE_ID, segId, key);
 				Assert.assertNull(segData);
 
 				List<Integer> dirtySegs = testTreeStore
-						.clearAndGetDirtySegments(HashTreeIdProviderTest.TREE_ID);
+						.clearAndGetDirtySegments(SimpleTreeIdProvider.TREE_ID);
 				Assert.assertEquals(1, dirtySegs.size());
 				Assert.assertEquals(2, dirtySegs.get(0).intValue());
 			}
@@ -155,7 +155,7 @@ public class HashTreesImplTest {
 				testTree.hPut(actualKey, actualValue);
 				testTree.rebuildHashTrees(false);
 				SegmentHash segHash = testTree.getSegmentHash(
-						HashTreeIdProviderTest.TREE_ID, nodeId);
+						SimpleTreeIdProvider.TREE_ID, nodeId);
 				Assert.assertNotNull(segHash);
 				Assert.assertTrue(Arrays.equals(expectedLeafNodeDigest,
 						segHash.getHash()));
@@ -165,7 +165,7 @@ public class HashTreesImplTest {
 				byte[] expectedRootNodeDigest = ByteUtils.sha1(sb.toString()
 						.getBytes());
 				SegmentHash actualRootNodeDigest = testTree.getSegmentHash(
-						HashTreeIdProviderTest.TREE_ID, rootNodeId);
+						SimpleTreeIdProvider.TREE_ID, rootNodeId);
 				Assert.assertNotNull(actualRootNodeDigest);
 				Assert.assertTrue(Arrays.equals(expectedRootNodeDigest,
 						actualRootNodeDigest.getHash()));
@@ -240,10 +240,9 @@ public class HashTreesImplTest {
 				remoteHTreeComp.hTree.rebuildHashTrees(false);
 				localHTreeComp.hTree.synch(1, remoteHTreeComp.hTree);
 
-				Assert.assertEquals(localHTreeComp.store.localStore,
-						remoteHTreeComp.store.localStore);
-				Assert.assertEquals(0, localHTreeComp.store.localStore.size());
-				Assert.assertEquals(0, remoteHTreeComp.store.localStore.size());
+				Assert.assertEquals(localHTreeComp.store, remoteHTreeComp.store);
+				Assert.assertFalse(localHTreeComp.store.iterator().hasNext());
+				Assert.assertFalse(remoteHTreeComp.store.iterator().hasNext());
 			}
 		} finally {
 			HashTreesImplTestUtils.closeStores(stores);
@@ -273,8 +272,7 @@ public class HashTreesImplTest {
 				remoteHTreeComp.hTree.rebuildHashTrees(false);
 				localHTreeComp.hTree.synch(1, remoteHTreeComp.hTree);
 
-				Assert.assertEquals(localHTreeComp.store.localStore,
-						remoteHTreeComp.store.localStore);
+				Assert.assertEquals(localHTreeComp.store, remoteHTreeComp.store);
 			}
 		} finally {
 			HashTreesImplTestUtils.closeStores(stores);
@@ -311,8 +309,7 @@ public class HashTreesImplTest {
 				remoteHTreeComp.hTree.rebuildHashTrees(false);
 				localHTreeComp.hTree.synch(1, remoteHTreeComp.hTree);
 
-				Assert.assertEquals(localHTreeComp.store.localStore,
-						remoteHTreeComp.store.localStore);
+				Assert.assertEquals(localHTreeComp.store, remoteHTreeComp.store);
 			}
 
 		} finally {
@@ -363,8 +360,7 @@ public class HashTreesImplTest {
 				remoteHTreeComp.hTree.rebuildHashTrees(false);
 				localHTreeComp.hTree.synch(1, thriftClient);
 
-				Assert.assertEquals(localHTreeComp.store.localStore,
-						remoteHTreeComp.store.localStore);
+				Assert.assertEquals(localHTreeComp.store, remoteHTreeComp.store);
 			}
 
 			hTreeManager.shutdown();
@@ -377,7 +373,7 @@ public class HashTreesImplTest {
 	@Test
 	public void testEnableNonBlockingCalls() {
 		HashTreesStore htStore = generateInMemoryStore();
-		StoreImplTest store = new StoreImplTest();
+		SimpleMemStore store = new SimpleMemStore();
 		HashTrees hTrees = new HashTreesImpl(DEFAULT_SEG_DATA_BLOCKS_COUNT,
 				TREE_ID_PROVIDER, SEG_ID_PROVIDER, htStore, store);
 		Assert.assertFalse(hTrees.enableNonblockingOperations());
@@ -388,7 +384,7 @@ public class HashTreesImplTest {
 	@Test
 	public void testStop() {
 		HashTreesStore htStore = generateInMemoryStore();
-		StoreImplTest store = new StoreImplTest();
+		SimpleMemStore store = new SimpleMemStore();
 		HashTrees hTrees = new HashTreesImpl(DEFAULT_SEG_DATA_BLOCKS_COUNT,
 				TREE_ID_PROVIDER, SEG_ID_PROVIDER, htStore, store);
 		hTrees.enableNonblockingOperations();
@@ -425,7 +421,7 @@ public class HashTreesImplTest {
 			}
 		};
 
-		StoreImplTest store = new StoreImplTest();
+		SimpleMemStore store = new SimpleMemStore();
 		HashTrees hTrees = new HashTreesImpl(DEFAULT_SEG_DATA_BLOCKS_COUNT,
 				TREE_ID_PROVIDER, SEG_ID_PROVIDER, htStore, store);
 		hTrees.enableNonblockingOperations(maxQueueSize);

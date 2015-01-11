@@ -653,6 +653,14 @@ public class HashTreesImpl implements HashTrees {
 		return result;
 	}
 
+	/**
+	 * Asks the object to initialize any tasks explicitly.
+	 * 
+	 */
+	public void init() {
+		store.registerHashTrees(this);
+	}
+
 	@Override
 	public void stop() {
 		disableNonblockingOperations();

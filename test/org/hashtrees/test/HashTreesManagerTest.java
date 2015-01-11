@@ -14,11 +14,11 @@ import org.hashtrees.HashTreesConstants;
 import org.hashtrees.store.HashTreesManagerStore;
 import org.hashtrees.store.HashTreesMemStore;
 import org.hashtrees.store.HashTreesStore;
+import org.hashtrees.store.SimpleMemStore;
 import org.hashtrees.synch.HashTreesManager;
 import org.hashtrees.test.utils.HashTreesImplTestObj;
 import org.hashtrees.test.utils.HashTreesImplTestObj.HTSynchEvent;
 import org.hashtrees.test.utils.HashTreesImplTestUtils;
-import org.hashtrees.test.utils.HashTreesImplTestUtils.StoreImplTest;
 import org.hashtrees.thrift.generated.RemoteTreeInfo;
 import org.hashtrees.thrift.generated.ServerName;
 import org.junit.Test;
@@ -47,7 +47,7 @@ public class HashTreesManagerTest {
 	private static class HashTreeSyncManagerComponents {
 		volatile HashTreesStore htStore;
 		volatile HashTreesManager syncMgrImpl;
-		volatile StoreImplTest storeImplTest;
+		volatile SimpleMemStore storeImplTest;
 	}
 
 	private static HashTreeSyncManagerComponents createHashTreeSyncManager(
@@ -57,7 +57,7 @@ public class HashTreesManagerTest {
 		HashTreesStore htStore = inMemoryStore;
 		HashTreesManagerStore syncMgrStore = inMemoryStore;
 
-		StoreImplTest store = new StoreImplTest();
+		SimpleMemStore store = new SimpleMemStore();
 
 		HashTreesImplTestObj hTree = new HashTreesImplTestObj(
 				DEFAULT_SEG_DATA_BLOCKS_COUNT, htStore, store, events);
@@ -65,7 +65,7 @@ public class HashTreesManagerTest {
 				"localhost", portNo, hTree, TREE_ID_PROVIDER, syncMgrStore)
 				.setFullRebuildPeriod(fullRebuildTimeInterval)
 				.schedule(schedPeriod).build();
-		store.setHashTree(hTree);
+		store.registerHashTrees(hTree);
 
 		HashTreeSyncManagerComponents components = new HashTreeSyncManagerComponents();
 		components.htStore = htStore;

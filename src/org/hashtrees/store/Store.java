@@ -18,9 +18,48 @@ public interface Store {
 
 	ByteBuffer get(ByteBuffer key);
 
+	/**
+	 * Adds the key and value to the local store. Also this call should forward
+	 * the request to {@link HashTrees#hPut(ByteBuffer, ByteBuffer)} with the
+	 * HashTrees object (If there is a hash trees registered already through
+	 * {@link #registerHashTrees(HashTrees)}.
+	 * 
+	 * @param key
+	 * @param value
+	 * @throws Exception
+	 */
 	void put(ByteBuffer key, ByteBuffer value) throws Exception;
 
-	ByteBuffer remove(ByteBuffer key) throws Exception;
+	/**
+	 * Removes the key from the local store. Also this call should forward the
+	 * request to {@link HashTrees#hRemove(ByteBuffer)} with the HashTrees
+	 * object (If there is a hash trees registered already through
+	 * {@link #registerHashTrees(HashTrees)}.
+	 * 
+	 * @param key
+	 * @return
+	 * @throws Exception
+	 */
+	void remove(ByteBuffer key) throws Exception;
 
+	/**
+	 * This should return only (key,value) that are belonging to treeId. Used by
+	 * {@link HashTrees#rebuildHashTree(long, boolean)} while rebuilding a
+	 * specific hashtree.
+	 * 
+	 * @param treeId
+	 * @return
+	 */
 	Iterator<Pair<ByteBuffer, ByteBuffer>> iterator(long treeId);
+
+	/**
+	 * Returns all keyValue pairs that are part of this store.Used by
+	 * {@link HashTrees#rebuildHashTree(long, boolean)} while rebuilding all
+	 * hashtrees.
+	 * 
+	 * @return
+	 */
+	Iterator<Pair<ByteBuffer, ByteBuffer>> iterator();
+
+	void registerHashTrees(HashTrees hashTrees);
 }

@@ -52,6 +52,7 @@ public class HashTreesUsage {
 	 * Following example creates the hash trees with in memory store
 	 * implementation.
 	 * 
+	 * @param store
 	 * @return
 	 * @throws Exception
 	 */
@@ -63,9 +64,10 @@ public class HashTreesUsage {
 	}
 
 	/**
-	 * We need to register hashtrees with store object. So that store will
-	 * forward the necessary calls to hashtrees.
+	 * We need to register {@link HashTrees} with {@link Store} object. So that
+	 * {@link Store} will forward the necessary calls to {@link HashTrees}.
 	 * 
+	 * @param store
 	 * @param hashTrees
 	 */
 	public static void registerHashTreesWithStore(Store store,
@@ -74,8 +76,8 @@ public class HashTreesUsage {
 	}
 
 	/**
-	 * The following function creates a store and hash trees object to support
-	 * the store.
+	 * The following function creates a {@link Store} and {@link HashTrees}
+	 * object to support the {@link Store}.
 	 * 
 	 * @return
 	 * @throws Exception
@@ -114,7 +116,7 @@ public class HashTreesUsage {
 		ByteBuffer value = ByteBuffer.wrap("testValue".getBytes());
 		primary.getFirst().put(key, value);
 
-		primary.getSecond().rebuildHashTree(1, 0);
+		primary.getSecond().rebuildHashTree(1, false);
 		primary.getSecond().synch(1, backup.getSecond());
 		Assert.assertTrue(Arrays.equals(backup.getFirst().get(key).array(),
 				value.array()));

@@ -776,7 +776,7 @@ public class HashTreesImpl implements HashTrees {
 		 * 
 		 * @param noOfSegments
 		 *            , value should be a power of 2, otherwise it will be
-		 *            internally converted.
+		 *            converted to the equivalent.
 		 * @return
 		 */
 		public Builder setNoOfSegments(int noOfSegments) {

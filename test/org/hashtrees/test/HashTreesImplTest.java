@@ -374,7 +374,7 @@ public class HashTreesImplTest {
 	public void testEnableNonBlockingCalls() {
 		HashTreesStore htStore = generateInMemoryStore();
 		SimpleMemStore store = new SimpleMemStore();
-		HashTrees hTrees = new HashTreesImpl(DEFAULT_SEG_DATA_BLOCKS_COUNT,
+		HashTreesImpl hTrees = new HashTreesImpl(DEFAULT_SEG_DATA_BLOCKS_COUNT,
 				TREE_ID_PROVIDER, SEG_ID_PROVIDER, htStore, store);
 		Assert.assertFalse(hTrees.enableNonblockingOperations());
 		Assert.assertTrue(hTrees.isNonBlockingCallsEnabled());
@@ -385,7 +385,7 @@ public class HashTreesImplTest {
 	public void testStop() {
 		HashTreesStore htStore = generateInMemoryStore();
 		SimpleMemStore store = new SimpleMemStore();
-		HashTrees hTrees = new HashTreesImpl(DEFAULT_SEG_DATA_BLOCKS_COUNT,
+		HashTreesImpl hTrees = new HashTreesImpl(DEFAULT_SEG_DATA_BLOCKS_COUNT,
 				TREE_ID_PROVIDER, SEG_ID_PROVIDER, htStore, store);
 		hTrees.enableNonblockingOperations();
 		Assert.assertTrue(hTrees.isNonBlockingCallsEnabled());
@@ -422,7 +422,7 @@ public class HashTreesImplTest {
 		};
 
 		SimpleMemStore store = new SimpleMemStore();
-		HashTrees hTrees = new HashTreesImpl(DEFAULT_SEG_DATA_BLOCKS_COUNT,
+		HashTreesImpl hTrees = new HashTreesImpl(DEFAULT_SEG_DATA_BLOCKS_COUNT,
 				TREE_ID_PROVIDER, SEG_ID_PROVIDER, htStore, store);
 		hTrees.enableNonblockingOperations(maxQueueSize);
 		Thread.sleep(100);

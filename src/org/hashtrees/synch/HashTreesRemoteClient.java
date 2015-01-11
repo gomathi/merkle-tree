@@ -100,30 +100,4 @@ public class HashTreesRemoteClient implements HashTrees {
 		throw new UnsupportedOperationException(
 				"Remote tree does not support this operation.");
 	}
-
-	@Override
-	public boolean enableNonblockingOperations() {
-		throw new UnsupportedOperationException(
-				"Remote tree does not support this operation.");
-	}
-
-	@Override
-	public void stop() {
-		throw new UnsupportedOperationException(
-				"Remote tree does not support this operation.");
-	}
-
-	@Override
-	public boolean isNonBlockingCallsEnabled() {
-		throw new UnsupportedOperationException(
-				"Remote tree does not support this operation.");
-	}
-
-	@Override
-	public boolean enableNonblockingOperations(int maxElementsToQue) {
-		throw new UnsupportedOperationException(
-				"Remote tree does not support this operation.");
-
-	}
-
 }

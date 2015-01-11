@@ -148,37 +148,4 @@ public interface HashTrees {
 	 * @return
 	 */
 	long getLastFullyRebuiltTimeStamp(long treeId) throws Exception;
-
-	/**
-	 * Indicates whether non blocking {@link #hPut(ByteBuffer, ByteBuffer)} and
-	 * {@link #hRemove(ByteBuffer)} are enabled.
-	 * 
-	 * @return
-	 */
-
-	boolean isNonBlockingCallsEnabled();
-
-	/**
-	 * Enables non blocking puts and removes operations.
-	 * 
-	 * @return a value indicates whether non blocking operations were enabled
-	 *         before.
-	 */
-	boolean enableNonblockingOperations();
-
-	/**
-	 * Enables non blocking puts and removes operations.
-	 * 
-	 * @param maxElementsToQue
-	 *            , specifies how many operations can be queued at any point of
-	 *            time.
-	 * @return a value indicates whether non blocking operations were enabled
-	 *         before.
-	 */
-	boolean enableNonblockingOperations(int maxElementsToQue);
-
-	/**
-	 * Stops all operations if there are any background jobs are running.
-	 */
-	void stop();
 }

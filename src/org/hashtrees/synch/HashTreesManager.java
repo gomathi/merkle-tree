@@ -133,28 +133,12 @@ public class HashTreesManager extends StoppableTask implements
 	@Override
 	public void onRebuildHashTreeRequest(RebuildHashTreeRequest request)
 			throws Exception {
-		boolean fullRebuild = isFullRebuildRequired(request.treeId,
-				request.expFullRebuildTimeInt);
-		hashTrees.rebuildHashTree(request.treeId, fullRebuild);
+		hashTrees
+				.rebuildHashTree(request.treeId, request.expFullRebuildTimeInt);
 		HashTreesSyncInterface.Iface client = getHashTreeSyncClient(request.requester);
 		RebuildHashTreeResponse response = new RebuildHashTreeResponse(
 				localServer, request.treeId, request.tokenNo);
 		client.submitRebuildResponse(response);
-	}
-
-	private boolean isFullRebuildRequired(long treeId, long expFullRebuildPeriod)
-			throws Exception {
-		if (expFullRebuildPeriod != -1) {
-			long lastFullyRebuiltTS = hashTrees
-					.getLastFullyRebuiltTimeStamp(treeId);
-			return ((System.currentTimeMillis() - lastFullyRebuiltTS) > expFullRebuildPeriod) ? true
-					: false;
-		}
-		return false;
-	}
-
-	private boolean isFullRebuildRequired(long treeId) throws Exception {
-		return isFullRebuildRequired(treeId, fullRebuildPeriod);
 	}
 
 	private void rebuildAllLocalTrees() {
@@ -163,12 +147,12 @@ public class HashTreesManager extends StoppableTask implements
 			LOG.info("There are no locally managed trees. So skipping rebuild operation.");
 			return;
 		}
-		List<Pair<Long, Boolean>> treeIdAndRebuildType = new ArrayList<Pair<Long, Boolean>>();
+		List<Pair<Long, Long>> treeIdAndRebuildType = new ArrayList<>();
 		while (treeIdItr.hasNext()) {
 			long treeId = treeIdItr.next();
 			try {
-				boolean isFullRebuild = isFullRebuildRequired(treeId);
-				treeIdAndRebuildType.add(Pair.create(treeId, isFullRebuild));
+				treeIdAndRebuildType
+						.add(Pair.create(treeId, fullRebuildPeriod));
 			} catch (Exception e) {
 				LOG.error("Exception occurred while rebuilding.", e);
 			}
@@ -179,10 +163,10 @@ public class HashTreesManager extends StoppableTask implements
 		}
 		Collection<Callable<Void>> rebuildTasks = Collections2.transform(
 				treeIdAndRebuildType,
-				new Function<Pair<Long, Boolean>, Callable<Void>>() {
+				new Function<Pair<Long, Long>, Callable<Void>>() {
 
 					@Override
-					public Callable<Void> apply(final Pair<Long, Boolean> input) {
+					public Callable<Void> apply(final Pair<Long, Long> input) {
 						return new Callable<Void>() {
 
 							@Override

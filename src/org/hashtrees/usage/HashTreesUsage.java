@@ -114,7 +114,7 @@ public class HashTreesUsage {
 		ByteBuffer value = ByteBuffer.wrap("testValue".getBytes());
 		primary.getFirst().put(key, value);
 
-		primary.getSecond().rebuildHashTree(1, true);
+		primary.getSecond().rebuildHashTree(1, 0);
 		primary.getSecond().synch(1, backup.getSecond());
 		Assert.assertTrue(Arrays.equals(backup.getFirst().get(key).array(),
 				value.array()));

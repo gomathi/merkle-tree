@@ -34,7 +34,6 @@ public class HashTreesMemStore extends HashTreesBaseStore implements
 		private final ConcurrentMap<Integer, ByteBuffer> segmentHashes = new ConcurrentSkipListMap<Integer, ByteBuffer>();
 		private final ConcurrentMap<Integer, ConcurrentSkipListMap<ByteBuffer, ByteBuffer>> segDataBlocks = new ConcurrentHashMap<Integer, ConcurrentSkipListMap<ByteBuffer, ByteBuffer>>();
 		private final AtomicLong fullyRebuiltTreeTs = new AtomicLong(0);
-		private final AtomicLong rebuiltTreeTs = new AtomicLong(0);
 	}
 
 	private HashTreeMemStore getIndHTree(long treeId) {
@@ -129,20 +128,9 @@ public class HashTreesMemStore extends HashTreesBaseStore implements
 	}
 
 	@Override
-	public long getLastFullyTreeReBuiltTimestamp(long treeId) {
+	public long getLastFullyTreeBuiltTimestamp(long treeId) {
 		long value = getIndHTree(treeId).fullyRebuiltTreeTs.get();
 		return value;
-	}
-
-	@Override
-	public void setLastHashTreeUpdatedTimestamp(long treeId, long timestamp) {
-		setValueIfNewValueIsGreater(getIndHTree(treeId).rebuiltTreeTs,
-				timestamp);
-	}
-
-	@Override
-	public long getLastHashTreeUpdatedTimestamp(long treeId) {
-		return getIndHTree(treeId).rebuiltTreeTs.get();
 	}
 
 	@Override

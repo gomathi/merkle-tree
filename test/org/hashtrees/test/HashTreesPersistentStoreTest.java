@@ -117,15 +117,7 @@ public class HashTreesPersistentStoreTest {
 	public void testSetLastFullyTreeBuiltTimestamp() {
 		long exTs = System.currentTimeMillis();
 		dbObj.setLastFullyTreeBuiltTimestamp(DEF_TREE_ID, exTs);
-		long dbTs = dbObj.getLastFullyTreeReBuiltTimestamp(DEF_TREE_ID);
-		Assert.assertEquals(exTs, dbTs);
-	}
-
-	@Test
-	public void testLastHashTreeUpdatedTimestamp() {
-		long exTs = System.currentTimeMillis();
-		dbObj.setLastHashTreeUpdatedTimestamp(DEF_TREE_ID, exTs);
-		long dbTs = dbObj.getLastHashTreeUpdatedTimestamp(DEF_TREE_ID);
+		long dbTs = dbObj.getLastFullyTreeBuiltTimestamp(DEF_TREE_ID);
 		Assert.assertEquals(exTs, dbTs);
 	}
 

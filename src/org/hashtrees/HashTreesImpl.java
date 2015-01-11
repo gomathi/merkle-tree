@@ -36,6 +36,7 @@ import org.hashtrees.thrift.generated.SegmentHash;
 import org.hashtrees.util.ByteUtils;
 import org.hashtrees.util.CollectionPeekingIterator;
 import org.hashtrees.util.LockedBy;
+import org.hashtrees.util.NonBlockingQueuingTask;
 import org.hashtrees.util.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -62,14 +63,17 @@ public class HashTreesImpl implements HashTrees {
 	 * non blocking queue. When the queue is full, the new puts or removes are
 	 * rejected.
 	 */
-	public static final int DEFAULT_NB_QUE_SIZE = 10000;
+	public final static int DEFAULT_NB_QUE_SIZE = 10000;
+	/**
+	 * Specifies at most how many segments can be used by a single HashTree.
+	 */
+	public final static int MAX_NO_OF_SEGMENTS = 1 << 30;
 
 	private final static Logger LOGGER = LoggerFactory
 			.getLogger(HashTreesImpl.class.getName());
 	private final static char COMMA_DELIMETER = ',';
 	private final static char NEW_LINE_DELIMETER = '\n';
 	private final static int ROOT_NODE = 0;
-	private final static int MAX_NO_OF_BUCKETS = 1 << 30;
 	private final static int BINARY_TREE = 2;
 
 	private final int noOfChildren;
@@ -104,7 +108,7 @@ public class HashTreesImpl implements HashTrees {
 	}
 
 	private static int getValidSegmentsCount(int noOfSegments) {
-		return ((noOfSegments > MAX_NO_OF_BUCKETS) || (noOfSegments < 0)) ? MAX_NO_OF_BUCKETS
+		return ((noOfSegments > MAX_NO_OF_SEGMENTS) || (noOfSegments < 0)) ? MAX_NO_OF_SEGMENTS
 				: roundUpToPowerOf2(noOfSegments);
 	}
 
@@ -119,7 +123,7 @@ public class HashTreesImpl implements HashTrees {
 			hPutInternal(key, value);
 	}
 
-	void hPutInternal(final ByteBuffer key, final ByteBuffer value) {
+	private void hPutInternal(final ByteBuffer key, final ByteBuffer value) {
 		long treeId = treeIdProvider.getTreeId(key);
 		int segId = segIdProvider.getSegmentId(key);
 		ByteBuffer digest = ByteBuffer.wrap(sha1(value.array()));
@@ -138,7 +142,7 @@ public class HashTreesImpl implements HashTrees {
 		}
 	}
 
-	void hRemoveInternal(final ByteBuffer key) {
+	private void hRemoveInternal(final ByteBuffer key) {
 		long treeId = treeIdProvider.getTreeId(key);
 		int segId = segIdProvider.getSegmentId(key);
 		htStore.setDirtySegment(treeId, segId);
@@ -332,7 +336,27 @@ public class HashTreesImpl implements HashTrees {
 	}
 
 	@Override
-	public void rebuildHashTrees(boolean fullRebuild) {
+	public void rebuildHashTrees(long fullRebuildPeriod) throws Exception {
+		Iterator<Long> treeIdItr = htStore.getAllTreeIds();
+		while (treeIdItr.hasNext()) {
+			long treeId = treeIdItr.next();
+			rebuildHashTree(treeId, fullRebuildPeriod);
+		}
+	}
+
+	@Override
+	public void rebuildHashTree(long treeId, long fullRebuildPeriod)
+			throws Exception {
+		long lastFullRebuiltTime = htStore
+				.getLastFullyTreeBuiltTimestamp(treeId);
+		boolean fullRebuild = (lastFullRebuiltTime == 0) ? true
+				: ((fullRebuildPeriod < 0) ? false
+						: (System.currentTimeMillis() - lastFullRebuiltTime) > fullRebuildPeriod);
+		rebuildHashTree(treeId, fullRebuild);
+	}
+
+	@Override
+	public void rebuildHashTrees(boolean fullRebuild) throws Exception {
 		Iterator<Long> treeIdItr = htStore.getAllTreeIds();
 		while (treeIdItr.hasNext())
 			rebuildHashTree(treeIdItr.next(), fullRebuild);
@@ -358,7 +382,6 @@ public class HashTreesImpl implements HashTrees {
 							dirtyNodeAndDigest.getValue());
 				if (fullRebuild)
 					htStore.setLastFullyTreeBuiltTimestamp(treeId, currentTs);
-				htStore.setLastHashTreeUpdatedTimestamp(treeId, currentTs);
 			} finally {
 				releaseTreeLock(treeId);
 			}
@@ -583,13 +606,13 @@ public class HashTreesImpl implements HashTrees {
 	}
 
 	private static int roundUpToPowerOf2(int number) {
-		return (number >= MAX_NO_OF_BUCKETS) ? MAX_NO_OF_BUCKETS
+		return (number >= MAX_NO_OF_SEGMENTS) ? MAX_NO_OF_SEGMENTS
 				: ((number > 1) ? Integer.highestOneBit((number - 1) << 1) : 1);
 	}
 
 	@Override
 	public long getLastFullyRebuiltTimeStamp(long treeId) {
-		return htStore.getLastFullyTreeReBuiltTimestamp(treeId);
+		return htStore.getLastFullyTreeBuiltTimestamp(treeId);
 	}
 
 	public boolean enableNonblockingOperations(int maxElementsToQue) {
@@ -654,6 +677,50 @@ public class HashTreesImpl implements HashTrees {
 		disableNonblockingOperations();
 	}
 
+	/**
+	 * Used to tag type of operation when the input is fed into the non blocking
+	 * version of {@link HashTreesImpl} hPut and hRemove methods.
+	 * 
+	 */
+	private static enum HTOperation {
+		PUT, REMOVE
+	}
+
+	/**
+	 * A task to enable non blocking calls on all
+	 * {@link HashTreesImpl#hPut(ByteArray, ByteArray)} and
+	 * {@link HashTreesImpl#hRemove(ByteArray)} operation.
+	 * 
+	 */
+	@ThreadSafe
+	private static class NonBlockingHTDataUpdater extends
+			NonBlockingQueuingTask<Pair<HTOperation, List<ByteBuffer>>> {
+
+		private static final Pair<HTOperation, List<ByteBuffer>> STOP_MARKER = new Pair<HTOperation, List<ByteBuffer>>(
+				HTOperation.PUT, null);
+		private final HashTreesImpl hTree;
+
+		public NonBlockingHTDataUpdater(final HashTreesImpl hTree,
+				int maxElementsToQue) {
+			super(STOP_MARKER, maxElementsToQue);
+			this.hTree = hTree;
+		}
+
+		@Override
+		public void handleElement(Pair<HTOperation, List<ByteBuffer>> pair) {
+			switch (pair.getFirst()) {
+			case PUT:
+				hTree.hPutInternal(pair.getSecond().get(0), pair.getSecond()
+						.get(1));
+				break;
+			case REMOVE:
+				hTree.hRemoveInternal(pair.getSecond().get(0));
+				break;
+			}
+		}
+
+	}
+
 	@NotThreadSafe
 	public static class Builder {
 
@@ -662,7 +729,7 @@ public class HashTreesImpl implements HashTrees {
 		private final HashTreesIdProvider treeIdProvider;
 
 		private SegmentIdProvider segIdProvider;
-		private int noOfSegments = MAX_NO_OF_BUCKETS;
+		private int noOfSegments = MAX_NO_OF_SEGMENTS;
 
 		public Builder(Store store, HashTreesIdProvider treeIdProvider,
 				HashTreesStore htStore) {
@@ -687,6 +754,12 @@ public class HashTreesImpl implements HashTrees {
 					htStoreDirName));
 		}
 
+		/**
+		 * By default {@link ModuloSegIdProvider} is used.
+		 * 
+		 * @param segIdProvider
+		 * @return
+		 */
 		public Builder setSegmentIdProvider(SegmentIdProvider segIdProvider) {
 			this.segIdProvider = segIdProvider;
 			return this;
@@ -695,11 +768,15 @@ public class HashTreesImpl implements HashTrees {
 		/**
 		 * Depends upon data size, this should be set. Data size and
 		 * noOfSegments should be directly proportional. With higher dataSize,
-		 * and lesser noOfSegments means each segment will get more no of data.
-		 * So when a segment is marked as dirty, the rebuild process has to read
-		 * huge data unnecessarily.
+		 * and lesser noOfSegments means each segment will get more amount of
+		 * data. So when a segment is marked as dirty, the rebuild process has
+		 * to read huge data unnecessarily.
+		 * 
+		 * Default value is 1073741824.
 		 * 
 		 * @param noOfSegments
+		 *            , value should be a power of 2, otherwise it will be
+		 *            internally converted.
 		 * @return
 		 */
 		public Builder setNoOfSegments(int noOfSegments) {

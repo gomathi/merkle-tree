@@ -68,8 +68,8 @@ public class HashTreesPersistentStore extends HashTreesBaseStore implements
 
 	private static enum MetaDataKey {
 
-		KEY_LAST_FULLY_TREE_BUILT_TS("ltfbTs".getBytes()), KEY_LAST_TREE_BUILT_TS(
-				"ltbTs".getBytes()), KEY_SERVERNAME_KEY_PREFIX("sn".getBytes());
+		KEY_LAST_FULLY_TREE_BUILT_TS("ltfbTs".getBytes()), KEY_SERVERNAME_KEY_PREFIX(
+				"sn".getBytes());
 
 		private final byte[] key;
 
@@ -228,27 +228,9 @@ public class HashTreesPersistentStore extends HashTreesBaseStore implements
 	}
 
 	@Override
-	public long getLastFullyTreeReBuiltTimestamp(long treeId) {
+	public long getLastFullyTreeBuiltTimestamp(long treeId) {
 		byte[] key = prepareMetaDataKey(treeId,
 				MetaDataKey.KEY_LAST_FULLY_TREE_BUILT_TS);
-		byte[] value = dbObj.get(key);
-		if (value != null)
-			return ByteUtils.toLong(value, 0);
-		return 0;
-	}
-
-	@Override
-	public void setLastHashTreeUpdatedTimestamp(long treeId, long timestamp) {
-		byte[] value = new byte[ByteUtils.SIZEOF_LONG];
-		ByteBuffer bbValue = ByteBuffer.wrap(value);
-		bbValue.putLong(timestamp);
-		updateMetaData(treeId, MetaDataKey.KEY_LAST_TREE_BUILT_TS, value);
-	}
-
-	@Override
-	public long getLastHashTreeUpdatedTimestamp(long treeId) {
-		byte[] key = prepareMetaDataKey(treeId,
-				MetaDataKey.KEY_LAST_TREE_BUILT_TS);
 		byte[] value = dbObj.get(key);
 		if (value != null)
 			return ByteUtils.toLong(value, 0);

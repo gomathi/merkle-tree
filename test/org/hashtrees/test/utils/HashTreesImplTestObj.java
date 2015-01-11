@@ -12,8 +12,6 @@ import org.hashtrees.HashTreesImpl;
 import org.hashtrees.ModuloSegIdProvider;
 import org.hashtrees.store.HashTreesStore;
 import org.hashtrees.store.Store;
-import org.hashtrees.thrift.generated.SegmentData;
-import org.hashtrees.thrift.generated.SegmentHash;
 
 public class HashTreesImplTestObj extends HashTreesImpl {
 
@@ -45,51 +43,10 @@ public class HashTreesImplTestObj extends HashTreesImpl {
 	}
 
 	@Override
-	public List<SegmentHash> getSegmentHashes(long treeId, List<Integer> nodeIds) {
-		return super.getSegmentHashes(treeId, nodeIds);
-	}
-
-	@Override
-	public SegmentHash getSegmentHash(long treeId, int nodeId) {
-		return super.getSegmentHash(treeId, nodeId);
-	}
-
-	@Override
-	public List<SegmentData> getSegment(long treeId, int segId) {
-		return super.getSegment(treeId, segId);
-	}
-
-	@Override
-	public SegmentData getSegmentData(long treeId, int segId, ByteBuffer key) {
-		return super.getSegmentData(treeId, segId, key);
-	}
-
-	@Override
-	public void deleteTreeNodes(long treeId, List<Integer> nodeIds)
-			throws Exception {
-		super.deleteTreeNodes(treeId, nodeIds);
-	}
-
-	@Override
-	public void hPut(ByteBuffer key, ByteBuffer value) {
-		super.hPut(key, value);
-	}
-
-	@Override
-	public void hRemove(ByteBuffer key) {
-		super.hRemove(key);
-	}
-
-	@Override
 	public boolean synch(long treeId, HashTrees remoteTree) throws Exception {
 		boolean result = super.synch(treeId, remoteTree);
 		events.add(HTSynchEvent.SYNCH);
 		return result;
-	}
-
-	@Override
-	public void rebuildHashTrees(boolean fullRebuild) {
-		super.rebuildHashTrees(fullRebuild);
 	}
 
 	@Override

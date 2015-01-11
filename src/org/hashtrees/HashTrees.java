@@ -124,9 +124,22 @@ public interface HashTrees {
 	 * key change. Rather tree is rebuilt at regular intervals. This function
 	 * provides an option to make a force call to update the entire tree.
 	 * 
-	 * @param fullRebuild
-	 *            , indicates whether to rebuild all segments, or just the dirty
-	 *            segments.
+	 * @param fullRebuildPeriod
+	 *            , indicates a time interval in milliseconds, and if a tree is
+	 *            not fully rebuilt for more than this value, a full rebuild
+	 *            will be triggered. Otherwise only dirty segments will be
+	 *            updated. If there is no information about when was the last
+	 *            time the tree was fully rebuilt, then a full rebuild will be
+	 *            triggered. A negative value indicates disabling full rebuild.
+	 */
+	void rebuildHashTrees(long fullRebuildPeriod) throws Exception;
+
+	/**
+	 * Similar {@link #rebuildHashTree(long, long)}, except that allows to
+	 * specify whether a full rebuild should be triggered or not.
+	 * 
+	 * @param rebuild
+	 * @throws Exception
 	 */
 	void rebuildHashTrees(boolean fullRebuild) throws Exception;
 
@@ -134,10 +147,23 @@ public interface HashTrees {
 	 * Updates segment hashes based on the dirty entries.
 	 * 
 	 * @param treeId
+	 * @param fullRebuildPeriod
+	 *            , indicates a time interval in milliseconds, and if a tree is
+	 *            not fully rebuilt for more than this value, a full rebuild
+	 *            will be triggered. Otherwise only dirty segments will be
+	 *            updated. If there is no information about when was the last
+	 *            time the tree was fully rebuilt, then a full rebuild will be
+	 *            triggered. A negative value indicates disabling full rebuild.
+	 */
+	void rebuildHashTree(long treeId, long fullRebuildPeriod) throws Exception;
+
+	/**
+	 * Similar to {@link #rebuildHashTree(long, long)}, except that allows to
+	 * specify whether a full rebuild should be triggered or not.
+	 * 
+	 * @param treeId
 	 * @param fullRebuild
-	 *            , false indicates only update the hash trees based on the
-	 *            dirty entries, true indicates complete rebuild of the tree
-	 *            irrespective of dirty markers.
+	 * @throws Exception
 	 */
 	void rebuildHashTree(long treeId, boolean fullRebuild) throws Exception;
 

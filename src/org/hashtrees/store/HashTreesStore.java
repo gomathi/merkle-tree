@@ -128,24 +128,7 @@ public interface HashTreesStore {
 	 * 
 	 * @return
 	 */
-	long getLastFullyTreeReBuiltTimestamp(long treeId);
-
-	/**
-	 * Sets the timestamp at which segment hashes were updated, not the entire
-	 * tree.
-	 * 
-	 * @param treeId
-	 * @param timestamp
-	 */
-	void setLastHashTreeUpdatedTimestamp(long treeId, long timestamp);
-
-	/**
-	 * Retrieves the timestamp at which segment hashes were updated.
-	 * 
-	 * @param treeId
-	 * @return
-	 */
-	long getLastHashTreeUpdatedTimestamp(long treeId);
+	long getLastFullyTreeBuiltTimestamp(long treeId);
 
 	/**
 	 * Returns all tree ids that are stored.

@@ -43,30 +43,30 @@ public class HashTreesPersistentStore extends HashTreesBaseStore implements
 
 	private static final Logger LOG = LoggerFactory
 			.getLogger(HashTreesPersistentStore.class);
+	private static final byte[] EMPTY_VALUE = new byte[0];
 
 	private static final int SIZE_TREEID = ByteUtils.SIZEOF_LONG;
 	private static final int SIZE_SEGID = ByteUtils.SIZEOF_INT;
-	private static final int SIZE_PREFIX_KEY_TID = KeyPrefix.KEY_LENGTH
+	private static final int SIZE_BASE_KEY_WITH_TID = BaseKeyPrefix.LENGTH
 			+ SIZE_TREEID;
-	private static final int SIZE_PREFIX_KEY_TID_AND_SEGID = KeyPrefix.KEY_LENGTH
+	private static final int SIZE_BASE_KEY_TID_A_SEGID = BaseKeyPrefix.LENGTH
 			+ SIZE_TREEID + SIZE_SEGID;
-	private static final byte[] EMPTY_VALUE = new byte[0];
 
-	private static enum KeyPrefix {
+	private static enum BaseKeyPrefix {
 
 		META_DATA_KEY_PREFIX((byte) 'M'), SEG_HASH_KEY_PREFIX((byte) 'H'), SEG_DATA_KEY_PREFIX(
 				(byte) 'S'), TREEID_KEY_PREFIX((byte) 'T'), DIRTY_SEG_KEY_PREFIX(
 				(byte) 'D');
 
-		private final byte keyPrefix;
-		private static final int KEY_LENGTH = 1;
+		private final byte baseKeyPrefix;
+		private static final int LENGTH = 1; // in terms of bytes.
 
-		private KeyPrefix(byte keyPrefix) {
-			this.keyPrefix = keyPrefix;
+		private BaseKeyPrefix(byte baseKeyPrefix) {
+			this.baseKeyPrefix = baseKeyPrefix;
 		}
 
-		public byte getKeyPrefix() {
-			return keyPrefix;
+		public byte getBaseKeyPrefix() {
+			return baseKeyPrefix;
 		}
 	}
 
@@ -109,9 +109,9 @@ public class HashTreesPersistentStore extends HashTreesBaseStore implements
 	 */
 	private void initDirtySegments() {
 		DBIterator itr = dbObj.iterator();
-		byte[] startKey = new byte[KeyPrefix.KEY_LENGTH];
+		byte[] startKey = new byte[BaseKeyPrefix.LENGTH];
 		ByteBuffer bb = ByteBuffer.wrap(startKey);
-		bb.put(KeyPrefix.DIRTY_SEG_KEY_PREFIX.keyPrefix);
+		bb.put(BaseKeyPrefix.DIRTY_SEG_KEY_PREFIX.baseKeyPrefix);
 		itr.seek(startKey);
 
 		while (itr.hasNext()) {
@@ -134,64 +134,64 @@ public class HashTreesPersistentStore extends HashTreesBaseStore implements
 
 	private static long getTreeId(byte[] keyPrefix) {
 		ByteBuffer bb = ByteBuffer.wrap(keyPrefix);
-		return bb.getLong(KeyPrefix.KEY_LENGTH);
+		return bb.getLong(BaseKeyPrefix.LENGTH);
 	}
 
 	private static void prepareKeyPrefix(ByteBuffer keyToFill,
-			KeyPrefix keyMarker, long treeId) {
-		keyToFill.put(keyMarker.getKeyPrefix());
+			BaseKeyPrefix keyMarker, long treeId) {
+		keyToFill.put(keyMarker.getBaseKeyPrefix());
 		keyToFill.putLong(treeId);
 	}
 
 	private static byte[] prepareTreeId(long treeId) {
-		byte[] result = new byte[SIZE_PREFIX_KEY_TID];
+		byte[] result = new byte[SIZE_BASE_KEY_WITH_TID];
 		ByteBuffer bb = ByteBuffer.wrap(result);
-		prepareKeyPrefix(bb, KeyPrefix.TREEID_KEY_PREFIX, treeId);
+		prepareKeyPrefix(bb, BaseKeyPrefix.TREEID_KEY_PREFIX, treeId);
 		return result;
 	}
 
 	private static void prepareKeyPrefix(ByteBuffer keyToFill,
-			KeyPrefix keyMarker, long treeId, int nodeId) {
+			BaseKeyPrefix keyMarker, long treeId, int nodeId) {
 		prepareKeyPrefix(keyToFill, keyMarker, treeId);
 		keyToFill.putInt(nodeId);
 	}
 
 	private static byte[] prepareSegmentHashKey(long treeId, int nodeId) {
-		byte[] key = new byte[SIZE_PREFIX_KEY_TID_AND_SEGID];
+		byte[] key = new byte[SIZE_BASE_KEY_TID_A_SEGID];
 		ByteBuffer bb = ByteBuffer.wrap(key);
-		prepareKeyPrefix(bb, KeyPrefix.SEG_HASH_KEY_PREFIX, treeId, nodeId);
+		prepareKeyPrefix(bb, BaseKeyPrefix.SEG_HASH_KEY_PREFIX, treeId, nodeId);
 		return key;
 	}
 
 	private static byte[] readSegmentDataKey(byte[] dbSegDataKey) {
-		int from = SIZE_PREFIX_KEY_TID_AND_SEGID;
+		int from = SIZE_BASE_KEY_TID_A_SEGID;
 		byte[] key = ByteUtils.copy(dbSegDataKey, from, dbSegDataKey.length);
 		return key;
 	}
 
 	private static byte[] prepareSegmentDataKeyPrefix(long treeId, int segId) {
-		byte[] byteKey = new byte[SIZE_PREFIX_KEY_TID_AND_SEGID];
+		byte[] byteKey = new byte[SIZE_BASE_KEY_TID_A_SEGID];
 		ByteBuffer bb = ByteBuffer.wrap(byteKey);
-		prepareKeyPrefix(bb, KeyPrefix.SEG_DATA_KEY_PREFIX, treeId, segId);
+		prepareKeyPrefix(bb, BaseKeyPrefix.SEG_DATA_KEY_PREFIX, treeId, segId);
 		return byteKey;
 	}
 
 	private static byte[] prepareSegmentDataKey(long treeId, int segId,
 			ByteBuffer key) {
-		byte[] byteKey = new byte[SIZE_PREFIX_KEY_TID_AND_SEGID
+		byte[] byteKey = new byte[SIZE_BASE_KEY_TID_A_SEGID
 				+ (key.array().length)];
 		ByteBuffer bb = ByteBuffer.wrap(byteKey);
-		prepareKeyPrefix(bb, KeyPrefix.SEG_DATA_KEY_PREFIX, treeId, segId);
+		prepareKeyPrefix(bb, BaseKeyPrefix.SEG_DATA_KEY_PREFIX, treeId, segId);
 		bb.put(key.array());
 		return byteKey;
 	}
 
 	private static byte[] prepareMetaDataKey(long treeId,
 			MetaDataKey metaDataKey) {
-		byte[] byteKey = new byte[SIZE_PREFIX_KEY_TID
+		byte[] byteKey = new byte[SIZE_BASE_KEY_WITH_TID
 				+ metaDataKey.getKey().length];
 		ByteBuffer bb = ByteBuffer.wrap(byteKey);
-		prepareKeyPrefix(bb, KeyPrefix.META_DATA_KEY_PREFIX, treeId);
+		prepareKeyPrefix(bb, BaseKeyPrefix.META_DATA_KEY_PREFIX, treeId);
 		bb.put(metaDataKey.getKey());
 		return byteKey;
 	}
@@ -203,10 +203,10 @@ public class HashTreesPersistentStore extends HashTreesBaseStore implements
 	}
 
 	private static byte[] prepareDirtySegmentKey(long treeId, int segId) {
-		byte[] key = new byte[KeyPrefix.KEY_LENGTH + ByteUtils.SIZEOF_LONG
+		byte[] key = new byte[BaseKeyPrefix.LENGTH + ByteUtils.SIZEOF_LONG
 				+ ByteUtils.SIZEOF_INT];
 		ByteBuffer bb = ByteBuffer.wrap(key);
-		bb.put(KeyPrefix.DIRTY_SEG_KEY_PREFIX.keyPrefix);
+		bb.put(BaseKeyPrefix.DIRTY_SEG_KEY_PREFIX.baseKeyPrefix);
 		bb.putLong(treeId);
 		bb.putInt(segId);
 		return bb.array();
@@ -214,7 +214,7 @@ public class HashTreesPersistentStore extends HashTreesBaseStore implements
 
 	private static Pair<Long, Integer> readTreeIdAndDirtySegmentFrom(byte[] key) {
 		ByteBuffer bb = ByteBuffer.wrap(key);
-		int offset = KeyPrefix.KEY_LENGTH;
+		int offset = BaseKeyPrefix.LENGTH;
 		long treeId = bb.getLong(offset);
 		offset += ByteUtils.SIZEOF_LONG;
 		int dirtySegId = bb.getInt(offset);
@@ -291,8 +291,8 @@ public class HashTreesPersistentStore extends HashTreesBaseStore implements
 	@Override
 	public void deleteTree(long treeId) {
 		DBIterator dbItr;
-		byte[] temp = new byte[SIZE_PREFIX_KEY_TID];
-		for (KeyPrefix keyPrefix : KeyPrefix.values()) {
+		byte[] temp = new byte[SIZE_BASE_KEY_WITH_TID];
+		for (BaseKeyPrefix keyPrefix : BaseKeyPrefix.values()) {
 			dbItr = dbObj.iterator();
 			ByteBuffer wrap = ByteBuffer.wrap(temp);
 			prepareKeyPrefix(wrap, keyPrefix, treeId);
@@ -364,7 +364,7 @@ public class HashTreesPersistentStore extends HashTreesBaseStore implements
 	 */
 	@Override
 	public Iterator<Long> getAllTreeIds() {
-		final byte[] keyToFill = new byte[SIZE_PREFIX_KEY_TID];
+		final byte[] keyToFill = new byte[SIZE_BASE_KEY_WITH_TID];
 		final DBIterator iterator = dbObj.iterator();
 		return new Iterator<Long>() {
 
@@ -395,7 +395,7 @@ public class HashTreesPersistentStore extends HashTreesBaseStore implements
 			private void loadNextElement() {
 				if (internalQue.isEmpty()) {
 					ByteBuffer bb = ByteBuffer.wrap(keyToFill);
-					prepareKeyPrefix(bb, KeyPrefix.TREEID_KEY_PREFIX,
+					prepareKeyPrefix(bb, BaseKeyPrefix.TREEID_KEY_PREFIX,
 							lastTreeId + 1);
 					iterator.seek(bb.array());
 					if (iterator.hasNext()) {
@@ -426,7 +426,7 @@ public class HashTreesPersistentStore extends HashTreesBaseStore implements
 
 	private static RemoteTreeInfo readRemoteTreeInfoFrom(byte[] key) {
 		long treeId = getTreeId(key);
-		int offset = SIZE_PREFIX_KEY_TID
+		int offset = SIZE_BASE_KEY_WITH_TID
 				+ MetaDataKey.KEY_SERVERNAME.getKey().length;
 		ByteBuffer bb = ByteBuffer.wrap(key);
 		int portNo = bb.getInt(offset);

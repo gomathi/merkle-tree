@@ -18,6 +18,7 @@ import org.hashtrees.thrift.generated.SegmentData;
 import org.hashtrees.thrift.generated.SegmentHash;
 import org.hashtrees.thrift.generated.ServerName;
 import org.hashtrees.util.ByteUtils;
+import org.hashtrees.util.Pair;
 import org.iq80.leveldb.DB;
 import org.iq80.leveldb.DBIterator;
 import org.iq80.leveldb.Options;
@@ -26,7 +27,7 @@ import org.slf4j.LoggerFactory;
 
 /**
  * Uses LevelDB for storing segment hashes and segment data. Dirty segment
- * markers are stored in memory.
+ * markers are also stored on disk.
  * 
  * Stores the following data
  * 
@@ -45,31 +46,34 @@ public class HashTreesPersistentStore extends HashTreesBaseStore implements
 
 	private static final int SIZE_TREEID = ByteUtils.SIZEOF_LONG;
 	private static final int SIZE_SEGID = ByteUtils.SIZEOF_INT;
-	private static final int SIZE_PREFIX_KEY_TID = 1 + SIZE_TREEID;
-	private static final int SIZE_PREFIX_KEY_TID_AND_SEGID = 1 + SIZE_TREEID
-			+ SIZE_SEGID;
+	private static final int SIZE_PREFIX_KEY_TID = KeyPrefix.KEY_LENGTH
+			+ SIZE_TREEID;
+	private static final int SIZE_PREFIX_KEY_TID_AND_SEGID = KeyPrefix.KEY_LENGTH
+			+ SIZE_TREEID + SIZE_SEGID;
 	private static final byte[] EMPTY_VALUE = new byte[0];
 
-	private static enum KeyMarker {
+	private static enum KeyPrefix {
 
-		META_DATA_MARKER((byte) 'M'), SEG_HASH_MARKER((byte) 'H'), SEG_DATA_MARKER(
-				(byte) 'S'), TREEID_MARKER((byte) 'T');
+		META_DATA_KEY_PREFIX((byte) 'M'), SEG_HASH_KEY_PREFIX((byte) 'H'), SEG_DATA_KEY_PREFIX(
+				(byte) 'S'), TREEID_KEY_PREFIX((byte) 'T'), DIRTY_SEG_KEY_PREFIX(
+				(byte) 'D');
 
-		private final byte keyMarker;
+		private final byte keyPrefix;
+		private static final int KEY_LENGTH = 1;
 
-		private KeyMarker(byte keyMarker) {
-			this.keyMarker = keyMarker;
+		private KeyPrefix(byte keyPrefix) {
+			this.keyPrefix = keyPrefix;
 		}
 
-		public byte getKeyMarker() {
-			return keyMarker;
+		public byte getKeyPrefix() {
+			return keyPrefix;
 		}
 	}
 
 	private static enum MetaDataKey {
 
-		KEY_LAST_FULLY_TREE_BUILT_TS("ltfbTs".getBytes()), KEY_SERVERNAME_KEY_PREFIX(
-				"sn".getBytes());
+		KEY_LAST_FULLY_TREE_BUILT_TS("ltfbTs".getBytes()), KEY_SERVERNAME("sn"
+				.getBytes());
 
 		private final byte[] key;
 
@@ -85,11 +89,6 @@ public class HashTreesPersistentStore extends HashTreesBaseStore implements
 	private final String dbDir;
 	private final DB dbObj;
 
-	public HashTreesPersistentStore(String dbDir) throws Exception {
-		this.dbDir = dbDir;
-		this.dbObj = initDatabase(dbDir);
-	}
-
 	private static boolean createDir(String dirName) {
 		File file = new File(dirName);
 		if (file.exists())
@@ -104,34 +103,55 @@ public class HashTreesPersistentStore extends HashTreesBaseStore implements
 		return new JniDBFactory().open(new File(dbDir), options);
 	}
 
-	public void close() {
-		try {
-			dbObj.close();
-		} catch (IOException e) {
-			LOG.warn("Exception occurred while closing leveldb connection.");
+	/**
+	 * Need to inform {@link HashTreesBaseStore} about dirty segments which are
+	 * marked in the previous job.
+	 */
+	private void initDirtySegments() {
+		DBIterator itr = dbObj.iterator();
+		byte[] startKey = new byte[KeyPrefix.KEY_LENGTH];
+		ByteBuffer bb = ByteBuffer.wrap(startKey);
+		bb.put(KeyPrefix.DIRTY_SEG_KEY_PREFIX.keyPrefix);
+		itr.seek(startKey);
+
+		while (itr.hasNext()) {
+			Entry<byte[], byte[]> entry = itr.next();
+			byte[] key = entry.getKey();
+			if (ByteUtils.compareTo(startKey, 0, startKey.length, key, 0,
+					startKey.length) != 0)
+				break;
+			Pair<Long, Integer> treeIdAndDirtySegId = readTreeIdAndDirtySegmentFrom(key);
+			super.setDirtySegment(treeIdAndDirtySegId.getFirst(),
+					treeIdAndDirtySegId.getSecond());
 		}
+	}
+
+	public HashTreesPersistentStore(String dbDir) throws Exception {
+		this.dbDir = dbDir;
+		this.dbObj = initDatabase(dbDir);
+		initDirtySegments();
 	}
 
 	private static long getTreeId(byte[] keyPrefix) {
 		ByteBuffer bb = ByteBuffer.wrap(keyPrefix);
-		return bb.getLong(1);
+		return bb.getLong(KeyPrefix.KEY_LENGTH);
+	}
+
+	private static void prepareKeyPrefix(ByteBuffer keyToFill,
+			KeyPrefix keyMarker, long treeId) {
+		keyToFill.put(keyMarker.getKeyPrefix());
+		keyToFill.putLong(treeId);
 	}
 
 	private static byte[] prepareTreeId(long treeId) {
 		byte[] result = new byte[SIZE_PREFIX_KEY_TID];
 		ByteBuffer bb = ByteBuffer.wrap(result);
-		prepareKeyPrefix(bb, KeyMarker.TREEID_MARKER, treeId);
+		prepareKeyPrefix(bb, KeyPrefix.TREEID_KEY_PREFIX, treeId);
 		return result;
 	}
 
 	private static void prepareKeyPrefix(ByteBuffer keyToFill,
-			KeyMarker keyMarker, long treeId) {
-		keyToFill.put(keyMarker.getKeyMarker());
-		keyToFill.putLong(treeId);
-	}
-
-	private static void prepareKeyPrefix(ByteBuffer keyToFill,
-			KeyMarker keyMarker, long treeId, int nodeId) {
+			KeyPrefix keyMarker, long treeId, int nodeId) {
 		prepareKeyPrefix(keyToFill, keyMarker, treeId);
 		keyToFill.putInt(nodeId);
 	}
@@ -139,7 +159,7 @@ public class HashTreesPersistentStore extends HashTreesBaseStore implements
 	private static byte[] prepareSegmentHashKey(long treeId, int nodeId) {
 		byte[] key = new byte[SIZE_PREFIX_KEY_TID_AND_SEGID];
 		ByteBuffer bb = ByteBuffer.wrap(key);
-		prepareKeyPrefix(bb, KeyMarker.SEG_HASH_MARKER, treeId, nodeId);
+		prepareKeyPrefix(bb, KeyPrefix.SEG_HASH_KEY_PREFIX, treeId, nodeId);
 		return key;
 	}
 
@@ -152,7 +172,7 @@ public class HashTreesPersistentStore extends HashTreesBaseStore implements
 	private static byte[] prepareSegmentDataKeyPrefix(long treeId, int segId) {
 		byte[] byteKey = new byte[SIZE_PREFIX_KEY_TID_AND_SEGID];
 		ByteBuffer bb = ByteBuffer.wrap(byteKey);
-		prepareKeyPrefix(bb, KeyMarker.SEG_DATA_MARKER, treeId, segId);
+		prepareKeyPrefix(bb, KeyPrefix.SEG_DATA_KEY_PREFIX, treeId, segId);
 		return byteKey;
 	}
 
@@ -161,7 +181,7 @@ public class HashTreesPersistentStore extends HashTreesBaseStore implements
 		byte[] byteKey = new byte[SIZE_PREFIX_KEY_TID_AND_SEGID
 				+ (key.array().length)];
 		ByteBuffer bb = ByteBuffer.wrap(byteKey);
-		prepareKeyPrefix(bb, KeyMarker.SEG_DATA_MARKER, treeId, segId);
+		prepareKeyPrefix(bb, KeyPrefix.SEG_DATA_KEY_PREFIX, treeId, segId);
 		bb.put(key.array());
 		return byteKey;
 	}
@@ -171,7 +191,7 @@ public class HashTreesPersistentStore extends HashTreesBaseStore implements
 		byte[] byteKey = new byte[SIZE_PREFIX_KEY_TID
 				+ metaDataKey.getKey().length];
 		ByteBuffer bb = ByteBuffer.wrap(byteKey);
-		prepareKeyPrefix(bb, KeyMarker.META_DATA_MARKER, treeId);
+		prepareKeyPrefix(bb, KeyPrefix.META_DATA_KEY_PREFIX, treeId);
 		bb.put(metaDataKey.getKey());
 		return byteKey;
 	}
@@ -182,9 +202,31 @@ public class HashTreesPersistentStore extends HashTreesBaseStore implements
 		dbObj.put(key, value);
 	}
 
+	private static byte[] prepareDirtySegmentKey(long treeId, int segId) {
+		byte[] key = new byte[KeyPrefix.KEY_LENGTH + ByteUtils.SIZEOF_LONG
+				+ ByteUtils.SIZEOF_INT];
+		ByteBuffer bb = ByteBuffer.wrap(key);
+		bb.put(KeyPrefix.DIRTY_SEG_KEY_PREFIX.keyPrefix);
+		bb.putLong(treeId);
+		bb.putInt(segId);
+		return bb.array();
+	}
+
+	private static Pair<Long, Integer> readTreeIdAndDirtySegmentFrom(byte[] key) {
+		ByteBuffer bb = ByteBuffer.wrap(key);
+		int offset = KeyPrefix.KEY_LENGTH;
+		long treeId = bb.getLong(offset);
+		offset += ByteUtils.SIZEOF_LONG;
+		int dirtySegId = bb.getInt(offset);
+		return Pair.create(treeId, dirtySegId);
+	}
+
 	@Override
 	public boolean setDirtySegment(long treeId, int segId) {
-		return super.setDirtySegment(treeId, segId);
+		boolean hasSet = super.setDirtySegment(treeId, segId);
+		if (!hasSet)
+			dbObj.put(prepareDirtySegmentKey(treeId, segId), EMPTY_VALUE);
+		return hasSet;
 	}
 
 	@Override
@@ -195,6 +237,10 @@ public class HashTreesPersistentStore extends HashTreesBaseStore implements
 	@Override
 	public void clearDirtySegments(long treeId, List<Integer> segIds) {
 		super.clearDirtySegments(treeId, segIds);
+		for (int segId : segIds) {
+			byte[] key = prepareDirtySegmentKey(treeId, segId);
+			dbObj.delete(key);
+		}
 	}
 
 	@Override
@@ -246,10 +292,10 @@ public class HashTreesPersistentStore extends HashTreesBaseStore implements
 	public void deleteTree(long treeId) {
 		DBIterator dbItr;
 		byte[] temp = new byte[SIZE_PREFIX_KEY_TID];
-		for (KeyMarker keyMarker : KeyMarker.values()) {
+		for (KeyPrefix keyPrefix : KeyPrefix.values()) {
 			dbItr = dbObj.iterator();
 			ByteBuffer wrap = ByteBuffer.wrap(temp);
-			prepareKeyPrefix(wrap, keyMarker, treeId);
+			prepareKeyPrefix(wrap, keyPrefix, treeId);
 			dbItr.seek(wrap.array());
 			for (; dbItr.hasNext(); dbItr.next()) {
 				if (ByteUtils.compareTo(temp, 0, temp.length, dbItr.peekNext()
@@ -349,7 +395,7 @@ public class HashTreesPersistentStore extends HashTreesBaseStore implements
 			private void loadNextElement() {
 				if (internalQue.isEmpty()) {
 					ByteBuffer bb = ByteBuffer.wrap(keyToFill);
-					prepareKeyPrefix(bb, KeyMarker.TREEID_MARKER,
+					prepareKeyPrefix(bb, KeyPrefix.TREEID_KEY_PREFIX,
 							lastTreeId + 1);
 					iterator.seek(bb.array());
 					if (iterator.hasNext()) {
@@ -365,28 +411,26 @@ public class HashTreesPersistentStore extends HashTreesBaseStore implements
 		return dbDir;
 	}
 
-	private static byte[] convertToBytes(RemoteTreeInfo rTree) {
+	private static byte[] convertRemoteTreeInfoToBytes(RemoteTreeInfo rTree) {
+		byte[] keyPrefix = prepareMetaDataKey(rTree.treeId,
+				MetaDataKey.KEY_SERVERNAME);
 		byte[] serverNameInBytes = rTree.sn.hostName.getBytes();
-		byte[] key = new byte[MetaDataKey.KEY_SERVERNAME_KEY_PREFIX.key.length
-				+ serverNameInBytes.length + ByteUtils.SIZEOF_INT
-				+ ByteUtils.SIZEOF_LONG];
-
+		byte[] key = new byte[keyPrefix.length + serverNameInBytes.length
+				+ ByteUtils.SIZEOF_INT];
 		ByteBuffer keyBB = ByteBuffer.wrap(key);
-		keyBB.put(MetaDataKey.KEY_SERVERNAME_KEY_PREFIX.key);
+		keyBB.put(keyPrefix);
 		keyBB.putInt(rTree.sn.portNo);
-		keyBB.putLong(rTree.treeId);
 		keyBB.put(serverNameInBytes);
-
 		return keyBB.array();
 	}
 
-	private static RemoteTreeInfo readFrom(byte[] key) {
-		int offset = MetaDataKey.KEY_SERVERNAME_KEY_PREFIX.key.length;
+	private static RemoteTreeInfo readRemoteTreeInfoFrom(byte[] key) {
+		long treeId = getTreeId(key);
+		int offset = SIZE_PREFIX_KEY_TID
+				+ MetaDataKey.KEY_SERVERNAME.getKey().length;
 		ByteBuffer bb = ByteBuffer.wrap(key);
 		int portNo = bb.getInt(offset);
 		offset += ByteUtils.SIZEOF_INT;
-		long treeId = bb.getLong(offset);
-		offset += ByteUtils.SIZEOF_LONG;
 		byte[] snInBytes = ByteUtils.copy(key, offset, key.length);
 		String hostName = new String(snInBytes);
 		return new RemoteTreeInfo(new ServerName(hostName, portNo), treeId);
@@ -394,18 +438,18 @@ public class HashTreesPersistentStore extends HashTreesBaseStore implements
 
 	@Override
 	public void addToSyncList(RemoteTreeInfo rTree) {
-		dbObj.put(convertToBytes(rTree), EMPTY_VALUE);
+		dbObj.put(convertRemoteTreeInfoToBytes(rTree), EMPTY_VALUE);
 	}
 
 	@Override
 	public void removeFromSyncList(RemoteTreeInfo rTree) {
-		dbObj.delete(convertToBytes(rTree));
+		dbObj.delete(convertRemoteTreeInfoToBytes(rTree));
 	}
 
 	@Override
-	public List<RemoteTreeInfo> getSyncList() {
+	public List<RemoteTreeInfo> getSyncList(long treeId) {
 		DBIterator itr = dbObj.iterator();
-		byte[] startKey = MetaDataKey.KEY_SERVERNAME_KEY_PREFIX.getKey();
+		byte[] startKey = prepareMetaDataKey(treeId, MetaDataKey.KEY_SERVERNAME);
 		itr.seek(startKey);
 
 		List<RemoteTreeInfo> result = new ArrayList<>();
@@ -415,8 +459,21 @@ public class HashTreesPersistentStore extends HashTreesBaseStore implements
 			if (ByteUtils.compareTo(startKey, 0, startKey.length, key, 0,
 					startKey.length) != 0)
 				break;
-			result.add(readFrom(key));
+			result.add(readRemoteTreeInfoFrom(key));
 		}
 		return result;
+	}
+
+	public void close() {
+		try {
+			dbObj.close();
+		} catch (IOException e) {
+			LOG.warn("Exception occurred while closing leveldb connection.");
+		}
+	}
+
+	@Override
+	public void stop() {
+		close();
 	}
 }

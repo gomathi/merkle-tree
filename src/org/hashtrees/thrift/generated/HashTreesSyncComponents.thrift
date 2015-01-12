@@ -158,5 +158,5 @@ service HashTreesSyncInterface
 	* Returns which remote trees are synced by this instance.
 	*
 	*/
-	list<RemoteTreeInfo> getSyncList();
+	list<RemoteTreeInfo> getSyncList(1:i64 treeId);
 }

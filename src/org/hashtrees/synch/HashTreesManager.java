@@ -107,12 +107,15 @@ public class HashTreesManager extends StoppableTask implements
 		this.syncManagerStore = syncMgrStore;
 		this.hashTrees = hashTrees;
 		this.treeIdProvider = treeIdProvider;
-		initServersToSyncList(syncMgrStore.getSyncList());
+		initServersToSyncList(treeIdProvider.getAllPrimaryTreeIds());
 	}
 
-	private void initServersToSyncList(List<RemoteTreeInfo> syncList) {
-		for (RemoteTreeInfo rTree : syncList)
-			addToSyncList(rTree);
+	private void initServersToSyncList(Iterator<Long> treeIds) {
+		while (treeIds.hasNext()) {
+			for (RemoteTreeInfo rTree : syncManagerStore.getSyncList(treeIds
+					.next()))
+				addToSyncList(rTree);
+		}
 	}
 
 	@Override
@@ -193,7 +196,7 @@ public class HashTreesManager extends StoppableTask implements
 	}
 
 	private void sendRebuildRequestToRemoteTrees(long treeId) {
-		for (ServerName sn : getSyncList(treeId)) {
+		for (ServerName sn : getSyncListServers(treeId)) {
 			Pair<ServerName, Long> serverNameWTreeId = Pair.create(sn, treeId);
 			try {
 				long buildReqTS = System.currentTimeMillis();
@@ -219,7 +222,7 @@ public class HashTreesManager extends StoppableTask implements
 		while (treeIds.hasNext()) {
 			long treeId = treeIds.next();
 
-			for (ServerName sn : getSyncList(treeId)) {
+			for (ServerName sn : getSyncListServers(treeId)) {
 				Pair<ServerName, Long> serverNameATreeId = Pair.create(sn,
 						treeId);
 				Pair<Long, Boolean> lastBuildReqTSAndResponse = remoteTreeAndLastBuildReqTS
@@ -354,7 +357,7 @@ public class HashTreesManager extends StoppableTask implements
 		LOG.info("Executing rebuild/synch operations - Done.");
 	}
 
-	private ConcurrentSkipListSet<ServerName> getSyncList(long treeId) {
+	private ConcurrentSkipListSet<ServerName> getSyncListServers(long treeId) {
 		if (!serversToSync.containsKey(treeId))
 			serversToSync.putIfAbsent(treeId,
 					new ConcurrentSkipListSet<ServerName>());
@@ -364,7 +367,7 @@ public class HashTreesManager extends StoppableTask implements
 	@Override
 	public void addToSyncList(RemoteTreeInfo rTree) {
 		syncManagerStore.addToSyncList(rTree);
-		boolean added = getSyncList(rTree.treeId).add(rTree.sn);
+		boolean added = getSyncListServers(rTree.treeId).add(rTree.sn);
 		if (added) {
 			LOG.info(rTree + " has been added to sync list.");
 		} else
@@ -374,7 +377,7 @@ public class HashTreesManager extends StoppableTask implements
 	@Override
 	public void removeFromSyncList(RemoteTreeInfo rTree) {
 		syncManagerStore.removeFromSyncList(rTree);
-		boolean removed = getSyncList(rTree.treeId).remove(rTree.sn);
+		boolean removed = getSyncListServers(rTree.treeId).remove(rTree.sn);
 		if (removed)
 			LOG.info(rTree + "has been removed from sync list.");
 		else
@@ -382,8 +385,8 @@ public class HashTreesManager extends StoppableTask implements
 	}
 
 	@Override
-	public List<RemoteTreeInfo> getSyncList() {
-		return syncManagerStore.getSyncList();
+	public List<RemoteTreeInfo> getSyncList(long treeId) {
+		return syncManagerStore.getSyncList(treeId);
 	}
 
 	public void shutdown() {

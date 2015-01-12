@@ -28,7 +28,7 @@ public class HashTreesMemStore extends HashTreesBaseStore implements
 		HashTreesManagerStore {
 
 	private final ConcurrentMap<Long, HashTreeMemStore> treeIdAndIndHashTree = new ConcurrentHashMap<>();
-	private final ConcurrentSkipListSet<RemoteTreeInfo> servers = new ConcurrentSkipListSet<>();
+	private final ConcurrentMap<Long, ConcurrentSkipListSet<RemoteTreeInfo>> servers = new ConcurrentSkipListMap<>();
 
 	private static class HashTreeMemStore {
 		private final ConcurrentMap<Integer, ByteBuffer> segmentHashes = new ConcurrentSkipListMap<Integer, ByteBuffer>();
@@ -147,18 +147,30 @@ public class HashTreesMemStore extends HashTreesBaseStore implements
 		}
 	}
 
+	private ConcurrentSkipListSet<RemoteTreeInfo> getRemoteTreeList(long treeId) {
+		if (!servers.containsKey(treeId))
+			servers.putIfAbsent(treeId,
+					new ConcurrentSkipListSet<RemoteTreeInfo>());
+		return servers.get(treeId);
+	}
+
 	@Override
 	public void addToSyncList(RemoteTreeInfo rTree) {
-		servers.add(rTree);
+		getRemoteTreeList(rTree.treeId).add(rTree);
 	}
 
 	@Override
 	public void removeFromSyncList(RemoteTreeInfo rTree) {
-		servers.remove(rTree);
+		getRemoteTreeList(rTree.treeId).remove(rTree);
 	}
 
 	@Override
-	public List<RemoteTreeInfo> getSyncList() {
-		return new ArrayList<RemoteTreeInfo>(servers);
+	public List<RemoteTreeInfo> getSyncList(long treeId) {
+		return new ArrayList<RemoteTreeInfo>(getRemoteTreeList(treeId));
+	}
+
+	@Override
+	public void stop() {
+		// No actions to do.
 	}
 }

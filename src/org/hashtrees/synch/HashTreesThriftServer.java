@@ -129,7 +129,7 @@ public class HashTreesThriftServer implements HashTreesSyncInterface.Iface {
 	}
 
 	@Override
-	public List<RemoteTreeInfo> getSyncList() throws TException {
-		return syncCallsObserver.getSyncList();
+	public List<RemoteTreeInfo> getSyncList(long treeId) throws TException {
+		return syncCallsObserver.getSyncList(treeId);
 	}
 }

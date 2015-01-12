@@ -676,6 +676,7 @@ public class HashTreesImpl implements HashTrees {
 
 	public void stop() {
 		disableNonblockingOperations();
+		htStore.stop();
 	}
 
 	/**

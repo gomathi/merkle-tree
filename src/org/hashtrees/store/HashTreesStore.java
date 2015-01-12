@@ -144,4 +144,9 @@ public interface HashTreesStore {
 	 * @return
 	 */
 	Iterator<Long> getAllTreeIds();
+
+	/**
+	 * Provides an opportunity to do any cleanup tasks.
+	 */
+	void stop();
 }

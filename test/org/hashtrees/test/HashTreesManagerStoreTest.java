@@ -29,7 +29,9 @@ public class HashTreesManagerStoreTest {
 				for (RemoteTreeInfo rTree : expected)
 					syncMgrStore.addToSyncList(rTree);
 
-				List<RemoteTreeInfo> actual = syncMgrStore.getSyncList();
+				List<RemoteTreeInfo> actual = new ArrayList<>();
+				for (int i = 0; i < 10; i++)
+					actual.addAll(syncMgrStore.getSyncList(i));
 				Assert.assertNotNull(actual);
 				Assert.assertEquals(expected.size(), actual.size());
 				Collections.sort(actual);
@@ -38,7 +40,9 @@ public class HashTreesManagerStoreTest {
 
 				for (RemoteTreeInfo sn : expected)
 					syncMgrStore.removeFromSyncList(sn);
-				actual = syncMgrStore.getSyncList();
+				actual = new ArrayList<>();
+				for (int i = 0; i < 10; i++)
+					actual.addAll(syncMgrStore.getSyncList(i));
 				Assert.assertNotNull(actual);
 				Assert.assertEquals(0, actual.size());
 			}

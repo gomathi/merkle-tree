@@ -145,8 +145,10 @@ public class HashTreesSyncInterface {
     /**
      * Returns which remote trees are synced by this instance.
      * 
+     * 
+     * @param treeId
      */
-    public List<RemoteTreeInfo> getSyncList() throws org.apache.thrift.TException;
+    public List<RemoteTreeInfo> getSyncList(long treeId) throws org.apache.thrift.TException;
 
   }
 
@@ -174,7 +176,7 @@ public class HashTreesSyncInterface {
 
     public void removeFromSyncList(RemoteTreeInfo rTree, org.apache.thrift.async.AsyncMethodCallback<AsyncClient.removeFromSyncList_call> resultHandler) throws org.apache.thrift.TException;
 
-    public void getSyncList(org.apache.thrift.async.AsyncMethodCallback<AsyncClient.getSyncList_call> resultHandler) throws org.apache.thrift.TException;
+    public void getSyncList(long treeId, org.apache.thrift.async.AsyncMethodCallback<AsyncClient.getSyncList_call> resultHandler) throws org.apache.thrift.TException;
 
   }
 
@@ -436,15 +438,16 @@ public class HashTreesSyncInterface {
       return;
     }
 
-    public List<RemoteTreeInfo> getSyncList() throws org.apache.thrift.TException
+    public List<RemoteTreeInfo> getSyncList(long treeId) throws org.apache.thrift.TException
     {
-      send_getSyncList();
+      send_getSyncList(treeId);
       return recv_getSyncList();
     }
 
-    public void send_getSyncList() throws org.apache.thrift.TException
+    public void send_getSyncList(long treeId) throws org.apache.thrift.TException
     {
       getSyncList_args args = new getSyncList_args();
+      args.setTreeId(treeId);
       sendBase("getSyncList", args);
     }
 
@@ -846,21 +849,24 @@ public class HashTreesSyncInterface {
       }
     }
 
-    public void getSyncList(org.apache.thrift.async.AsyncMethodCallback<getSyncList_call> resultHandler) throws org.apache.thrift.TException {
+    public void getSyncList(long treeId, org.apache.thrift.async.AsyncMethodCallback<getSyncList_call> resultHandler) throws org.apache.thrift.TException {
       checkReady();
-      getSyncList_call method_call = new getSyncList_call(resultHandler, this, ___protocolFactory, ___transport);
+      getSyncList_call method_call = new getSyncList_call(treeId, resultHandler, this, ___protocolFactory, ___transport);
       this.___currentMethod = method_call;
       ___manager.call(method_call);
     }
 
     public static class getSyncList_call extends org.apache.thrift.async.TAsyncMethodCall {
-      public getSyncList_call(org.apache.thrift.async.AsyncMethodCallback<getSyncList_call> resultHandler, org.apache.thrift.async.TAsyncClient client, org.apache.thrift.protocol.TProtocolFactory protocolFactory, org.apache.thrift.transport.TNonblockingTransport transport) throws org.apache.thrift.TException {
+      private long treeId;
+      public getSyncList_call(long treeId, org.apache.thrift.async.AsyncMethodCallback<getSyncList_call> resultHandler, org.apache.thrift.async.TAsyncClient client, org.apache.thrift.protocol.TProtocolFactory protocolFactory, org.apache.thrift.transport.TNonblockingTransport transport) throws org.apache.thrift.TException {
         super(client, protocolFactory, transport, resultHandler, false);
+        this.treeId = treeId;
       }
 
       public void write_args(org.apache.thrift.protocol.TProtocol prot) throws org.apache.thrift.TException {
         prot.writeMessageBegin(new org.apache.thrift.protocol.TMessage("getSyncList", org.apache.thrift.protocol.TMessageType.CALL, 0));
         getSyncList_args args = new getSyncList_args();
+        args.setTreeId(treeId);
         args.write(prot);
         prot.writeMessageEnd();
       }
@@ -1090,7 +1096,7 @@ public class HashTreesSyncInterface {
 
       protected getSyncList_result getResult(I iface, getSyncList_args args) throws org.apache.thrift.TException {
         getSyncList_result result = new getSyncList_result();
-        result.success = iface.getSyncList();
+        result.success = iface.getSyncList(args.treeId);
         return result;
       }
     }
@@ -9035,6 +9041,7 @@ public class HashTreesSyncInterface {
   public static class getSyncList_args implements org.apache.thrift.TBase<getSyncList_args, getSyncList_args._Fields>, java.io.Serializable, Cloneable   {
     private static final org.apache.thrift.protocol.TStruct STRUCT_DESC = new org.apache.thrift.protocol.TStruct("getSyncList_args");
 
+    private static final org.apache.thrift.protocol.TField TREE_ID_FIELD_DESC = new org.apache.thrift.protocol.TField("treeId", org.apache.thrift.protocol.TType.I64, (short)1);
 
     private static final Map<Class<? extends IScheme>, SchemeFactory> schemes = new HashMap<Class<? extends IScheme>, SchemeFactory>();
     static {
@@ -9042,10 +9049,11 @@ public class HashTreesSyncInterface {
       schemes.put(TupleScheme.class, new getSyncList_argsTupleSchemeFactory());
     }
 
+    public long treeId; // required
 
     /** The set of fields this struct contains, along with convenience methods for finding and manipulating them. */
     public enum _Fields implements org.apache.thrift.TFieldIdEnum {
-;
+      TREE_ID((short)1, "treeId");
 
       private static final Map<String, _Fields> byName = new HashMap<String, _Fields>();
 
@@ -9060,6 +9068,8 @@ public class HashTreesSyncInterface {
        */
       public static _Fields findByThriftId(int fieldId) {
         switch(fieldId) {
+          case 1: // TREE_ID
+            return TREE_ID;
           default:
             return null;
         }
@@ -9098,9 +9108,15 @@ public class HashTreesSyncInterface {
         return _fieldName;
       }
     }
+
+    // isset id assignments
+    private static final int __TREEID_ISSET_ID = 0;
+    private BitSet __isset_bit_vector = new BitSet(1);
     public static final Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> metaDataMap;
     static {
       Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> tmpMap = new EnumMap<_Fields, org.apache.thrift.meta_data.FieldMetaData>(_Fields.class);
+      tmpMap.put(_Fields.TREE_ID, new org.apache.thrift.meta_data.FieldMetaData("treeId", org.apache.thrift.TFieldRequirementType.DEFAULT, 
+          new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.I64)));
       metaDataMap = Collections.unmodifiableMap(tmpMap);
       org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(getSyncList_args.class, metaDataMap);
     }
@@ -9108,10 +9124,21 @@ public class HashTreesSyncInterface {
     public getSyncList_args() {
     }
 
+    public getSyncList_args(
+      long treeId)
+    {
+      this();
+      this.treeId = treeId;
+      setTreeIdIsSet(true);
+    }
+
     /**
      * Performs a deep copy on <i>other</i>.
      */
     public getSyncList_args(getSyncList_args other) {
+      __isset_bit_vector.clear();
+      __isset_bit_vector.or(other.__isset_bit_vector);
+      this.treeId = other.treeId;
     }
 
     public getSyncList_args deepCopy() {
@@ -9120,15 +9147,51 @@ public class HashTreesSyncInterface {
 
     @Override
     public void clear() {
+      setTreeIdIsSet(false);
+      this.treeId = 0;
+    }
+
+    public long getTreeId() {
+      return this.treeId;
+    }
+
+    public getSyncList_args setTreeId(long treeId) {
+      this.treeId = treeId;
+      setTreeIdIsSet(true);
+      return this;
+    }
+
+    public void unsetTreeId() {
+      __isset_bit_vector.clear(__TREEID_ISSET_ID);
+    }
+
+    /** Returns true if field treeId is set (has been assigned a value) and false otherwise */
+    public boolean isSetTreeId() {
+      return __isset_bit_vector.get(__TREEID_ISSET_ID);
+    }
+
+    public void setTreeIdIsSet(boolean value) {
+      __isset_bit_vector.set(__TREEID_ISSET_ID, value);
     }
 
     public void setFieldValue(_Fields field, Object value) {
       switch (field) {
+      case TREE_ID:
+        if (value == null) {
+          unsetTreeId();
+        } else {
+          setTreeId((Long)value);
+        }
+        break;
+
       }
     }
 
     public Object getFieldValue(_Fields field) {
       switch (field) {
+      case TREE_ID:
+        return Long.valueOf(getTreeId());
+
       }
       throw new IllegalStateException();
     }
@@ -9140,6 +9203,8 @@ public class HashTreesSyncInterface {
       }
 
       switch (field) {
+      case TREE_ID:
+        return isSetTreeId();
       }
       throw new IllegalStateException();
     }
@@ -9157,6 +9222,15 @@ public class HashTreesSyncInterface {
       if (that == null)
         return false;
 
+      boolean this_present_treeId = true;
+      boolean that_present_treeId = true;
+      if (this_present_treeId || that_present_treeId) {
+        if (!(this_present_treeId && that_present_treeId))
+          return false;
+        if (this.treeId != that.treeId)
+          return false;
+      }
+
       return true;
     }
 
@@ -9173,6 +9247,16 @@ public class HashTreesSyncInterface {
       int lastComparison = 0;
       getSyncList_args typedOther = (getSyncList_args)other;
 
+      lastComparison = Boolean.valueOf(isSetTreeId()).compareTo(typedOther.isSetTreeId());
+      if (lastComparison != 0) {
+        return lastComparison;
+      }
+      if (isSetTreeId()) {
+        lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.treeId, typedOther.treeId);
+        if (lastComparison != 0) {
+          return lastComparison;
+        }
+      }
       return 0;
     }
 
@@ -9193,6 +9277,9 @@ public class HashTreesSyncInterface {
       StringBuilder sb = new StringBuilder("getSyncList_args(");
       boolean first = true;
 
+      sb.append("treeId:");
+      sb.append(this.treeId);
+      first = false;
       sb.append(")");
       return sb.toString();
     }
@@ -9211,6 +9298,8 @@ public class HashTreesSyncInterface {
 
     private void readObject(java.io.ObjectInputStream in) throws java.io.IOException, ClassNotFoundException {
       try {
+        // it doesn't seem like you should have to do this, but java serialization is wacky, and doesn't call the default constructor.
+        __isset_bit_vector = new BitSet(1);
         read(new org.apache.thrift.protocol.TCompactProtocol(new org.apache.thrift.transport.TIOStreamTransport(in)));
       } catch (org.apache.thrift.TException te) {
         throw new java.io.IOException(te);
@@ -9235,6 +9324,14 @@ public class HashTreesSyncInterface {
             break;
           }
           switch (schemeField.id) {
+            case 1: // TREE_ID
+              if (schemeField.type == org.apache.thrift.protocol.TType.I64) {
+                struct.treeId = iprot.readI64();
+                struct.setTreeIdIsSet(true);
+              } else { 
+                org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
+              }
+              break;
             default:
               org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
           }
@@ -9250,6 +9347,9 @@ public class HashTreesSyncInterface {
         struct.validate();
 
         oprot.writeStructBegin(STRUCT_DESC);
+        oprot.writeFieldBegin(TREE_ID_FIELD_DESC);
+        oprot.writeI64(struct.treeId);
+        oprot.writeFieldEnd();
         oprot.writeFieldStop();
         oprot.writeStructEnd();
       }
@@ -9267,11 +9367,24 @@ public class HashTreesSyncInterface {
       @Override
       public void write(org.apache.thrift.protocol.TProtocol prot, getSyncList_args struct) throws org.apache.thrift.TException {
         TTupleProtocol oprot = (TTupleProtocol) prot;
+        BitSet optionals = new BitSet();
+        if (struct.isSetTreeId()) {
+          optionals.set(0);
+        }
+        oprot.writeBitSet(optionals, 1);
+        if (struct.isSetTreeId()) {
+          oprot.writeI64(struct.treeId);
+        }
       }
 
       @Override
       public void read(org.apache.thrift.protocol.TProtocol prot, getSyncList_args struct) throws org.apache.thrift.TException {
         TTupleProtocol iprot = (TTupleProtocol) prot;
+        BitSet incoming = iprot.readBitSet(1);
+        if (incoming.get(0)) {
+          struct.treeId = iprot.readI64();
+          struct.setTreeIdIsSet(true);
+        }
       }
     }
 

@@ -16,5 +16,5 @@ public interface HashTreesManagerStore {
 
 	void removeFromSyncList(RemoteTreeInfo rTree);
 
-	List<RemoteTreeInfo> getSyncList();
+	List<RemoteTreeInfo> getSyncList(long treeId);
 }

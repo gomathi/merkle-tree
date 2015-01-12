@@ -73,6 +73,25 @@ public class AtomicBitSet {
 		return (value & 1) == 1;
 	}
 
+	public List<Integer> getAllSetBits() {
+		List<Integer> result = new ArrayList<Integer>();
+		for (Entry<Integer, AtomicLongArray> bitsHolderEntry : bitsHolderMap
+				.entrySet()) {
+			AtomicLongArray bitsHolder = bitsHolderEntry.getValue();
+			for (int i = 0; i < bitsHolder.length(); i++) {
+				int offset = bitsHolderEntry.getKey() * ATOMIC_LONG_ARRAY_SIZE;
+				long value = bitsHolder.get(i);
+				for (int j = offset + (i * BITS_PER_WORD), max = j
+						+ (BITS_PER_WORD); value != 0 && j < max; j++) {
+					if ((value & 1) == 1)
+						result.add(j);
+					value = value >> 1;
+				}
+			}
+		}
+		return result;
+	}
+
 	public List<Integer> clearAndGetAllSetBits() {
 		List<Integer> result = new ArrayList<Integer>();
 		for (Entry<Integer, AtomicLongArray> bitsHolderEntry : bitsHolderMap
@@ -92,6 +111,44 @@ public class AtomicBitSet {
 			}
 		}
 		return result;
+	}
+
+	public void clearBits(List<Integer> bitIndexList) {
+		if (bitIndexList.isEmpty())
+			return;
+		int prevBitIndex = bitIndexList.get(0);
+		int prevWordPos = getWordPos(prevBitIndex);
+		int prevArrIndex = getWordIndex(prevBitIndex);
+		long helper = 1L << prevBitIndex;
+
+		for (int i = 1; i < bitIndexList.size(); i++) {
+			int currBitIndex = bitIndexList.get(i);
+			int currWordPos = getWordPos(currBitIndex);
+			int currArrIndex = getWordIndex(currBitIndex);
+			if (currWordPos != prevWordPos || currArrIndex != prevArrIndex) {
+				while (true) {
+					AtomicLongArray bitsHolder = getBitsHolderFromMap(prevBitIndex);
+					long oldValue = bitsHolder.get(prevArrIndex);
+					long newValue = oldValue & ~(helper);
+					if (bitsHolder.compareAndSet(prevArrIndex, oldValue,
+							newValue))
+						break;
+				}
+				prevBitIndex = currBitIndex;
+				prevWordPos = currWordPos;
+				prevArrIndex = currArrIndex;
+				helper = 0;
+			}
+			helper |= (1L << currBitIndex);
+		}
+
+		while (true) {
+			AtomicLongArray bitsHolder = getBitsHolderFromMap(prevBitIndex);
+			long oldValue = bitsHolder.get(prevArrIndex);
+			long newValue = oldValue & ~(helper);
+			if (bitsHolder.compareAndSet(prevArrIndex, oldValue, newValue))
+				break;
+		}
 	}
 
 	/**
@@ -121,4 +178,7 @@ public class AtomicBitSet {
 				bitsHolder.set(i, 0);
 	}
 
+	public static void main(String[] args) {
+		System.out.println(Long.toBinaryString(-1l));
+	}
 }

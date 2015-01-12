@@ -95,17 +95,25 @@ public interface HashTreesStore {
 	 * 
 	 * @param treeId
 	 * @param segId
+	 * @return the previous value of the segment.
 	 */
-	void setDirtySegment(long treeId, int segId);
+	boolean setDirtySegment(long treeId, int segId);
 
 	/**
-	 * Returns all the ids of the dirty segments. Dirty markers are reset while
-	 * returning the result. This operation is atomic.
+	 * Gets the dirty segments without clearing those bits.
 	 * 
 	 * @param treeId
 	 * @return
 	 */
-	List<Integer> clearAndGetDirtySegments(long treeId);
+	List<Integer> getDirtySegments(long treeId);
+
+	/**
+	 * Clears the segments, which are passed as an argument.
+	 * 
+	 * @param treeId
+	 * @param segIds
+	 */
+	void clearDirtySegments(long treeId, List<Integer> segIds);
 
 	/**
 	 * Deletes the segment hashes, and segment data for the given treeId.

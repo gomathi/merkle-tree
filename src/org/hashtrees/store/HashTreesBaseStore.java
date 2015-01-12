@@ -17,12 +17,17 @@ public abstract class HashTreesBaseStore implements HashTreesStore {
 	}
 
 	@Override
-	public void setDirtySegment(long treeId, int segId) {
-		getDirtySegmentsHolder(treeId).set(segId);
+	public boolean setDirtySegment(long treeId, int segId) {
+		return getDirtySegmentsHolder(treeId).set(segId);
 	}
 
 	@Override
-	public List<Integer> clearAndGetDirtySegments(long treeId) {
-		return getDirtySegmentsHolder(treeId).clearAndGetAllSetBits();
+	public List<Integer> getDirtySegments(long treeId) {
+		return getDirtySegmentsHolder(treeId).getAllSetBits();
+	}
+
+	@Override
+	public void clearDirtySegments(long treeId, List<Integer> segIds) {
+		getDirtySegmentsHolder(treeId).clearBits(segIds);
 	}
 }

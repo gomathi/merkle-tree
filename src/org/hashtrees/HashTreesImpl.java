@@ -368,11 +368,10 @@ public class HashTreesImpl implements HashTrees {
 				: acquireTreeLock(treeId, false);
 		if (acquiredLock) {
 			try {
-				long currentTs = System.currentTimeMillis();
 				if (fullRebuild)
 					rebuildCompleteTree(treeId);
 				List<Integer> dirtySegmentBuckets = htStore
-						.clearAndGetDirtySegments(treeId);
+						.getDirtySegments(treeId);
 				Map<Integer, ByteBuffer> dirtyNodeAndDigestMap = rebuildLeaves(
 						treeId, dirtySegmentBuckets);
 				rebuildInternalNodes(treeId, dirtyNodeAndDigestMap);
@@ -380,8 +379,10 @@ public class HashTreesImpl implements HashTrees {
 						.entrySet())
 					htStore.putSegmentHash(treeId, dirtyNodeAndDigest.getKey(),
 							dirtyNodeAndDigest.getValue());
-				if (fullRebuild)
+				if (fullRebuild) {
+					long currentTs = System.currentTimeMillis();
 					htStore.setLastFullyTreeBuiltTimestamp(treeId, currentTs);
+				}
 			} finally {
 				releaseTreeLock(treeId);
 			}
@@ -769,8 +770,8 @@ public class HashTreesImpl implements HashTrees {
 		 * Depends upon data size, this should be set. Data size and
 		 * noOfSegments should be directly proportional. With higher dataSize,
 		 * and lesser noOfSegments means each segment will get more amount of
-		 * data. So when a segment is marked as dirty, the rebuild process has
-		 * to read huge data unnecessarily.
+		 * data. When a segment is marked as dirty, the rebuild process has to
+		 * read huge data unnecessarily.
 		 * 
 		 * Default value is 1073741824.
 		 * 

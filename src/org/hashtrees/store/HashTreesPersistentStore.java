@@ -183,13 +183,18 @@ public class HashTreesPersistentStore extends HashTreesBaseStore implements
 	}
 
 	@Override
-	public void setDirtySegment(long treeId, int segId) {
-		super.setDirtySegment(treeId, segId);
+	public boolean setDirtySegment(long treeId, int segId) {
+		return super.setDirtySegment(treeId, segId);
 	}
 
 	@Override
-	public List<Integer> clearAndGetDirtySegments(long treeId) {
-		return super.clearAndGetDirtySegments(treeId);
+	public List<Integer> getDirtySegments(long treeId) {
+		return super.getDirtySegments(treeId);
+	}
+
+	@Override
+	public void clearDirtySegments(long treeId, List<Integer> segIds) {
+		super.clearDirtySegments(treeId, segIds);
 	}
 
 	@Override

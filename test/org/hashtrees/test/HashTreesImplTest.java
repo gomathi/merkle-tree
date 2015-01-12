@@ -86,7 +86,7 @@ public class HashTreesImplTest {
 						actualKeyAndDigest.getDigest()));
 
 				List<Integer> dirtySegs = testTreeStore
-						.clearAndGetDirtySegments(SimpleTreeIdProvider.TREE_ID);
+						.getDirtySegments(SimpleTreeIdProvider.TREE_ID);
 				Assert.assertEquals(1, dirtySegs.size());
 				Assert.assertEquals(1, dirtySegs.get(0).intValue());
 			}
@@ -119,7 +119,7 @@ public class HashTreesImplTest {
 				Assert.assertNull(segData);
 
 				List<Integer> dirtySegs = testTreeStore
-						.clearAndGetDirtySegments(SimpleTreeIdProvider.TREE_ID);
+						.getDirtySegments(SimpleTreeIdProvider.TREE_ID);
 				Assert.assertEquals(1, dirtySegs.size());
 				Assert.assertEquals(2, dirtySegs.get(0).intValue());
 			}

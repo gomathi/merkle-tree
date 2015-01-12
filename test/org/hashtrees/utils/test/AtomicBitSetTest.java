@@ -1,5 +1,6 @@
 package org.hashtrees.utils.test;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.hashtrees.util.AtomicBitSet;
@@ -74,6 +75,46 @@ public class AtomicBitSetTest {
 			obj.set(i);
 
 		List<Integer> setBits = obj.clearAndGetAllSetBits();
+		Assert.assertEquals(10000, setBits.size());
+		for (int i = 0; i < 1000; i++)
+			Assert.assertEquals(i, setBits.get(i).intValue());
+	}
+
+	@Test
+	public void testClearBitsWithParameters() {
+		AtomicBitSet obj = new AtomicBitSet();
+		for (int i = 0; i < 10000; i++)
+			obj.set(i);
+
+		List<Integer> expected = new ArrayList<>();
+		for (int i = 100; i < 200; i++)
+			expected.add(i);
+		for (int i = 5000; i < 6000; i++)
+			expected.add(i);
+
+		obj.clearBits(expected);
+		List<Integer> setBits = obj.getAllSetBits();
+		Assert.assertEquals(10000 - (100 + 1000), setBits.size());
+	}
+
+	@Test
+	public void testGetSetBitsWithDiffArgs() {
+		AtomicBitSet obj = new AtomicBitSet();
+		obj.set(1025);
+		obj.set(1026);
+
+		obj.clear();
+		List<Integer> setBits = obj.getAllSetBits();
+		Assert.assertEquals(0, setBits.size());
+	}
+
+	@Test
+	public void testGetAllSetBits() {
+		AtomicBitSet obj = new AtomicBitSet();
+		for (int i = 0; i < 10000; i++)
+			obj.set(i);
+
+		List<Integer> setBits = obj.getAllSetBits();
 		Assert.assertEquals(10000, setBits.size());
 		for (int i = 0; i < 1000; i++)
 			Assert.assertEquals(i, setBits.get(i).intValue());

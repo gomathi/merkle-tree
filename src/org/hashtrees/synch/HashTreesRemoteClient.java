@@ -90,12 +90,6 @@ public class HashTreesRemoteClient implements HashTrees {
 	}
 
 	@Override
-	public void rebuildHashTrees(long fullRebuildPeriod) throws Exception {
-		throw new UnsupportedOperationException(
-				"Remote tree does not support this operation.");
-	}
-
-	@Override
 	public void rebuildHashTree(long treeId, long fullRebuildPeriod)
 			throws Exception {
 		throw new UnsupportedOperationException(

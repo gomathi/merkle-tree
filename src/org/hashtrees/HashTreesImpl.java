@@ -336,15 +336,6 @@ public class HashTreesImpl implements HashTrees {
 	}
 
 	@Override
-	public void rebuildHashTrees(long fullRebuildPeriod) throws Exception {
-		Iterator<Long> treeIdItr = htStore.getAllTreeIds();
-		while (treeIdItr.hasNext()) {
-			long treeId = treeIdItr.next();
-			rebuildHashTree(treeId, fullRebuildPeriod);
-		}
-	}
-
-	@Override
 	public void rebuildHashTree(long treeId, long fullRebuildPeriod)
 			throws Exception {
 		long lastFullRebuiltTime = htStore

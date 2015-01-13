@@ -120,21 +120,6 @@ public interface HashTrees {
 	boolean synch(long treeId, HashTrees remoteTree) throws Exception;
 
 	/**
-	 * Hash tree implementations do not update the segment hashes tree on every
-	 * key change. Rather tree is rebuilt at regular intervals. This function
-	 * provides an option to make a force call to update the entire tree.
-	 * 
-	 * @param fullRebuildPeriod
-	 *            , indicates a time interval in milliseconds, and if a tree is
-	 *            not fully rebuilt for more than this value, a full rebuild
-	 *            will be triggered. Otherwise only dirty segments will be
-	 *            updated. If there is no information about when was the last
-	 *            time the tree was fully rebuilt, then a full rebuild will be
-	 *            triggered. A negative value indicates disabling full rebuild.
-	 */
-	void rebuildHashTrees(long fullRebuildPeriod) throws Exception;
-
-	/**
 	 * Similar {@link #rebuildHashTree(long, long)}, except that allows to
 	 * specify whether a full rebuild should be triggered or not.
 	 * 

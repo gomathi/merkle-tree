@@ -35,7 +35,7 @@ public class HashTreesPersistentStoreTest {
 	@After
 	public void deleteDBDir() {
 		if (dbObj != null)
-			dbObj.close();
+			dbObj.stop();
 		File dbDirObj = new File(dbDir);
 		if (dbDirObj.exists())
 			FileUtils.deleteQuietly(dbDirObj);

@@ -369,8 +369,8 @@ public class HashTreesImpl implements HashTrees {
 					rebuildCompleteTree(treeId);
 				List<Integer> dirtySegments = htStore.getDirtySegments(treeId);
 				htStore.markSegmentsForRebuild(treeId, dirtySegments);
-				rebuildLeaves(treeId, dirtySegments);
-				rebuildInternalNodes(treeId, dirtySegments);
+				List<Integer> dirtyNodes = rebuildLeaves(treeId, dirtySegments);
+				rebuildInternalNodes(treeId, dirtyNodes);
 				htStore.unmarkSegmentsForRebuild(treeId, dirtySegments);
 				if (fullRebuild) {
 					long currentTs = System.currentTimeMillis();
@@ -416,13 +416,17 @@ public class HashTreesImpl implements HashTrees {
 	 * Rebuilds the dirty segments, and updates the segment hashes of the
 	 * leaves.
 	 */
-	private void rebuildLeaves(long treeId, final List<Integer> dirtySegments) {
+	private List<Integer> rebuildLeaves(long treeId,
+			final List<Integer> dirtySegments) {
+		List<Integer> nodeIds = new ArrayList<>();
 		for (int dirtySegId : dirtySegments) {
 			htStore.clearDirtySegment(treeId, dirtySegId);
 			ByteBuffer digest = digestSegmentData(treeId, dirtySegId);
 			int nodeId = getLeafIdFromSegmentId(dirtySegId);
 			htStore.putSegmentHash(treeId, nodeId, digest);
+			nodeIds.add(nodeId);
 		}
+		return nodeIds;
 	}
 
 	/**

@@ -49,24 +49,28 @@ public class ByteKeyValueConverter {
 		keyToFill.putLong(treeId);
 	}
 
-	public static byte[] generateRebuildMarkerKey(long treeId, int segId) {
-		byte[] key = new byte[LEN_BASEKEY_AND_TREEID + ByteUtils.SIZEOF_INT];
-		ByteBuffer bb = ByteBuffer.wrap(key);
-		fillBaseKey(bb, BaseKey.REBUILD_MARKER, treeId);
-		bb.putInt(segId);
-		return key;
-	}
-
 	public static byte[] readSegmentDataKey(byte[] dbSegDataKey) {
 		int from = LEN_BASEKEY_AND_TREEID + ByteUtils.SIZEOF_INT;
 		byte[] key = ByteUtils.copy(dbSegDataKey, from, dbSegDataKey.length);
 		return key;
 	}
 
+	public static void fillSegmentKey(ByteBuffer keyToFill, BaseKey baseKey,
+			long treeId, int id) {
+		fillBaseKey(keyToFill, baseKey, treeId);
+		keyToFill.putInt(id);
+	}
+
 	public static void fillSegmentDataKey(ByteBuffer keyToFill, long treeId,
 			int segId) {
-		fillBaseKey(keyToFill, BaseKey.SEG_DATA, treeId);
-		keyToFill.putInt(segId);
+		fillSegmentKey(keyToFill, BaseKey.SEG_DATA, treeId, segId);
+	}
+
+	public static byte[] generateRebuildMarkerKey(long treeId, int segId) {
+		byte[] key = new byte[LEN_BASEKEY_AND_TREEID + ByteUtils.SIZEOF_INT];
+		ByteBuffer bb = ByteBuffer.wrap(key);
+		fillSegmentKey(bb, BaseKey.REBUILD_MARKER, treeId, segId);
+		return key;
 	}
 
 	public static byte[] generateSegmentDataKey(long treeId, int segId) {
@@ -89,8 +93,7 @@ public class ByteKeyValueConverter {
 	public static byte[] generateSegmentHashKey(long treeId, int nodeId) {
 		byte[] key = new byte[LEN_BASEKEY_AND_TREEID + ByteUtils.SIZEOF_INT];
 		ByteBuffer bb = ByteBuffer.wrap(key);
-		fillBaseKey(bb, BaseKey.SEG_HASH, treeId);
-		bb.putInt(nodeId);
+		fillSegmentKey(bb, BaseKey.SEG_HASH, treeId, nodeId);
 		return key;
 	}
 
@@ -107,8 +110,7 @@ public class ByteKeyValueConverter {
 		byte[] key = new byte[BaseKey.LENGTH + ByteUtils.SIZEOF_LONG
 				+ ByteUtils.SIZEOF_INT];
 		ByteBuffer bb = ByteBuffer.wrap(key);
-		fillBaseKey(bb, BaseKey.DIRTY_SEG, treeId);
-		bb.putInt(segId);
+		fillSegmentKey(bb, BaseKey.DIRTY_SEG, treeId, segId);
 		return key;
 	}
 

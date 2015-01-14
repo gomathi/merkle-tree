@@ -4,6 +4,7 @@ import static org.hashtrees.TreeUtils.getImmediateChildren;
 import static org.hashtrees.TreeUtils.getNoOfNodes;
 import static org.hashtrees.TreeUtils.getParent;
 import static org.hashtrees.TreeUtils.height;
+import static org.hashtrees.util.ByteUtils.roundUpToPowerOf2;
 import static org.hashtrees.util.ByteUtils.sha1;
 
 import java.nio.ByteBuffer;
@@ -106,11 +107,6 @@ public class HashTreesImpl implements HashTrees {
 		this.store = store;
 	}
 
-	private static int getValidSegmentsCount(int noOfSegments) {
-		return ((noOfSegments > MAX_NO_OF_SEGMENTS) || (noOfSegments < 0)) ? MAX_NO_OF_SEGMENTS
-				: roundUpToPowerOf2(noOfSegments);
-	}
-
 	@Override
 	public void hPut(final ByteBuffer key, final ByteBuffer value) {
 		if (enabledNonBlockingCalls) {
@@ -174,16 +170,6 @@ public class HashTreesImpl implements HashTrees {
 		return true;
 	}
 
-	private static int compareSegNodeIds(SegmentHash left, SegmentHash right) {
-		if (left == null && right == null)
-			return 0;
-		if (left == null)
-			return 1;
-		if (right == null)
-			return -1;
-		return left.getNodeId() - right.getNodeId();
-	}
-
 	private void findDifferences(long treeId, HashTrees remoteTree,
 			Collection<Integer> nodesToCheck,
 			Collection<Integer> missingNodesInRemote,
@@ -233,16 +219,6 @@ public class HashTreesImpl implements HashTrees {
 			HashTrees remoteTree) throws Exception {
 		for (int segId : segIds)
 			syncSegment(treeId, segId, remoteTree);
-	}
-
-	private static int compareSegmentKeys(SegmentData left, SegmentData right) {
-		if (left == null && right == null)
-			return 0;
-		if (left == null)
-			return 1;
-		if (right == null)
-			return -1;
-		return ByteUtils.compareTo(left.getKey(), right.getKey());
 	}
 
 	private void syncSegment(long treeId, int segId, HashTrees remoteTree)
@@ -335,17 +311,6 @@ public class HashTreesImpl implements HashTrees {
 	}
 
 	@Override
-	public void rebuildHashTree(long treeId, long fullRebuildPeriod)
-			throws Exception {
-		long lastFullRebuiltTime = htStore
-				.getLastFullyTreeBuiltTimestamp(treeId);
-		boolean fullRebuild = (lastFullRebuiltTime == 0) ? true
-				: ((fullRebuildPeriod < 0) ? false
-						: (System.currentTimeMillis() - lastFullRebuiltTime) > fullRebuildPeriod);
-		rebuildHashTree(treeId, fullRebuild);
-	}
-
-	@Override
 	public void rebuildAllTrees(long fullRebuildPeriod) throws Exception {
 		Iterator<Long> treeIdItr = htStore.getAllTreeIds();
 		while (treeIdItr.hasNext())
@@ -357,6 +322,17 @@ public class HashTreesImpl implements HashTrees {
 		Iterator<Long> treeIdItr = htStore.getAllTreeIds();
 		while (treeIdItr.hasNext())
 			rebuildHashTree(treeIdItr.next(), fullRebuild);
+	}
+
+	@Override
+	public void rebuildHashTree(long treeId, long fullRebuildPeriod)
+			throws Exception {
+		long lastFullRebuiltTime = htStore
+				.getLastFullyTreeBuiltTimestamp(treeId);
+		boolean fullRebuild = (lastFullRebuiltTime == 0) ? true
+				: ((fullRebuildPeriod < 0) ? false
+						: (System.currentTimeMillis() - lastFullRebuiltTime) > fullRebuildPeriod);
+		rebuildHashTree(treeId, fullRebuild);
 	}
 
 	@Override
@@ -386,32 +362,6 @@ public class HashTreesImpl implements HashTrees {
 
 	}
 
-	@Override
-	public void sPut(final Map<ByteBuffer, ByteBuffer> keyValuePairs)
-			throws Exception {
-		for (Map.Entry<ByteBuffer, ByteBuffer> keyValuePair : keyValuePairs
-				.entrySet())
-			store.put(keyValuePair.getKey(), keyValuePair.getValue());
-	}
-
-	@Override
-	public void sRemove(final List<ByteBuffer> keys) throws Exception {
-		for (ByteBuffer key : keys)
-			store.remove(key);
-	}
-
-	@Override
-	public void deleteTreeNodes(long treeId, List<Integer> nodeIds)
-			throws Exception {
-		List<Integer> segIds = getSegmentIdsFromLeafIds(getAllLeafNodeIds(nodeIds));
-		for (int segId : segIds) {
-			Iterator<SegmentData> segDataItr = getSegment(treeId, segId)
-					.iterator();
-			while (segDataItr.hasNext())
-				store.remove(ByteBuffer.wrap(segDataItr.next().getKey()));
-		}
-	}
-
 	/**
 	 * Rebuilds the dirty segments, and updates the segment hashes of the
 	 * leaves.
@@ -429,23 +379,6 @@ public class HashTreesImpl implements HashTrees {
 		return nodeIds;
 	}
 
-	/**
-	 * Concatenates the given ByteBuffer values by first converting them to the
-	 * equivalent hex strings, and then concatenates by adding the comma
-	 * delimiter.
-	 * 
-	 * @param values
-	 * @return
-	 */
-	public static String getHexString(ByteBuffer... values) {
-		StringBuffer sb = new StringBuffer();
-		for (int i = 0; i < values.length - 1; i++)
-			sb.append(Hex.encodeHexString(values[i].array()) + COMMA_DELIMETER);
-		if (values.length > 0)
-			sb.append(Hex.encodeHexString(values[values.length - 1].array()));
-		return sb.toString();
-	}
-
 	private ByteBuffer digestSegmentData(long treeId, int segId) {
 		List<SegmentData> dirtySegmentData = htStore.getSegment(treeId, segId);
 		List<String> hexStrings = new ArrayList<String>();
@@ -455,33 +388,14 @@ public class HashTreesImpl implements HashTrees {
 	}
 
 	/**
-	 * 
-	 * @param segDataList
-	 * @return
-	 */
-	public static ByteBuffer digestByteBuffers(List<ByteBuffer> bbList) {
-		List<String> hexStrings = new ArrayList<String>();
-		for (ByteBuffer bb : bbList)
-			hexStrings.add(Hex.encodeHexString(bb.array()));
-		return digestHexStrings(hexStrings);
-	}
-
-	public static ByteBuffer digestHexStrings(List<String> hexStrings) {
-		StringBuilder sb = new StringBuilder();
-		for (String hexString : hexStrings)
-			sb.append(hexString + NEW_LINE_DELIMETER);
-		return ByteBuffer.wrap(sha1(sb.toString().getBytes()));
-	}
-
-	/**
 	 * Updates the segment hashes iteratively for each level on the tree.
 	 * 
-	 * @param dirtySegIds
+	 * @param dirtyNodeIds
 	 */
 	private void rebuildInternalNodes(long treeId,
-			final List<Integer> dirtySegIds) {
+			final List<Integer> dirtyNodeIds) {
 		Set<Integer> parentNodeIds = new TreeSet<Integer>();
-		Set<Integer> nodeIds = new TreeSet<Integer>(dirtySegIds);
+		Set<Integer> nodeIds = new TreeSet<Integer>(dirtyNodeIds);
 		while (!nodeIds.isEmpty()) {
 			for (int nodeId : nodeIds)
 				parentNodeIds.add(getParent(nodeId, noOfChildren));
@@ -520,72 +434,30 @@ public class HashTreesImpl implements HashTrees {
 		}
 	}
 
-	/**
-	 * Segment block id starts with 0. Each leaf node corresponds to a segment
-	 * block. This function does the mapping from segment block id to leaf node
-	 * id.
-	 * 
-	 * @param segId
-	 * @return
-	 */
-	private int getLeafIdFromSegmentId(int segId) {
-		return internalNodesCount + segId;
+	@Override
+	public void sPut(final Map<ByteBuffer, ByteBuffer> keyValuePairs)
+			throws Exception {
+		for (Map.Entry<ByteBuffer, ByteBuffer> keyValuePair : keyValuePairs
+				.entrySet())
+			store.put(keyValuePair.getKey(), keyValuePair.getValue());
 	}
 
-	/**
-	 * 
-	 * @param leafNodeId
-	 * @return
-	 */
-	private int getSegmentIdFromLeafId(int leafNodeId) {
-		return leafNodeId - internalNodesCount;
+	@Override
+	public void sRemove(final List<ByteBuffer> keys) throws Exception {
+		for (ByteBuffer key : keys)
+			store.remove(key);
 	}
 
-	private List<Integer> getSegmentIdsFromLeafIds(
-			final Collection<Integer> leafNodeIds) {
-		List<Integer> result = new ArrayList<Integer>(leafNodeIds.size());
-		for (Integer leafNodeId : leafNodeIds)
-			result.add(getSegmentIdFromLeafId(leafNodeId));
-		return result;
-	}
-
-	/**
-	 * Given a node id, finds all the leaves that can be reached from this node.
-	 * If the nodeId is a leaf node, then that will be returned as the result.
-	 * 
-	 * @param nodeId
-	 * @return, all ids of leaf nodes.
-	 */
-	private Collection<Integer> getAllLeafNodeIds(int nodeId) {
-		Queue<Integer> pQueue = new ArrayDeque<Integer>();
-		pQueue.add(nodeId);
-		while (pQueue.peek() < internalNodesCount) {
-			int cNodeId = pQueue.remove();
-			pQueue.addAll(getImmediateChildren(cNodeId, noOfChildren));
+	@Override
+	public void deleteTreeNodes(long treeId, List<Integer> nodeIds)
+			throws Exception {
+		List<Integer> segIds = getSegmentIdsFromLeafIds(getAllLeafNodeIds(nodeIds));
+		for (int segId : segIds) {
+			Iterator<SegmentData> segDataItr = getSegment(treeId, segId)
+					.iterator();
+			while (segDataItr.hasNext())
+				store.remove(ByteBuffer.wrap(segDataItr.next().getKey()));
 		}
-		return pQueue;
-	}
-
-	private Collection<Integer> getAllLeafNodeIds(Collection<Integer> nodeIds) {
-		Collection<Integer> result = new ArrayList<Integer>();
-		for (int nodeId : nodeIds)
-			result.addAll(getAllLeafNodeIds(nodeId));
-		return result;
-	}
-
-	/**
-	 * 
-	 * @param nodeId
-	 *            , id of the internal node in the tree.
-	 * @return
-	 */
-	private boolean isLeafNode(int nodeId) {
-		return nodeId >= internalNodesCount;
-	}
-
-	private static int roundUpToPowerOf2(int number) {
-		return (number >= MAX_NO_OF_SEGMENTS) ? MAX_NO_OF_SEGMENTS
-				: ((number > 1) ? Integer.highestOneBit((number - 1) << 1) : 1);
 	}
 
 	@Override
@@ -654,6 +526,114 @@ public class HashTreesImpl implements HashTrees {
 	public void stop() {
 		disableNonblockingOperations();
 		htStore.stop();
+	}
+
+	private static int compareSegNodeIds(SegmentHash left, SegmentHash right) {
+		if (left == null && right == null)
+			return 0;
+		if (left == null)
+			return 1;
+		if (right == null)
+			return -1;
+		return left.getNodeId() - right.getNodeId();
+	}
+
+	private static int compareSegmentKeys(SegmentData left, SegmentData right) {
+		if (left == null && right == null)
+			return 0;
+		if (left == null)
+			return 1;
+		if (right == null)
+			return -1;
+		return ByteUtils.compareTo(left.getKey(), right.getKey());
+	}
+
+	private static int getValidSegmentsCount(int noOfSegments) {
+		return ((noOfSegments > MAX_NO_OF_SEGMENTS) || (noOfSegments < 0)) ? MAX_NO_OF_SEGMENTS
+				: roundUpToPowerOf2(noOfSegments);
+	}
+
+	/**
+	 * Concatenates the given ByteBuffer values by first converting them to the
+	 * equivalent hex strings, and then concatenates by adding the comma
+	 * delimiter.
+	 * 
+	 * @param values
+	 * @return
+	 */
+	public static String getHexString(ByteBuffer... values) {
+		StringBuffer sb = new StringBuffer();
+		for (int i = 0; i < values.length - 1; i++)
+			sb.append(Hex.encodeHexString(values[i].array()) + COMMA_DELIMETER);
+		if (values.length > 0)
+			sb.append(Hex.encodeHexString(values[values.length - 1].array()));
+		return sb.toString();
+	}
+
+	public static ByteBuffer digestByteBuffers(List<ByteBuffer> bbList) {
+		List<String> hexStrings = new ArrayList<String>();
+		for (ByteBuffer bb : bbList)
+			hexStrings.add(Hex.encodeHexString(bb.array()));
+		return digestHexStrings(hexStrings);
+	}
+
+	public static ByteBuffer digestHexStrings(List<String> hexStrings) {
+		StringBuilder sb = new StringBuilder();
+		for (String hexString : hexStrings)
+			sb.append(hexString + NEW_LINE_DELIMETER);
+		return ByteBuffer.wrap(sha1(sb.toString().getBytes()));
+	}
+
+	/**
+	 * Segment block id starts with 0. Each leaf node corresponds to a segment
+	 * block. This function does the mapping from segment block id to leaf node
+	 * id.
+	 * 
+	 * @param segId
+	 * @return
+	 */
+	private int getLeafIdFromSegmentId(int segId) {
+		return internalNodesCount + segId;
+	}
+
+	private int getSegmentIdFromLeafId(int leafNodeId) {
+		return leafNodeId - internalNodesCount;
+	}
+
+	private List<Integer> getSegmentIdsFromLeafIds(
+			final Collection<Integer> leafNodeIds) {
+		List<Integer> result = new ArrayList<Integer>(leafNodeIds.size());
+		for (Integer leafNodeId : leafNodeIds)
+			result.add(getSegmentIdFromLeafId(leafNodeId));
+		return result;
+	}
+
+	/**
+	 * Given a node id, finds all the leaves that can be reached from this node.
+	 * If the nodeId is a leaf node, then that will be returned as the result.
+	 * 
+	 * @param nodeId
+	 * @return, all ids of leaf nodes.
+	 */
+	private Collection<Integer> getAllLeafNodeIds(int nodeId) {
+		Queue<Integer> pQueue = new ArrayDeque<Integer>();
+		pQueue.add(nodeId);
+		while (pQueue.peek() < internalNodesCount) {
+			int cNodeId = pQueue.remove();
+			pQueue.addAll(getImmediateChildren(cNodeId, noOfChildren));
+		}
+		return pQueue;
+	}
+
+	private Collection<Integer> getAllLeafNodeIds(Collection<Integer> nodeIds) {
+		Collection<Integer> result = new ArrayList<Integer>();
+		for (int nodeId : nodeIds)
+			result.addAll(getAllLeafNodeIds(nodeId));
+		return result;
+	}
+
+	private boolean isLeafNode(int nodeId) {
+		return nodeId >= internalNodesCount;
 	}
 
 	/**

@@ -186,4 +186,8 @@ public class ByteUtils {
 			return a;
 		}
 	}
+
+	public static int roundUpToPowerOf2(int number) {
+		return (number > 1) ? Integer.highestOneBit((number - 1) << 1) : 1;
+	}
 }

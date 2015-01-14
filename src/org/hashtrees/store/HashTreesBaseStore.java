@@ -27,7 +27,7 @@ public abstract class HashTreesBaseStore implements HashTreesStore {
 	}
 
 	@Override
-	public void clearDirtySegments(long treeId, List<Integer> segIds) {
-		getDirtySegmentsHolder(treeId).clearBits(segIds);
+	public void clearDirtySegment(long treeId, int segId) {
+		getDirtySegmentsHolder(treeId).clear(segId);
 	}
 }

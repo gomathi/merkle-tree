@@ -100,6 +100,14 @@ public interface HashTreesStore {
 	boolean setDirtySegment(long treeId, int segId);
 
 	/**
+	 * Clears the segments, which are passed as an argument.
+	 * 
+	 * @param treeId
+	 * @param segId
+	 */
+	void clearDirtySegment(long treeId, int segId);
+
+	/**
 	 * Gets the dirty segments without clearing those bits.
 	 * 
 	 * @param treeId
@@ -108,12 +116,24 @@ public interface HashTreesStore {
 	List<Integer> getDirtySegments(long treeId);
 
 	/**
-	 * Clears the segments, which are passed as an argument.
+	 * Used during rebuild process by
+	 * {@link HashTrees#rebuildHashTree(long, boolean)}. If the process crashes
+	 * in the middle of rebuilding we don't want to loose track of dirty
+	 * segments.This has to persist that information, so that we can reuse it
+	 * after the process recovery.
 	 * 
-	 * @param treeId
 	 * @param segIds
 	 */
-	void clearDirtySegments(long treeId, List<Integer> segIds);
+	void markSegmentsForRebuild(long treeId, List<Integer> segIds);
+
+	/**
+	 * Used during rebuild process by
+	 * {@link HashTrees#rebuildHashTree(long, boolean)}. After rebuilding is
+	 * done, this will be cleared.
+	 * 
+	 * @param segIds
+	 */
+	void unmarkSegmentsForRebuild(long treeId, List<Integer> segIds);
 
 	/**
 	 * Deletes the segment hashes, and segment data for the given treeId.

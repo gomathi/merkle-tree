@@ -14,7 +14,7 @@ public class ByteKeyValueConverter {
 	public static enum BaseKey {
 
 		META_DATA((byte) 'M'), SEG_HASH((byte) 'H'), SEG_DATA((byte) 'S'), TREEID(
-				(byte) 'T'), DIRTY_SEG((byte) 'D');
+				(byte) 'T'), DIRTY_SEG((byte) 'D'), REBUILD_MARKER((byte) 'R');
 
 		public static final int LENGTH = 1; // in terms of bytes.
 		public final byte key;
@@ -49,14 +49,6 @@ public class ByteKeyValueConverter {
 		keyToFill.putLong(treeId);
 	}
 
-	public static byte[] generateSegmentHashKey(long treeId, int nodeId) {
-		byte[] key = new byte[LEN_BASEKEY_AND_TREEID + ByteUtils.SIZEOF_INT];
-		ByteBuffer bb = ByteBuffer.wrap(key);
-		fillBaseKey(bb, BaseKey.SEG_HASH, treeId);
-		bb.putInt(nodeId);
-		return key;
-	}
-
 	public static byte[] readSegmentDataKey(byte[] dbSegDataKey) {
 		int from = LEN_BASEKEY_AND_TREEID + ByteUtils.SIZEOF_INT;
 		byte[] key = ByteUtils.copy(dbSegDataKey, from, dbSegDataKey.length);
@@ -69,30 +61,45 @@ public class ByteKeyValueConverter {
 		keyToFill.putInt(segId);
 	}
 
-	public static byte[] generateSegmentDataKey(long treeId, int segId) {
-		byte[] byteKey = new byte[LEN_BASEKEY_AND_TREEID + ByteUtils.SIZEOF_INT];
-		ByteBuffer bb = ByteBuffer.wrap(byteKey);
+	public static byte[] generateRebuildMarkerKey(long treeId, int segId) {
+		byte[] key = new byte[LEN_BASEKEY_AND_TREEID + ByteUtils.SIZEOF_INT];
+		ByteBuffer bb = ByteBuffer.wrap(key);
 		fillSegmentDataKey(bb, treeId, segId);
-		return byteKey;
+		return key;
+	}
+
+	public static byte[] generateSegmentDataKey(long treeId, int segId) {
+		byte[] key = new byte[LEN_BASEKEY_AND_TREEID + ByteUtils.SIZEOF_INT];
+		ByteBuffer bb = ByteBuffer.wrap(key);
+		fillSegmentDataKey(bb, treeId, segId);
+		return key;
 	}
 
 	public static byte[] generateSegmentDataKey(long treeId, int segId,
-			ByteBuffer key) {
-		byte[] byteKey = new byte[LEN_BASEKEY_AND_TREEID + ByteUtils.SIZEOF_INT
-				+ key.array().length];
-		ByteBuffer bb = ByteBuffer.wrap(byteKey);
+			ByteBuffer segDataKey) {
+		byte[] key = new byte[LEN_BASEKEY_AND_TREEID + ByteUtils.SIZEOF_INT
+				+ segDataKey.array().length];
+		ByteBuffer bb = ByteBuffer.wrap(key);
 		fillSegmentDataKey(bb, treeId, segId);
-		bb.put(key.array());
-		return byteKey;
+		bb.put(segDataKey.array());
+		return key;
+	}
+
+	public static byte[] generateSegmentHashKey(long treeId, int nodeId) {
+		byte[] key = new byte[LEN_BASEKEY_AND_TREEID + ByteUtils.SIZEOF_INT];
+		ByteBuffer bb = ByteBuffer.wrap(key);
+		fillBaseKey(bb, BaseKey.SEG_HASH, treeId);
+		bb.putInt(nodeId);
+		return key;
 	}
 
 	public static byte[] generateMetaDataKey(MetaDataKey metaDataKey,
 			long treeId) {
-		byte[] byteKey = new byte[LEN_BASEKEY_AND_TREEID + metaDataKey.length];
-		ByteBuffer bb = ByteBuffer.wrap(byteKey);
+		byte[] key = new byte[LEN_BASEKEY_AND_TREEID + metaDataKey.length];
+		ByteBuffer bb = ByteBuffer.wrap(key);
 		fillBaseKey(bb, BaseKey.META_DATA, treeId);
 		bb.put(metaDataKey.key);
-		return byteKey;
+		return key;
 	}
 
 	public static byte[] generateDirtySegmentKey(long treeId, int segId) {
@@ -105,10 +112,10 @@ public class ByteKeyValueConverter {
 	}
 
 	public static byte[] generateTreeIdKey(long treeId) {
-		byte[] result = new byte[LEN_BASEKEY_AND_TREEID];
-		ByteBuffer bb = ByteBuffer.wrap(result);
+		byte[] key = new byte[LEN_BASEKEY_AND_TREEID];
+		ByteBuffer bb = ByteBuffer.wrap(key);
 		fillBaseKey(bb, BaseKey.TREEID, treeId);
-		return result;
+		return key;
 	}
 
 	public static byte[] convertRemoteTreeInfoToBytes(RemoteTreeInfo rTree) {

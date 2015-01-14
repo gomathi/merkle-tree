@@ -107,10 +107,10 @@ public class HashTreesManager extends StoppableTask implements
 		this.syncManagerStore = syncMgrStore;
 		this.hashTrees = hashTrees;
 		this.treeIdProvider = treeIdProvider;
-		initServersToSyncList(treeIdProvider.getAllPrimaryTreeIds());
+		initServersWithSyncList(treeIdProvider.getAllPrimaryTreeIds());
 	}
 
-	private void initServersToSyncList(Iterator<Long> treeIds) {
+	private void initServersWithSyncList(Iterator<Long> treeIds) {
 		while (treeIds.hasNext()) {
 			for (RemoteTreeInfo rTree : syncManagerStore.getSyncList(treeIds
 					.next()))

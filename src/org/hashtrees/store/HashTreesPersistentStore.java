@@ -5,6 +5,7 @@ import static org.hashtrees.store.ByteKeyValueConverter.convertRemoteTreeInfoToB
 import static org.hashtrees.store.ByteKeyValueConverter.fillBaseKey;
 import static org.hashtrees.store.ByteKeyValueConverter.generateDirtySegmentKey;
 import static org.hashtrees.store.ByteKeyValueConverter.generateMetaDataKey;
+import static org.hashtrees.store.ByteKeyValueConverter.generateRebuildMarkerKey;
 import static org.hashtrees.store.ByteKeyValueConverter.generateSegmentDataKey;
 import static org.hashtrees.store.ByteKeyValueConverter.generateSegmentHashKey;
 import static org.hashtrees.store.ByteKeyValueConverter.generateTreeIdKey;
@@ -81,15 +82,22 @@ public class HashTreesPersistentStore extends HashTreesBaseStore implements
 		return new JniDBFactory().open(new File(dbDir), options);
 	}
 
+	private void initDirtySegments() {
+		initDirtySegments(BaseKey.DIRTY_SEG);
+		// If there are unfinished rebuild tasks, then we need to mark those
+		// segments belonging to those rebuild tasks as dirty segments.
+		initDirtySegments(BaseKey.REBUILD_MARKER);
+	}
+
 	/**
 	 * Need to inform {@link HashTreesBaseStore} about dirty segments which are
 	 * marked in the previous job.
 	 */
-	private void initDirtySegments() {
+	private void initDirtySegments(BaseKey baseKey) {
 		DBIterator itr = dbObj.iterator();
 		byte[] startKey = new byte[BaseKey.LENGTH];
 		ByteBuffer bb = ByteBuffer.wrap(startKey);
-		bb.put(BaseKey.DIRTY_SEG.key);
+		bb.put(baseKey.key);
 		itr.seek(startKey);
 
 		while (itr.hasNext()) {
@@ -118,17 +126,15 @@ public class HashTreesPersistentStore extends HashTreesBaseStore implements
 	}
 
 	@Override
-	public List<Integer> getDirtySegments(long treeId) {
-		return super.getDirtySegments(treeId);
+	public void clearDirtySegment(long treeId, int segId) {
+		super.clearDirtySegment(treeId, segId);
+		byte[] key = generateDirtySegmentKey(treeId, segId);
+		dbObj.delete(key);
 	}
 
 	@Override
-	public void clearDirtySegments(long treeId, List<Integer> segIds) {
-		super.clearDirtySegments(treeId, segIds);
-		for (int segId : segIds) {
-			byte[] key = generateDirtySegmentKey(treeId, segId);
-			dbObj.delete(key);
-		}
+	public List<Integer> getDirtySegments(long treeId) {
+		return super.getDirtySegments(treeId);
 	}
 
 	@Override
@@ -247,6 +253,22 @@ public class HashTreesPersistentStore extends HashTreesBaseStore implements
 			}
 		}
 		return result;
+	}
+
+	@Override
+	public void markSegmentsForRebuild(long treeId, List<Integer> segIds) {
+		for (int segId : segIds) {
+			byte[] key = generateRebuildMarkerKey(treeId, segId);
+			dbObj.put(key, EMPTY_VALUE);
+		}
+	}
+
+	@Override
+	public void unmarkSegmentsForRebuild(long treeId, List<Integer> segIds) {
+		for (int segId : segIds) {
+			byte[] key = generateRebuildMarkerKey(treeId, segId);
+			dbObj.delete(key);
+		}
 	}
 
 	/**

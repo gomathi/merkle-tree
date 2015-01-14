@@ -126,7 +126,20 @@ public interface HashTrees {
 	 * @param rebuild
 	 * @throws Exception
 	 */
-	void rebuildHashTrees(boolean fullRebuild) throws Exception;
+	void rebuildAllTrees(boolean fullRebuild) throws Exception;
+
+	/**
+	 * Updates segment hashes based on the dirty entries or entire dataset.
+	 * 
+	 * @param fullRebuildPeriod
+	 *            , indicates a time interval in milliseconds, and if a tree is
+	 *            not fully rebuilt for more than this value, a full rebuild
+	 *            will be triggered. Otherwise only dirty segments will be
+	 *            updated. If there is no information about when was the last
+	 *            time the tree was fully rebuilt, then a full rebuild will be
+	 *            triggered. A negative value indicates disabling full rebuild.
+	 */
+	void rebuildAllTrees(long fullRebuildPeriod) throws Exception;
 
 	/**
 	 * Updates segment hashes based on the dirty entries.

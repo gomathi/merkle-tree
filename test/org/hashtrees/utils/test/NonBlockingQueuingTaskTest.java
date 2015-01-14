@@ -1,4 +1,4 @@
-package org.hashtrees.test;
+package org.hashtrees.utils.test;
 
 import java.util.ArrayList;
 import java.util.List;

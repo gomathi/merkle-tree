@@ -86,7 +86,6 @@ public class HashTreesImpl implements HashTrees {
 	private final SegmentIdProvider segIdProvider;
 
 	private final ConcurrentMap<Long, Lock> treeLocks = new ConcurrentHashMap<>();
-
 	private final Object nonBlockingCallsLock = new Object();
 	@LockedBy("nonBlockingCallsLock")
 	private volatile boolean enabledNonBlockingCalls;
@@ -347,7 +346,14 @@ public class HashTreesImpl implements HashTrees {
 	}
 
 	@Override
-	public void rebuildHashTrees(boolean fullRebuild) throws Exception {
+	public void rebuildAllTrees(long fullRebuildPeriod) throws Exception {
+		Iterator<Long> treeIdItr = htStore.getAllTreeIds();
+		while (treeIdItr.hasNext())
+			rebuildHashTree(treeIdItr.next(), fullRebuildPeriod);
+	}
+
+	@Override
+	public void rebuildAllTrees(boolean fullRebuild) throws Exception {
 		Iterator<Long> treeIdItr = htStore.getAllTreeIds();
 		while (treeIdItr.hasNext())
 			rebuildHashTree(treeIdItr.next(), fullRebuild);
@@ -361,15 +367,11 @@ public class HashTreesImpl implements HashTrees {
 			try {
 				if (fullRebuild)
 					rebuildCompleteTree(treeId);
-				List<Integer> dirtySegmentBuckets = htStore
-						.getDirtySegments(treeId);
-				Map<Integer, ByteBuffer> dirtyNodeAndDigestMap = rebuildLeaves(
-						treeId, dirtySegmentBuckets);
-				rebuildInternalNodes(treeId, dirtyNodeAndDigestMap);
-				for (Map.Entry<Integer, ByteBuffer> dirtyNodeAndDigest : dirtyNodeAndDigestMap
-						.entrySet())
-					htStore.putSegmentHash(treeId, dirtyNodeAndDigest.getKey(),
-							dirtyNodeAndDigest.getValue());
+				List<Integer> dirtySegments = htStore.getDirtySegments(treeId);
+				htStore.markSegmentsForRebuild(treeId, dirtySegments);
+				rebuildLeaves(treeId, dirtySegments);
+				rebuildInternalNodes(treeId, dirtySegments);
+				htStore.unmarkSegmentsForRebuild(treeId, dirtySegments);
 				if (fullRebuild) {
 					long currentTs = System.currentTimeMillis();
 					htStore.setLastFullyTreeBuiltTimestamp(treeId, currentTs);
@@ -405,32 +407,27 @@ public class HashTreesImpl implements HashTrees {
 		for (int segId : segIds) {
 			Iterator<SegmentData> segDataItr = getSegment(treeId, segId)
 					.iterator();
-			while (segDataItr.hasNext()) {
+			while (segDataItr.hasNext())
 				store.remove(ByteBuffer.wrap(segDataItr.next().getKey()));
-			}
 		}
 	}
 
 	/**
 	 * Rebuilds the dirty segments, and updates the segment hashes of the
 	 * leaves.
-	 * 
-	 * @return, node ids, and uncommitted digest.
 	 */
-	private Map<Integer, ByteBuffer> rebuildLeaves(long treeId,
-			final List<Integer> dirtySegments) {
-		Map<Integer, ByteBuffer> dirtyNodeIdAndDigestMap = new HashMap<Integer, ByteBuffer>();
+	private void rebuildLeaves(long treeId, final List<Integer> dirtySegments) {
 		for (int dirtySegId : dirtySegments) {
+			htStore.clearDirtySegment(treeId, dirtySegId);
 			ByteBuffer digest = digestSegmentData(treeId, dirtySegId);
 			int nodeId = getLeafIdFromSegmentId(dirtySegId);
-			dirtyNodeIdAndDigestMap.put(nodeId, digest);
+			htStore.putSegmentHash(treeId, nodeId, digest);
 		}
-		return dirtyNodeIdAndDigestMap;
 	}
 
 	/**
 	 * Concatenates the given ByteBuffer values by first converting them to the
-	 * equivalent hex strings, and then concatenated by adding the comma
+	 * equivalent hex strings, and then concatenates by adding the comma
 	 * delimiter.
 	 * 
 	 * @param values
@@ -438,9 +435,8 @@ public class HashTreesImpl implements HashTrees {
 	 */
 	public static String getHexString(ByteBuffer... values) {
 		StringBuffer sb = new StringBuffer();
-		for (int i = 0; i < values.length - 1; i++) {
+		for (int i = 0; i < values.length - 1; i++)
 			sb.append(Hex.encodeHexString(values[i].array()) + COMMA_DELIMETER);
-		}
 		if (values.length > 0)
 			sb.append(Hex.encodeHexString(values[values.length - 1].array()));
 		return sb.toString();
@@ -449,10 +445,8 @@ public class HashTreesImpl implements HashTrees {
 	private ByteBuffer digestSegmentData(long treeId, int segId) {
 		List<SegmentData> dirtySegmentData = htStore.getSegment(treeId, segId);
 		List<String> hexStrings = new ArrayList<String>();
-
 		for (SegmentData sd : dirtySegmentData)
 			hexStrings.add(getHexString(sd.key, sd.digest));
-
 		return digestHexStrings(hexStrings);
 	}
 
@@ -481,21 +475,16 @@ public class HashTreesImpl implements HashTrees {
 	 * @param nodeIdAndDigestMap
 	 */
 	private void rebuildInternalNodes(long treeId,
-			final Map<Integer, ByteBuffer> nodeIdAndDigestMap) {
+			final List<Integer> dirtySegIds) {
 		Set<Integer> parentNodeIds = new TreeSet<Integer>();
-		Set<Integer> nodeIds = new TreeSet<Integer>();
-		nodeIds.addAll(nodeIdAndDigestMap.keySet());
-
+		Set<Integer> nodeIds = new TreeSet<Integer>(dirtySegIds);
 		while (!nodeIds.isEmpty()) {
 			for (int nodeId : nodeIds)
 				parentNodeIds.add(getParent(nodeId, noOfChildren));
-
-			rebuildParentNodes(treeId, parentNodeIds, nodeIdAndDigestMap);
-
+			rebuildParentNodes(treeId, parentNodeIds);
 			nodeIds.clear();
 			nodeIds.addAll(parentNodeIds);
 			parentNodeIds.clear();
-
 			if (nodeIds.contains(ROOT_NODE))
 				break;
 		}
@@ -507,8 +496,7 @@ public class HashTreesImpl implements HashTrees {
 	 * 
 	 * @param parentIds
 	 */
-	private void rebuildParentNodes(long treeId, final Set<Integer> parentIds,
-			Map<Integer, ByteBuffer> nodeIdAndDigestMap) {
+	private void rebuildParentNodes(long treeId, final Set<Integer> parentIds) {
 		List<Integer> children;
 		List<ByteBuffer> segHashes = new ArrayList<ByteBuffer>(noOfChildren);
 		ByteBuffer segHashBB;
@@ -516,19 +504,14 @@ public class HashTreesImpl implements HashTrees {
 
 		for (int parentId : parentIds) {
 			children = getImmediateChildren(parentId, noOfChildren);
-
 			for (int child : children) {
-				if (nodeIdAndDigestMap.containsKey(child))
-					segHashBB = nodeIdAndDigestMap.get(child);
-				else {
-					segHash = htStore.getSegmentHash(treeId, child);
-					segHashBB = (segHash == null) ? null : segHash.hash;
-				}
+				segHash = htStore.getSegmentHash(treeId, child);
+				segHashBB = (segHash == null) ? null : segHash.hash;
 				if (segHashBB != null)
 					segHashes.add(segHashBB);
 			}
 			ByteBuffer digest = digestByteBuffers(segHashes);
-			nodeIdAndDigestMap.put(parentId, digest);
+			htStore.putSegmentHash(treeId, parentId, digest);
 			segHashes.clear();
 		}
 	}
@@ -581,9 +564,8 @@ public class HashTreesImpl implements HashTrees {
 
 	private Collection<Integer> getAllLeafNodeIds(Collection<Integer> nodeIds) {
 		Collection<Integer> result = new ArrayList<Integer>();
-		for (int nodeId : nodeIds) {
+		for (int nodeId : nodeIds)
 			result.addAll(getAllLeafNodeIds(nodeId));
-		}
 		return result;
 	}
 

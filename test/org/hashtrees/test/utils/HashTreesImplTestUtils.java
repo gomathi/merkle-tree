@@ -85,7 +85,7 @@ public class HashTreesImplTestUtils {
 		HashTreesImpl hTree = new HashTreesImpl(noOfSegDataBlocks, treeIdProv,
 				segIdPro, hTStore, store);
 		store.registerHashTrees(hTree);
-		hTree.rebuildHashTrees(true);
+		hTree.rebuildAllTrees(true);
 		return new HTreeComponents(hTStore, store, hTree);
 	}
 
@@ -97,7 +97,7 @@ public class HashTreesImplTestUtils {
 		HashTrees hTree = new HashTreesImpl(noOfSegments, TREE_ID_PROVIDER,
 				segIdProvider, hTStore, store);
 		store.registerHashTrees(hTree);
-		hTree.rebuildHashTrees(true);
+		hTree.rebuildAllTrees(true);
 		return new HTreeComponents(hTStore, store, hTree);
 	}
 

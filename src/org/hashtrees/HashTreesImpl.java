@@ -472,7 +472,7 @@ public class HashTreesImpl implements HashTrees {
 	/**
 	 * Updates the segment hashes iteratively for each level on the tree.
 	 * 
-	 * @param nodeIdAndDigestMap
+	 * @param dirtySegIds
 	 */
 	private void rebuildInternalNodes(long treeId,
 			final List<Integer> dirtySegIds) {

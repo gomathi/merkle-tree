@@ -49,6 +49,14 @@ public class ByteKeyValueConverter {
 		keyToFill.putLong(treeId);
 	}
 
+	public static byte[] generateRebuildMarkerKey(long treeId, int segId) {
+		byte[] key = new byte[LEN_BASEKEY_AND_TREEID + ByteUtils.SIZEOF_INT];
+		ByteBuffer bb = ByteBuffer.wrap(key);
+		fillBaseKey(bb, BaseKey.REBUILD_MARKER, treeId);
+		bb.putInt(segId);
+		return key;
+	}
+
 	public static byte[] readSegmentDataKey(byte[] dbSegDataKey) {
 		int from = LEN_BASEKEY_AND_TREEID + ByteUtils.SIZEOF_INT;
 		byte[] key = ByteUtils.copy(dbSegDataKey, from, dbSegDataKey.length);
@@ -59,13 +67,6 @@ public class ByteKeyValueConverter {
 			int segId) {
 		fillBaseKey(keyToFill, BaseKey.SEG_DATA, treeId);
 		keyToFill.putInt(segId);
-	}
-
-	public static byte[] generateRebuildMarkerKey(long treeId, int segId) {
-		byte[] key = new byte[LEN_BASEKEY_AND_TREEID + ByteUtils.SIZEOF_INT];
-		ByteBuffer bb = ByteBuffer.wrap(key);
-		fillSegmentDataKey(bb, treeId, segId);
-		return key;
 	}
 
 	public static byte[] generateSegmentDataKey(long treeId, int segId) {

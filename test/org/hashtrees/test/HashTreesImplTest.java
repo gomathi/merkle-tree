@@ -143,16 +143,17 @@ public class HashTreesImplTest {
 						TREE_ID_PROVIDER, SEG_ID_PROVIDER, store);
 				HashTrees testTree = components.hTree;
 
-				ByteBuffer actualKey = generateRandomKeyWithPrefix(segId);
-				ByteBuffer actualValue = ByteBuffer.wrap(randomBytes());
+				ByteBuffer expectedKey = generateRandomKeyWithPrefix(segId);
+				ByteBuffer expectedValue = ByteBuffer.wrap(randomBytes());
 				StringBuffer sb = new StringBuffer();
-				ByteBuffer digest = ByteBuffer.wrap(ByteUtils.sha1(actualValue
-						.array()));
-				sb.append(HashTreesImpl.getHexString(actualKey, digest) + "\n");
+				ByteBuffer expectedDigest = ByteBuffer.wrap(ByteUtils
+						.sha1(expectedValue.array()));
+				sb.append(HashTreesImpl.getHexString(expectedKey,
+						expectedDigest) + "\n");
 				byte[] expectedLeafNodeDigest = ByteUtils.sha1(sb.toString()
 						.getBytes());
 
-				testTree.hPut(actualKey, actualValue);
+				testTree.hPut(expectedKey, expectedValue);
 				testTree.rebuildAllTrees(false);
 				SegmentHash segHash = testTree.getSegmentHash(
 						SimpleTreeIdProvider.TREE_ID, nodeId);

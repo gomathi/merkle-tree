@@ -3,6 +3,7 @@ package org.hashtrees.store;
 import static org.hashtrees.store.ByteKeyValueConverter.LEN_BASEKEY_AND_TREEID;
 import static org.hashtrees.store.ByteKeyValueConverter.convertRemoteTreeInfoToBytes;
 import static org.hashtrees.store.ByteKeyValueConverter.fillBaseKey;
+import static org.hashtrees.store.ByteKeyValueConverter.generateBaseKey;
 import static org.hashtrees.store.ByteKeyValueConverter.generateDirtySegmentKey;
 import static org.hashtrees.store.ByteKeyValueConverter.generateMetaDataKey;
 import static org.hashtrees.store.ByteKeyValueConverter.generateRebuildMarkerKey;
@@ -25,6 +26,7 @@ import java.util.Map.Entry;
 import java.util.NoSuchElementException;
 import java.util.Queue;
 
+import org.apache.commons.io.FileUtils;
 import org.fusesource.leveldbjni.JniDBFactory;
 import org.hashtrees.store.ByteKeyValueConverter.BaseKey;
 import org.hashtrees.store.ByteKeyValueConverter.MetaDataKey;
@@ -82,22 +84,15 @@ public class HashTreesPersistentStore extends HashTreesBaseStore implements
 		return new JniDBFactory().open(new File(dbDir), options);
 	}
 
-	private void initDirtySegments() {
-		initDirtySegments(BaseKey.DIRTY_SEG);
-		// If there are unfinished rebuild tasks, then we need to mark those
-		// segments belonging to those rebuild tasks as dirty segments.
-		initDirtySegments(BaseKey.REBUILD_MARKER);
-	}
-
 	/**
 	 * Need to inform {@link HashTreesBaseStore} about dirty segments which are
-	 * marked in the previous job.
+	 * marked in the previous run.
 	 */
-	private void initDirtySegments(BaseKey baseKey) {
+	private void initDirtySegments() {
 		DBIterator itr = dbObj.iterator();
 		byte[] startKey = new byte[BaseKey.LENGTH];
 		ByteBuffer bb = ByteBuffer.wrap(startKey);
-		bb.put(baseKey.key);
+		bb.put(BaseKey.DIRTY_SEG.key);
 		itr.seek(startKey);
 
 		while (itr.hasNext()) {
@@ -256,7 +251,7 @@ public class HashTreesPersistentStore extends HashTreesBaseStore implements
 	}
 
 	@Override
-	public void markSegmentsForRebuild(long treeId, List<Integer> segIds) {
+	public void markSegments(long treeId, List<Integer> segIds) {
 		for (int segId : segIds) {
 			byte[] key = generateRebuildMarkerKey(treeId, segId);
 			dbObj.put(key, EMPTY_VALUE);
@@ -264,11 +259,32 @@ public class HashTreesPersistentStore extends HashTreesBaseStore implements
 	}
 
 	@Override
-	public void unmarkSegmentsForRebuild(long treeId, List<Integer> segIds) {
+	public void unmarkSegments(long treeId, List<Integer> segIds) {
 		for (int segId : segIds) {
 			byte[] key = generateRebuildMarkerKey(treeId, segId);
 			dbObj.delete(key);
 		}
+	}
+
+	@Override
+	public List<Integer> getMarkedSegments(long treeId) {
+		DBIterator itr = dbObj.iterator();
+		ByteBuffer bb;
+		byte[] startKey = generateBaseKey(BaseKey.REBUILD_MARKER, treeId);
+		itr.seek(startKey);
+
+		List<Integer> result = new ArrayList<>();
+		while (itr.hasNext()) {
+			Entry<byte[], byte[]> entry = itr.next();
+			byte[] key = entry.getKey();
+			if (ByteUtils.compareTo(startKey, 0, startKey.length, key, 0,
+					startKey.length) != 0)
+				break;
+			bb = ByteBuffer.wrap(key);
+			int segId = bb.getInt(LEN_BASEKEY_AND_TREEID);
+			result.add(segId);
+		}
+		return result;
 	}
 
 	/**
@@ -344,6 +360,17 @@ public class HashTreesPersistentStore extends HashTreesBaseStore implements
 			result.add(readRemoteTreeInfoFrom(key));
 		}
 		return result;
+	}
+
+	/**
+	 * Deletes the db files.
+	 * 
+	 */
+	public void stopAndDelete() {
+		stop();
+		File dbDirObj = new File(dbDir);
+		if (dbDirObj.exists())
+			FileUtils.deleteQuietly(dbDirObj);
 	}
 
 	@Override

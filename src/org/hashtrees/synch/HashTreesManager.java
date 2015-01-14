@@ -10,6 +10,7 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -187,11 +188,18 @@ public class HashTreesManager extends StoppableTask implements
 		TaskQueue<Void> taskQueue = new TaskQueue<Void>(threadPool,
 				rebuildTasks.iterator(), noOfThreads);
 		while (taskQueue.hasNext()) {
-			taskQueue.next();
+			try {
+				taskQueue.next().get();
+			} catch (ExecutionException | InterruptedException e) {
+				LOG.info("Failure occurred in build task.", e);
+			}
 			if (hasStopRequested()) {
 				taskQueue.stop();
 			}
 		}
+		LOG.info("No of successful/failed rebuild tasks : "
+				+ taskQueue.getPassedJobsCount() + "/"
+				+ taskQueue.getFailedJobsCount());
 		LOG.info("Building locally managed trees - Done");
 	}
 
@@ -215,7 +223,7 @@ public class HashTreesManager extends StoppableTask implements
 		}
 	}
 
-	private void synch() {
+	private void synchAllRemoteTrees() {
 		Iterator<Long> treeIds = treeIdProvider.getAllPrimaryTreeIds();
 		List<Pair<ServerName, Long>> remoteTrees = new ArrayList<>();
 
@@ -283,11 +291,18 @@ public class HashTreesManager extends StoppableTask implements
 		TaskQueue<Void> taskQueue = new TaskQueue<Void>(threadPool,
 				syncTasks.iterator(), noOfThreads);
 		while (taskQueue.hasNext()) {
-			taskQueue.next();
+			try {
+				taskQueue.next().get();
+			} catch (InterruptedException | ExecutionException e) {
+				LOG.error("Exception occurred in synch task.", e);
+			}
 			if (hasStopRequested()) {
 				taskQueue.stop();
 			}
 		}
+		LOG.info("No of successful/failed synch tasks : "
+				+ taskQueue.getPassedJobsCount() + "/"
+				+ taskQueue.getFailedJobsCount());
 		LOG.info("Synching remote hash trees. - Done");
 	}
 
@@ -353,7 +368,7 @@ public class HashTreesManager extends StoppableTask implements
 		if (rebuildEnabled)
 			rebuildAllLocalTrees();
 		if (synchEnabled)
-			synch();
+			synchAllRemoteTrees();
 		LOG.info("Executing rebuild/synch operations - Done.");
 	}
 

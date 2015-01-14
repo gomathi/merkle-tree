@@ -4,6 +4,7 @@ import java.util.Iterator;
 import java.util.NoSuchElementException;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CompletionService;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorCompletionService;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
@@ -27,6 +28,7 @@ public class TaskQueue<T> implements Iterator<Future<T>>, Stoppable {
 	private final Iterator<Callable<T>> tasksItr;
 	private volatile int noOfTasksSubmitted;
 	private volatile boolean stopRequested;
+	private volatile int sucCount, failCount;
 
 	public TaskQueue(final ExecutorService fixedExecutors,
 			final Iterator<Callable<T>> tasksItr, int initTasksToExecute) {
@@ -54,6 +56,12 @@ public class TaskQueue<T> implements Iterator<Future<T>>, Stoppable {
 		try {
 			noOfTasksSubmitted--;
 			Future<T> result = completionService.take();
+			try {
+				result.get();
+				sucCount++;
+			} catch (ExecutionException e) {
+				failCount++;
+			}
 			if (tasksItr.hasNext() && !stopRequested) {
 				completionService.submit(tasksItr.next());
 				noOfTasksSubmitted++;
@@ -63,6 +71,14 @@ public class TaskQueue<T> implements Iterator<Future<T>>, Stoppable {
 			throw new RuntimeException(
 					"Exception occurred while waiting to remove the element from the queue.");
 		}
+	}
+
+	public int getPassedJobsCount() {
+		return sucCount;
+	}
+
+	public int getFailedJobsCount() {
+		return failCount;
 	}
 
 	@Override

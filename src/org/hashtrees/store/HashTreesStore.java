@@ -116,24 +116,32 @@ public interface HashTreesStore {
 	List<Integer> getDirtySegments(long treeId);
 
 	/**
-	 * Used during rebuild process by
+	 * Sets flags for the given segments. Used during rebuild process by
 	 * {@link HashTrees#rebuildHashTree(long, boolean)}. If the process crashes
-	 * in the middle of rebuilding we don't want to loose track of dirty
-	 * segments.This has to persist that information, so that we can reuse it
-	 * after the process recovery.
+	 * in the middle of rebuilding we don't want to loose track. This has to
+	 * persist that information, so that we can reuse it after the process
+	 * recovery.
 	 * 
 	 * @param segIds
 	 */
-	void markSegmentsForRebuild(long treeId, List<Integer> segIds);
+	void markSegments(long treeId, List<Integer> segIds);
 
 	/**
-	 * Used during rebuild process by
+	 * Gets the marked segments for the given treeId.
+	 * 
+	 * @param treeId
+	 * @return
+	 */
+	List<Integer> getMarkedSegments(long treeId);
+
+	/**
+	 * Unsets flags for the given segments. Used during rebuild process by
 	 * {@link HashTrees#rebuildHashTree(long, boolean)}. After rebuilding is
 	 * done, this will be cleared.
 	 * 
 	 * @param segIds
 	 */
-	void unmarkSegmentsForRebuild(long treeId, List<Integer> segIds);
+	void unmarkSegments(long treeId, List<Integer> segIds);
 
 	/**
 	 * Deletes the segment hashes, and segment data for the given treeId.

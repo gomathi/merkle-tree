@@ -49,6 +49,13 @@ public class ByteKeyValueConverter {
 		keyToFill.putLong(treeId);
 	}
 
+	public static byte[] generateBaseKey(BaseKey keyMarker, long treeId) {
+		byte[] key = new byte[BaseKey.LENGTH + ByteUtils.SIZEOF_LONG];
+		ByteBuffer bb = ByteBuffer.wrap(key);
+		fillBaseKey(bb, keyMarker, treeId);
+		return key;
+	}
+
 	public static byte[] readSegmentDataKey(byte[] dbSegDataKey) {
 		int from = LEN_BASEKEY_AND_TREEID + ByteUtils.SIZEOF_INT;
 		byte[] key = ByteUtils.copy(dbSegDataKey, from, dbSegDataKey.length);

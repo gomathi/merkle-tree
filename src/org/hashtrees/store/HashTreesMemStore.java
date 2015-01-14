@@ -171,16 +171,21 @@ public class HashTreesMemStore extends HashTreesBaseStore implements
 
 	@Override
 	public void stop() {
-		// No actions to do.
+		// Nothing to stop.
 	}
 
 	@Override
-	public void markSegmentsForRebuild(long treeId, List<Integer> segIds) {
+	public void markSegments(long treeId, List<Integer> segIds) {
 
 	}
 
 	@Override
-	public void unmarkSegmentsForRebuild(long treeId, List<Integer> segIds) {
+	public void unmarkSegments(long treeId, List<Integer> segIds) {
 
+	}
+
+	@Override
+	public List<Integer> getMarkedSegments(long treeId) {
+		return Collections.emptyList();
 	}
 }

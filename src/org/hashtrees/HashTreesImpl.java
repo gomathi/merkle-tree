@@ -105,6 +105,19 @@ public class HashTreesImpl implements HashTrees {
 		this.segIdProvider = segIdProvider;
 		this.htStore = htStore;
 		this.store = store;
+		initDirtySegmentsFromUnfinishedRebuilds();
+	}
+
+	// If there are unfinished rebuild tasks, then we need to mark
+	// segments belonging to those rebuild tasks as dirty segments.
+	private void initDirtySegmentsFromUnfinishedRebuilds() {
+		Iterator<Long> treeIds = htStore.getAllTreeIds();
+		while (treeIds.hasNext()) {
+			long treeId = treeIds.next();
+			List<Integer> segIds = htStore.getMarkedSegments(treeId);
+			for (int segId : segIds)
+				htStore.setDirtySegment(treeId, segId);
+		}
 	}
 
 	@Override
@@ -344,10 +357,10 @@ public class HashTreesImpl implements HashTrees {
 				if (fullRebuild)
 					rebuildCompleteTree(treeId);
 				List<Integer> dirtySegments = htStore.getDirtySegments(treeId);
-				htStore.markSegmentsForRebuild(treeId, dirtySegments);
+				htStore.markSegments(treeId, dirtySegments);
 				List<Integer> dirtyNodes = rebuildLeaves(treeId, dirtySegments);
 				rebuildInternalNodes(treeId, dirtyNodes);
-				htStore.unmarkSegmentsForRebuild(treeId, dirtySegments);
+				htStore.unmarkSegments(treeId, dirtySegments);
 				if (fullRebuild) {
 					long currentTs = System.currentTimeMillis();
 					htStore.setLastFullyTreeBuiltTimestamp(treeId, currentTs);

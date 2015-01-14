@@ -8,11 +8,14 @@ import static org.hashtrees.test.utils.HashTreesImplTestUtils.TREE_ID_PROVIDER;
 import static org.hashtrees.test.utils.HashTreesImplTestUtils.createHashTree;
 import static org.hashtrees.test.utils.HashTreesImplTestUtils.generateInMemoryAndPersistentStores;
 import static org.hashtrees.test.utils.HashTreesImplTestUtils.generateInMemoryStore;
+import static org.hashtrees.test.utils.HashTreesImplTestUtils.generatePersistentStore;
 import static org.hashtrees.test.utils.HashTreesImplTestUtils.randomByteBuffer;
 import static org.hashtrees.test.utils.HashTreesImplTestUtils.randomBytes;
 
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 
@@ -23,6 +26,7 @@ import org.hashtrees.HashTreesImpl;
 import org.hashtrees.SimpleTreeIdProvider;
 import org.hashtrees.store.HashTreesManagerStore;
 import org.hashtrees.store.HashTreesMemStore;
+import org.hashtrees.store.HashTreesPersistentStore;
 import org.hashtrees.store.HashTreesStore;
 import org.hashtrees.store.SimpleMemStore;
 import org.hashtrees.synch.HashTreesManager;
@@ -383,18 +387,6 @@ public class HashTreesImplTest {
 	}
 
 	@Test
-	public void testStop() {
-		HashTreesStore htStore = generateInMemoryStore();
-		SimpleMemStore store = new SimpleMemStore();
-		HashTreesImpl hTrees = new HashTreesImpl(DEFAULT_SEG_DATA_BLOCKS_COUNT,
-				TREE_ID_PROVIDER, SEG_ID_PROVIDER, htStore, store);
-		hTrees.enableNonblockingOperations();
-		Assert.assertTrue(hTrees.isNonBlockingCallsEnabled());
-		hTrees.stop();
-		Assert.assertFalse(hTrees.isNonBlockingCallsEnabled());
-	}
-
-	@Test
 	public void testNonBlockingCalls() throws Exception {
 		int maxQueueSize = 5;
 		final CountDownLatch putLatch = new CountDownLatch(1);
@@ -451,5 +443,39 @@ public class HashTreesImplTest {
 			}
 		}
 		Assert.assertTrue(exceptionOccurred);
+	}
+
+	@Test
+	public void testRebuildTasksBetweenRestarts() throws Exception {
+		HashTreesPersistentStore htStore = generatePersistentStore();
+		int segId = 1;
+		try {
+			List<Integer> expectedSegIds = new ArrayList<>();
+			expectedSegIds.add(segId);
+			htStore.putSegmentData(DEFAULT_TREE_ID, segId, randomByteBuffer(),
+					randomByteBuffer());
+			htStore.markSegments(DEFAULT_TREE_ID, expectedSegIds);
+			createHashTree(DEFAULT_SEG_DATA_BLOCKS_COUNT, htStore);
+			List<Integer> actualSegIds = htStore
+					.getDirtySegments(DEFAULT_TREE_ID);
+			Assert.assertNotNull(actualSegIds);
+			Assert.assertEquals(expectedSegIds.size(), actualSegIds.size());
+			Collections.sort(actualSegIds);
+			Assert.assertEquals(expectedSegIds, actualSegIds);
+		} finally {
+			htStore.stopAndDelete();
+		}
+	}
+
+	@Test
+	public void testStop() {
+		HashTreesStore htStore = generateInMemoryStore();
+		SimpleMemStore store = new SimpleMemStore();
+		HashTreesImpl hTrees = new HashTreesImpl(DEFAULT_SEG_DATA_BLOCKS_COUNT,
+				TREE_ID_PROVIDER, SEG_ID_PROVIDER, htStore, store);
+		hTrees.enableNonblockingOperations();
+		Assert.assertTrue(hTrees.isNonBlockingCallsEnabled());
+		hTrees.stop();
+		Assert.assertFalse(hTrees.isNonBlockingCallsEnabled());
 	}
 }

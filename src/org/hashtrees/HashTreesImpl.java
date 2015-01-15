@@ -719,18 +719,13 @@ public class HashTreesImpl implements HashTrees {
 				boolean isAbsent = keysOnQueue.add(key);
 				switch (pair.getFirst()) {
 				case PUT:
-					hTree.hPutInternal(key, pair.getSecond().get(1));
+				case REMOVE:
+					super.enque(pair);
 					break;
 				case PUT_IF_ABSENT:
-					if (isAbsent)
-						hTree.hPutInternal(key, pair.getSecond().get(1));
-					break;
-				case REMOVE:
-					hTree.hRemoveInternal(key);
-					break;
 				case REMOVE_IF_ABSENT:
 					if (isAbsent)
-						hTree.hRemoveInternal(key);
+						super.enque(pair);
 					break;
 				}
 			}

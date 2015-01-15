@@ -83,7 +83,8 @@ public class HashTreesImplTestUtils {
 			throws Exception {
 		SimpleMemStore store = new SimpleMemStore();
 		HashTreesImpl hTree = new HashTreesImpl.Builder(store, treeIdProv,
-				hTStore).setNoOfSegments(noOfSegDataBlocks).build();
+				hTStore).setNoOfSegments(noOfSegDataBlocks)
+				.setSegmentIdProvider(segIdPro).build();
 		store.registerHashTrees(hTree);
 		return new HTreeComponents(hTStore, store, hTree);
 	}

@@ -16,9 +16,9 @@ import org.hashtrees.util.Pair;
  */
 public interface Store {
 
-	ByteBuffer get(ByteBuffer key);
+	byte[] get(byte[] key);
 
-	boolean contains(ByteBuffer key);
+	boolean contains(byte[] key);
 
 	/**
 	 * Adds the key and value to the local store. Also this call should forward
@@ -30,7 +30,7 @@ public interface Store {
 	 * @param value
 	 * @throws Exception
 	 */
-	void put(ByteBuffer key, ByteBuffer value) throws Exception;
+	void put(byte[] key, byte[] value) throws Exception;
 
 	/**
 	 * Removes the key from the local store. Also this call should forward the
@@ -42,7 +42,7 @@ public interface Store {
 	 * @return
 	 * @throws Exception
 	 */
-	void remove(ByteBuffer key) throws Exception;
+	void remove(byte[] key) throws Exception;
 
 	/**
 	 * This should return only (key,value) that are belonging to treeId. Used by
@@ -52,7 +52,7 @@ public interface Store {
 	 * @param treeId
 	 * @return
 	 */
-	Iterator<Pair<ByteBuffer, ByteBuffer>> iterator(long treeId);
+	Iterator<Pair<byte[], byte[]>> iterator(long treeId);
 
 	/**
 	 * Returns all keyValue pairs that are part of this store.Used by
@@ -61,7 +61,7 @@ public interface Store {
 	 * 
 	 * @return
 	 */
-	Iterator<Pair<ByteBuffer, ByteBuffer>> iterator();
+	Iterator<Pair<byte[], byte[]>> iterator();
 
 	void registerHashTrees(HashTrees hashTrees);
 }

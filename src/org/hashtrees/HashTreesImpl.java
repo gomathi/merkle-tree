@@ -271,12 +271,12 @@ public class HashTreesImpl implements HashTrees {
 			if (compRes == 0) {
 				if (!Arrays.equals(local.getDigest(), remote.getDigest()))
 					kvsForAddition.put(ByteBuffer.wrap(local.getKey()),
-							store.get(ByteBuffer.wrap(local.getKey())));
+							ByteBuffer.wrap(store.get(local.getKey())));
 				localDataItr.next();
 				remoteDataItr.next();
 			} else if (compRes < 0) {
 				kvsForAddition.put(ByteBuffer.wrap(local.getKey()),
-						store.get(ByteBuffer.wrap(local.getKey())));
+						ByteBuffer.wrap(store.get(local.getKey())));
 				localDataItr.next();
 			} else {
 				keysForRemoval.add(ByteBuffer.wrap(remote.getKey()));
@@ -297,7 +297,7 @@ public class HashTreesImpl implements HashTrees {
 			List<SegmentData> sdValues = getSegment(treeId, segId);
 			for (SegmentData sd : sdValues)
 				keyValuePairs.put(ByteBuffer.wrap(sd.getKey()),
-						store.get(ByteBuffer.wrap(sd.getKey())));
+						ByteBuffer.wrap(store.get(sd.getKey())));
 			if (sdValues.size() > 0)
 				remoteTree.sPut(keyValuePairs);
 		}
@@ -397,17 +397,18 @@ public class HashTreesImpl implements HashTrees {
 	 * @param treeId
 	 */
 	private void rebuildCompleteTree(long treeId) {
-		Iterator<Pair<ByteBuffer, ByteBuffer>> itr = store.iterator(treeId);
+		Iterator<Pair<byte[], byte[]>> itr = store.iterator(treeId);
 		while (itr.hasNext()) {
-			Pair<ByteBuffer, ByteBuffer> pair = itr.next();
-			hPutInternal(HTOperation.PUT_IF_ABSENT, pair.getFirst(),
-					pair.getSecond());
+			Pair<byte[], byte[]> pair = itr.next();
+			hPutInternal(HTOperation.PUT_IF_ABSENT,
+					ByteBuffer.wrap(pair.getFirst()),
+					ByteBuffer.wrap(pair.getSecond()));
 		}
 		Iterator<SegmentData> segDataItr = htStore
 				.getSegmentDataIterator(treeId);
 		while (segDataItr.hasNext()) {
 			SegmentData sd = segDataItr.next();
-			if (!store.contains(sd.key)) {
+			if (!store.contains(sd.key.array())) {
 				hRemoveInternal(HTOperation.REMOVE_IF_ABSENT, sd.key);
 			}
 		}
@@ -490,13 +491,14 @@ public class HashTreesImpl implements HashTrees {
 			throws Exception {
 		for (Map.Entry<ByteBuffer, ByteBuffer> keyValuePair : keyValuePairs
 				.entrySet())
-			store.put(keyValuePair.getKey(), keyValuePair.getValue());
+			store.put(keyValuePair.getKey().array(), keyValuePair.getValue()
+					.array());
 	}
 
 	@Override
 	public void sRemove(final List<ByteBuffer> keys) throws Exception {
 		for (ByteBuffer key : keys)
-			store.remove(key);
+			store.remove(key.array());
 	}
 
 	@Override
@@ -507,7 +509,7 @@ public class HashTreesImpl implements HashTrees {
 			Iterator<SegmentData> segDataItr = getSegment(treeId, segId)
 					.iterator();
 			while (segDataItr.hasNext())
-				store.remove(ByteBuffer.wrap(segDataItr.next().getKey()));
+				store.remove(segDataItr.next().getKey());
 		}
 	}
 

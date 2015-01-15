@@ -5,7 +5,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentSkipListMap;
 
 import org.hashtrees.util.Pair;
 
@@ -18,27 +18,27 @@ import org.hashtrees.util.Pair;
  */
 public class SimpleMemStore extends BaseStore {
 
-	private final ConcurrentHashMap<ByteBuffer, ByteBuffer> kvMap = new ConcurrentHashMap<ByteBuffer, ByteBuffer>();
+	private final ConcurrentSkipListMap<ByteBuffer, ByteBuffer> kvMap = new ConcurrentSkipListMap<>();
 
 	@Override
-	public ByteBuffer get(ByteBuffer key) {
-		ByteBuffer intKey = ByteBuffer.wrap(key.array());
-		return kvMap.get(intKey);
+	public byte[] get(byte[] key) {
+		ByteBuffer intKey = ByteBuffer.wrap(key);
+		return (intKey != null) ? kvMap.get(intKey).array() : null;
 	}
 
 	@Override
-	public void put(ByteBuffer key, ByteBuffer value) throws Exception {
-		ByteBuffer intKey = ByteBuffer.wrap(key.array());
-		ByteBuffer intValue = ByteBuffer.wrap(value.array());
+	public void put(byte[] key, byte[] value) throws Exception {
+		ByteBuffer intKey = ByteBuffer.wrap(key);
+		ByteBuffer intValue = ByteBuffer.wrap(value);
 		kvMap.put(intKey, intValue);
-		super.put(intKey, intValue);
+		super.put(key, value);
 	}
 
 	@Override
-	public void remove(ByteBuffer key) throws Exception {
-		ByteBuffer intKey = ByteBuffer.wrap(key.array());
+	public void remove(byte[] key) throws Exception {
+		ByteBuffer intKey = ByteBuffer.wrap(key);
 		kvMap.remove(intKey);
-		super.remove(intKey);
+		super.remove(key);
 	}
 
 	/**
@@ -46,7 +46,7 @@ public class SimpleMemStore extends BaseStore {
 	 * treeId it belongs to.
 	 */
 	@Override
-	public Iterator<Pair<ByteBuffer, ByteBuffer>> iterator(long treeId) {
+	public Iterator<Pair<byte[], byte[]>> iterator(long treeId) {
 		return iterator();
 	}
 
@@ -66,16 +66,18 @@ public class SimpleMemStore extends BaseStore {
 	}
 
 	@Override
-	public Iterator<Pair<ByteBuffer, ByteBuffer>> iterator() {
-		List<Pair<ByteBuffer, ByteBuffer>> result = new ArrayList<Pair<ByteBuffer, ByteBuffer>>();
+	public Iterator<Pair<byte[], byte[]>> iterator() {
+		List<Pair<byte[], byte[]>> result = new ArrayList<>();
 		for (Map.Entry<ByteBuffer, ByteBuffer> entry : kvMap.entrySet())
-			result.add(Pair.create(entry.getKey(), entry.getValue()));
+			result.add(Pair.create(entry.getKey().array(), entry.getValue()
+					.array()));
 		return result.iterator();
 	}
 
 	@Override
-	public boolean contains(ByteBuffer key) {
-		return kvMap.contains(key);
+	public boolean contains(byte[] key) {
+		ByteBuffer intKey = ByteBuffer.wrap(key);
+		return kvMap.containsKey(intKey);
 	}
 
 }

@@ -17,15 +17,15 @@ public abstract class BaseStore implements Store {
 	private volatile HashTrees hashTrees;
 
 	@Override
-	public void put(ByteBuffer key, ByteBuffer value) throws Exception {
+	public void put(byte[] key, byte[] value) throws Exception {
 		if (hashTrees != null)
-			hashTrees.hPut(key, value);
+			hashTrees.hPut(ByteBuffer.wrap(key), ByteBuffer.wrap(value));
 	}
 
 	@Override
-	public void remove(ByteBuffer key) throws Exception {
+	public void remove(byte[] key) throws Exception {
 		if (hashTrees != null)
-			hashTrees.hRemove(key);
+			hashTrees.hRemove(ByteBuffer.wrap(key));
 	}
 
 	@Override

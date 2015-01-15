@@ -114,9 +114,8 @@ public class HashTreesManagerTest {
 				localEvents,
 				HashTreesConstants.DEFAULT_HASH_TREE_SERVER_PORT_NO, 3000, 300);
 		HashTreesManager localSyncManager = componentsLocal.syncMgrImpl;
-		componentsLocal.storeImplTest.put(
-				HashTreesImplTestUtils.randomByteBuffer(),
-				HashTreesImplTestUtils.randomByteBuffer());
+		componentsLocal.storeImplTest.put(HashTreesImplTestUtils.randomBytes(),
+				HashTreesImplTestUtils.randomBytes());
 
 		BlockingQueue<HTSynchEvent> remoteEvents = new ArrayBlockingQueue<HTSynchEvent>(
 				10000);
@@ -129,7 +128,7 @@ public class HashTreesManagerTest {
 				"localhost", 8999), 1));
 		localSyncManager.init();
 
-		waitForTheEvent(localEvents, HTSynchEvent.SYNCH, 10000);
+		waitForTheEvent(localEvents, HTSynchEvent.SYNCH, 10000000000l);
 		waitForTheEvent(remoteEvents, HTSynchEvent.SYNCH_INITIATED, 10000);
 		localSyncManager.shutdown();
 		remoteSyncManager.shutdown();

@@ -1,6 +1,5 @@
 package org.hashtrees.usage;
 
-import java.nio.ByteBuffer;
 import java.util.Arrays;
 
 import junit.framework.Assert;
@@ -112,14 +111,14 @@ public class HashTreesUsage {
 		Pair<Store, HashTreesImpl> primary = createAStoreWithEnabledHashTrees();
 		Pair<Store, HashTreesImpl> backup = createAStoreWithEnabledHashTrees();
 
-		ByteBuffer key = ByteBuffer.wrap("testKey".getBytes());
-		ByteBuffer value = ByteBuffer.wrap("testValue".getBytes());
-		primary.getFirst().put(key, value);
+		byte[] keyBytes = "testKey".getBytes();
+		byte[] valueBytes = "testValue".getBytes();
+		primary.getFirst().put(keyBytes, valueBytes);
 
 		primary.getSecond().rebuildHashTree(1, false);
 		primary.getSecond().synch(1, backup.getSecond());
-		Assert.assertTrue(Arrays.equals(backup.getFirst().get(key).array(),
-				value.array()));
+		Assert.assertTrue(Arrays.equals(backup.getFirst().get(keyBytes),
+				valueBytes));
 
 		stop(primary.getSecond());
 		stop(backup.getSecond());

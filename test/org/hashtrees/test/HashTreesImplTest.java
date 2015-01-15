@@ -193,8 +193,7 @@ public class HashTreesImplTest {
 						DEFAULT_SEG_DATA_BLOCKS_COUNT, remoteStores[j]);
 
 				for (int i = 1; i <= DEFAULT_SEG_DATA_BLOCKS_COUNT; i++) {
-					localHTreeComp.store.put(randomByteBuffer(),
-							randomByteBuffer());
+					localHTreeComp.store.put(randomBytes(), randomBytes());
 				}
 
 				localHTreeComp.hTree.rebuildAllTrees(false);
@@ -237,8 +236,7 @@ public class HashTreesImplTest {
 						DEFAULT_SEG_DATA_BLOCKS_COUNT, remoteStores[j]);
 
 				for (int i = 0; i < DEFAULT_SEG_DATA_BLOCKS_COUNT; i++) {
-					remoteHTreeComp.store.put(randomByteBuffer(),
-							randomByteBuffer());
+					remoteHTreeComp.store.put(randomBytes(), randomBytes());
 				}
 
 				localHTreeComp.hTree.rebuildAllTrees(false);
@@ -269,8 +267,7 @@ public class HashTreesImplTest {
 						DEFAULT_SEG_DATA_BLOCKS_COUNT, remoteStores[j]);
 
 				for (int i = 0; i < DEFAULT_SEG_DATA_BLOCKS_COUNT; i++) {
-					localHTreeComp.store.put(randomByteBuffer(),
-							randomByteBuffer());
+					localHTreeComp.store.put(randomBytes(), randomBytes());
 				}
 
 				localHTreeComp.hTree.rebuildAllTrees(false);
@@ -302,12 +299,12 @@ public class HashTreesImplTest {
 
 				for (int k = 0; k <= 1; k++) {
 					ByteBuffer key = generateBytesFrom(segId, k);
-					remoteHTreeComp.store.put(key, randomByteBuffer());
+					remoteHTreeComp.store.put(key.array(), randomBytes());
 				}
 
 				for (int k = 1; k <= 2; k++) {
 					ByteBuffer key = generateBytesFrom(segId, k);
-					localHTreeComp.store.put(key, randomByteBuffer());
+					localHTreeComp.store.put(key.array(), randomBytes());
 				}
 
 				localHTreeComp.hTree.rebuildAllTrees(false);
@@ -347,8 +344,7 @@ public class HashTreesImplTest {
 							HashTreesConstants.DEFAULT_HASH_TREE_SERVER_PORT_NO));
 
 			for (int i = 1; i <= DEFAULT_SEG_DATA_BLOCKS_COUNT; i++) {
-				localHTreeComp.store
-						.put(randomByteBuffer(), randomByteBuffer());
+				localHTreeComp.store.put(randomBytes(), randomBytes());
 			}
 
 			localHTreeComp.hTree.rebuildAllTrees(false);
@@ -358,8 +354,7 @@ public class HashTreesImplTest {
 				List<SegmentData> segBlock = remoteHTreeComp.hTree.getSegment(
 						DEFAULT_TREE_ID, i);
 				for (SegmentData sData : segBlock) {
-					localHTreeComp.store.put(ByteBuffer.wrap(sData.getKey()),
-							randomByteBuffer());
+					localHTreeComp.store.put(sData.getKey(), randomBytes());
 				}
 				localHTreeComp.hTree.rebuildAllTrees(false);
 				remoteHTreeComp.hTree.rebuildAllTrees(false);

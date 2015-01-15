@@ -31,13 +31,28 @@ public interface HashTreesStore {
 			ByteBuffer digest);
 
 	/**
-	 * Deletes the given segement data from the block.
+	 * Similar to {@link #putSegmentData(long, int, ByteBuffer, ByteBuffer)},
+	 * except that this stores actual value as well.
 	 * 
 	 * @param treeId
 	 * @param segId
 	 * @param key
+	 * @param value
+	 * @param digest
 	 */
-	void deleteSegmentData(long treeId, int segId, ByteBuffer key);
+	void putSegmentData(long treeId, int segId, ByteBuffer key,
+			ByteBuffer value, ByteBuffer digest);
+
+	/**
+	 * {@link HashTrees} can store actual value of the given key on storage.
+	 * This returns that value. (Not the digest).
+	 * 
+	 * @param treeId
+	 * @param segId
+	 * @param key
+	 * @return
+	 */
+	ByteBuffer getValue(long treeId, int segId, ByteBuffer key);
 
 	/**
 	 * Returns the SegmentData for the given key if available, otherwise returns
@@ -49,6 +64,23 @@ public interface HashTreesStore {
 	 * @return
 	 */
 	SegmentData getSegmentData(long treeId, int segId, ByteBuffer key);
+
+	/**
+	 * Deletes the given segement data from the block.
+	 * 
+	 * @param treeId
+	 * @param segId
+	 * @param key
+	 */
+	void deleteSegmentData(long treeId, int segId, ByteBuffer key);
+
+	/**
+	 * Returns an iterator to read all the segment data of the given tree id.
+	 * 
+	 * @param treeId
+	 * @return
+	 */
+	Iterator<SegmentData> getSegmentDataIterator(long treeId);
 
 	/**
 	 * Given a segment id, returns the list of all segment data in the
@@ -157,14 +189,14 @@ public interface HashTreesStore {
 	 * 
 	 * @param timestamp
 	 */
-	void setLastFullyTreeBuiltTimestamp(long treeId, long timestamp);
+	void setCompleteRebuiltTimestamp(long treeId, long timestamp);
 
 	/**
 	 * Returns the timestamp at which the complete HashTree was rebuilt.
 	 * 
 	 * @return
 	 */
-	long getLastFullyTreeBuiltTimestamp(long treeId);
+	long getCompleteRebuiltTimestamp(long treeId);
 
 	/**
 	 * Returns all tree ids that are stored.

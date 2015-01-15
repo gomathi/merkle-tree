@@ -21,6 +21,7 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -85,6 +86,7 @@ public class HashTreesImpl implements HashTrees {
 	private final HashTreesStore htStore;
 	private final HashTreesIdProvider treeIdProvider;
 	private final SegmentIdProvider segIdProvider;
+	private final HTValueConverter converter;
 
 	private final ConcurrentMap<Long, Lock> treeLocks = new ConcurrentHashMap<>();
 	private final Object nonBlockingCallsLock = new Object();
@@ -96,7 +98,8 @@ public class HashTreesImpl implements HashTrees {
 	public HashTreesImpl(int noOfSegments,
 			final HashTreesIdProvider treeIdProvider,
 			final SegmentIdProvider segIdProvider,
-			final HashTreesStore htStore, final Store store) {
+			final HashTreesStore htStore, final Store store,
+			final HTValueConverter converter) {
 		this.noOfChildren = BINARY_TREE;
 		this.segmentsCount = getValidSegmentsCount(noOfSegments);
 		this.internalNodesCount = getNoOfNodes(
@@ -105,12 +108,13 @@ public class HashTreesImpl implements HashTrees {
 		this.segIdProvider = segIdProvider;
 		this.htStore = htStore;
 		this.store = store;
-		initDirtySegmentsFromUnfinishedRebuilds();
+		this.converter = converter;
+		initDirtySegments();
 	}
 
 	// If there are unfinished rebuild tasks, then we need to mark
 	// segments belonging to those rebuild tasks as dirty segments.
-	private void initDirtySegmentsFromUnfinishedRebuilds() {
+	private void initDirtySegments() {
 		Iterator<Long> treeIds = htStore.getAllTreeIds();
 		while (treeIds.hasNext()) {
 			long treeId = treeIds.next();
@@ -122,11 +126,16 @@ public class HashTreesImpl implements HashTrees {
 
 	@Override
 	public void hPut(final ByteBuffer key, final ByteBuffer value) {
+		hPutInternal(HTOperation.PUT, key, value);
+	}
+
+	private void hPutInternal(HTOperation operation, final ByteBuffer key,
+			final ByteBuffer value) {
 		if (enabledNonBlockingCalls) {
 			List<ByteBuffer> input = new ArrayList<ByteBuffer>();
 			input.add(key);
 			input.add(value);
-			bgDataUpdater.enque(Pair.create(HTOperation.PUT, input));
+			bgDataUpdater.enque(Pair.create(operation, input));
 		} else
 			hPutInternal(key, value);
 	}
@@ -134,17 +143,26 @@ public class HashTreesImpl implements HashTrees {
 	private void hPutInternal(final ByteBuffer key, final ByteBuffer value) {
 		long treeId = treeIdProvider.getTreeId(key);
 		int segId = segIdProvider.getSegmentId(key);
-		ByteBuffer digest = ByteBuffer.wrap(sha1(value.array()));
+		ByteBuffer newValue = (converter == null) ? value : (converter.apply(
+				htStore.getValue(treeId, segId, key), value));
+		ByteBuffer digest = ByteBuffer.wrap(sha1(newValue.array()));
 		htStore.setDirtySegment(treeId, segId);
-		htStore.putSegmentData(treeId, segId, key, digest);
+		if (converter == null)
+			htStore.putSegmentData(treeId, segId, key, digest);
+		else
+			htStore.putSegmentData(treeId, segId, key, newValue, digest);
 	}
 
 	@Override
 	public void hRemove(final ByteBuffer key) {
+		hRemoveInternal(HTOperation.REMOVE, key);
+	}
+
+	public void hRemoveInternal(HTOperation operation, final ByteBuffer key) {
 		if (enabledNonBlockingCalls) {
 			List<ByteBuffer> input = new ArrayList<ByteBuffer>();
 			input.add(key);
-			bgDataUpdater.enque(Pair.create(HTOperation.REMOVE, input));
+			bgDataUpdater.enque(Pair.create(operation, input));
 		} else {
 			hRemoveInternal(key);
 		}
@@ -340,8 +358,7 @@ public class HashTreesImpl implements HashTrees {
 	@Override
 	public void rebuildHashTree(long treeId, long fullRebuildPeriod)
 			throws Exception {
-		long lastFullRebuiltTime = htStore
-				.getLastFullyTreeBuiltTimestamp(treeId);
+		long lastFullRebuiltTime = htStore.getCompleteRebuiltTimestamp(treeId);
 		boolean fullRebuild = (lastFullRebuiltTime == 0) ? true
 				: ((fullRebuildPeriod < 0) ? false
 						: (System.currentTimeMillis() - lastFullRebuiltTime) > fullRebuildPeriod);
@@ -363,7 +380,7 @@ public class HashTreesImpl implements HashTrees {
 				htStore.unmarkSegments(treeId, dirtySegments);
 				if (fullRebuild) {
 					long currentTs = System.currentTimeMillis();
-					htStore.setLastFullyTreeBuiltTimestamp(treeId, currentTs);
+					htStore.setCompleteRebuiltTimestamp(treeId, currentTs);
 				}
 			} finally {
 				releaseTreeLock(treeId);
@@ -371,8 +388,29 @@ public class HashTreesImpl implements HashTrees {
 		}
 	}
 
+	/**
+	 * This reads all the entries from the {@link Store}, and updates
+	 * {@link HashTreesStore} with those (key,value) pairs. Also reads all the
+	 * existing entries from {@link HashTreesStore} and if they don't exist on
+	 * the {@link Store}, removes from {@link HashTreesStore}.
+	 * 
+	 * @param treeId
+	 */
 	private void rebuildCompleteTree(long treeId) {
-
+		Iterator<Pair<ByteBuffer, ByteBuffer>> itr = store.iterator(treeId);
+		while (itr.hasNext()) {
+			Pair<ByteBuffer, ByteBuffer> pair = itr.next();
+			hPutInternal(HTOperation.PUT_IF_ABSENT, pair.getFirst(),
+					pair.getSecond());
+		}
+		Iterator<SegmentData> segDataItr = htStore
+				.getSegmentDataIterator(treeId);
+		while (segDataItr.hasNext()) {
+			SegmentData sd = segDataItr.next();
+			if (!store.contains(sd.key)) {
+				hRemoveInternal(HTOperation.REMOVE_IF_ABSENT, sd.key);
+			}
+		}
 	}
 
 	/**
@@ -471,11 +509,6 @@ public class HashTreesImpl implements HashTrees {
 			while (segDataItr.hasNext())
 				store.remove(ByteBuffer.wrap(segDataItr.next().getKey()));
 		}
-	}
-
-	@Override
-	public long getLastFullyRebuiltTimeStamp(long treeId) {
-		return htStore.getLastFullyTreeBuiltTimestamp(treeId);
 	}
 
 	public boolean enableNonblockingOperations(int maxElementsToQue) {
@@ -655,7 +688,7 @@ public class HashTreesImpl implements HashTrees {
 	 * 
 	 */
 	private static enum HTOperation {
-		PUT, REMOVE
+		PUT, REMOVE, PUT_IF_ABSENT, REMOVE_IF_ABSENT
 	}
 
 	/**
@@ -670,6 +703,7 @@ public class HashTreesImpl implements HashTrees {
 
 		private static final Pair<HTOperation, List<ByteBuffer>> STOP_MARKER = new Pair<HTOperation, List<ByteBuffer>>(
 				HTOperation.PUT, null);
+		private final ConcurrentSkipListSet<ByteBuffer> keysOnQueue = new ConcurrentSkipListSet<>();
 		private final HashTreesImpl hTree;
 
 		public NonBlockingHTDataUpdater(final HashTreesImpl hTree,
@@ -679,15 +713,45 @@ public class HashTreesImpl implements HashTrees {
 		}
 
 		@Override
+		public void enque(Pair<HTOperation, List<ByteBuffer>> pair) {
+			if (pair != STOP_MARKER) {
+				ByteBuffer key = pair.getSecond().get(0);
+				boolean isAbsent = keysOnQueue.add(key);
+				switch (pair.getFirst()) {
+				case PUT:
+					hTree.hPutInternal(key, pair.getSecond().get(1));
+					break;
+				case PUT_IF_ABSENT:
+					if (isAbsent)
+						hTree.hPutInternal(key, pair.getSecond().get(1));
+					break;
+				case REMOVE:
+					hTree.hRemoveInternal(key);
+					break;
+				case REMOVE_IF_ABSENT:
+					if (isAbsent)
+						hTree.hRemoveInternal(key);
+					break;
+				}
+			}
+		}
+
+		@Override
 		public void handleElement(Pair<HTOperation, List<ByteBuffer>> pair) {
-			switch (pair.getFirst()) {
-			case PUT:
-				hTree.hPutInternal(pair.getSecond().get(0), pair.getSecond()
-						.get(1));
-				break;
-			case REMOVE:
-				hTree.hRemoveInternal(pair.getSecond().get(0));
-				break;
+			ByteBuffer key = pair.getSecond().get(0);
+			try {
+				switch (pair.getFirst()) {
+				case PUT:
+				case PUT_IF_ABSENT:
+					hTree.hPutInternal(key, pair.getSecond().get(1));
+					break;
+				case REMOVE:
+				case REMOVE_IF_ABSENT:
+					hTree.hRemoveInternal(key);
+					break;
+				}
+			} finally {
+				keysOnQueue.remove(key);
 			}
 		}
 
@@ -701,6 +765,7 @@ public class HashTreesImpl implements HashTrees {
 		private final HashTreesIdProvider treeIdProvider;
 
 		private SegmentIdProvider segIdProvider;
+		private HTValueConverter converter;
 		private int noOfSegments = MAX_NO_OF_SEGMENTS;
 
 		public Builder(Store store, HashTreesIdProvider treeIdProvider,
@@ -756,11 +821,16 @@ public class HashTreesImpl implements HashTrees {
 			return this;
 		}
 
+		public Builder setValueConverter(HTValueConverter converter) {
+			this.converter = converter;
+			return this;
+		}
+
 		public HashTreesImpl build() {
 			if (segIdProvider == null)
 				segIdProvider = new ModuloSegIdProvider(noOfSegments);
 			return new HashTreesImpl(noOfSegments, treeIdProvider,
-					segIdProvider, htStore, store);
+					segIdProvider, htStore, store, converter);
 		}
 	}
 }

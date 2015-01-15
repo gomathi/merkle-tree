@@ -18,6 +18,8 @@ public interface Store {
 
 	ByteBuffer get(ByteBuffer key);
 
+	boolean contains(ByteBuffer key);
+
 	/**
 	 * Adds the key and value to the local store. Also this call should forward
 	 * the request to {@link HashTrees#hPut(ByteBuffer, ByteBuffer)} with the

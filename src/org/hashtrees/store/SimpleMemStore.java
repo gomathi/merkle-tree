@@ -12,6 +12,9 @@ import org.hashtrees.util.Pair;
 /**
  * In memory implementation of {@link Store}. Intended to be used in unit tests.
  * 
+ * Note the {@link #hashCode()} is calculated by using the internal map of key
+ * values.
+ * 
  */
 public class SimpleMemStore extends BaseStore {
 
@@ -68,6 +71,11 @@ public class SimpleMemStore extends BaseStore {
 		for (Map.Entry<ByteBuffer, ByteBuffer> entry : kvMap.entrySet())
 			result.add(Pair.create(entry.getKey(), entry.getValue()));
 		return result.iterator();
+	}
+
+	@Override
+	public boolean contains(ByteBuffer key) {
+		return kvMap.contains(key);
 	}
 
 }

@@ -8,10 +8,13 @@ import static org.hashtrees.store.ByteKeyValueConverter.generateDirtySegmentKey;
 import static org.hashtrees.store.ByteKeyValueConverter.generateMetaDataKey;
 import static org.hashtrees.store.ByteKeyValueConverter.generateRebuildMarkerKey;
 import static org.hashtrees.store.ByteKeyValueConverter.generateSegmentDataKey;
+import static org.hashtrees.store.ByteKeyValueConverter.generateSegmentDataValue;
 import static org.hashtrees.store.ByteKeyValueConverter.generateSegmentHashKey;
 import static org.hashtrees.store.ByteKeyValueConverter.generateTreeIdKey;
 import static org.hashtrees.store.ByteKeyValueConverter.readRemoteTreeInfoFrom;
+import static org.hashtrees.store.ByteKeyValueConverter.readSegmentDataDigest;
 import static org.hashtrees.store.ByteKeyValueConverter.readSegmentDataKey;
+import static org.hashtrees.store.ByteKeyValueConverter.readSegmentDataValue;
 import static org.hashtrees.store.ByteKeyValueConverter.readTreeIdFromBaseKey;
 
 import java.io.File;
@@ -48,9 +51,9 @@ import org.slf4j.LoggerFactory;
  * 
  * 1) Metadata info [Like when the tree was built fully last time]. Format is
  * ['M'|treeId|key] -> [value] 2) SegmentData, format is ['S'|treeId|segId|key]
- * -> [value] 3) SegmentHash, format is ['H'|treeId|nodeId] -> [value] 4)
- * TreeId, format is ['T'|treeId] -> [EMPTY_VALUE] 5) Dirty segment key
- * ['D'|treeId|dirtySegId] -> [EMPTY_VALUE]
+ * -> [digest|marker|actualValue] 3) SegmentHash, format is ['H'|treeId|nodeId]
+ * -> [value] 4) TreeId, format is ['T'|treeId] -> [EMPTY_VALUE] 5) Dirty
+ * segment key ['D'|treeId|dirtySegId] -> [EMPTY_VALUE]
  * 
  */
 
@@ -160,23 +163,19 @@ public class HashTreesPersistentStore extends HashTreesBaseStore implements
 	}
 
 	@Override
-	public void setLastFullyTreeBuiltTimestamp(long treeId, long timestamp) {
+	public void setCompleteRebuiltTimestamp(long treeId, long ts) {
 		byte[] value = new byte[ByteUtils.SIZEOF_LONG];
 		ByteBuffer bbValue = ByteBuffer.wrap(value);
-		bbValue.putLong(timestamp);
-		byte[] key = generateMetaDataKey(MetaDataKey.LAST_FULLY_TREE_BUILT_TS,
-				treeId);
+		bbValue.putLong(ts);
+		byte[] key = generateMetaDataKey(MetaDataKey.FULL_REBUILT_TS, treeId);
 		dbObj.put(key, value);
 	}
 
 	@Override
-	public long getLastFullyTreeBuiltTimestamp(long treeId) {
-		byte[] key = generateMetaDataKey(MetaDataKey.LAST_FULLY_TREE_BUILT_TS,
-				treeId);
+	public long getCompleteRebuiltTimestamp(long treeId) {
+		byte[] key = generateMetaDataKey(MetaDataKey.FULL_REBUILT_TS, treeId);
 		byte[] value = dbObj.get(key);
-		if (value != null)
-			return ByteUtils.toLong(value, 0);
-		return 0;
+		return (value == null) ? 0 : ByteUtils.toLong(value, 0);
 	}
 
 	@Override
@@ -206,12 +205,27 @@ public class HashTreesPersistentStore extends HashTreesBaseStore implements
 	}
 
 	@Override
+	public void putSegmentData(long treeId, int segId, ByteBuffer key,
+			ByteBuffer value, ByteBuffer digest) {
+		putSegmentData(treeId, segId, key,
+				ByteBuffer.wrap(generateSegmentDataValue(digest, value)));
+	}
+
+	@Override
+	public ByteBuffer getValue(long treeId, int segId, ByteBuffer key) {
+		byte[] dbKey = generateSegmentDataKey(treeId, segId, key);
+		byte[] dbValue = dbObj.get(dbKey);
+		return (dbValue == null) ? null : ByteBuffer
+				.wrap(readSegmentDataValue(dbValue));
+	}
+
+	@Override
 	public SegmentData getSegmentData(long treeId, int segId, ByteBuffer key) {
 		byte[] dbKey = generateSegmentDataKey(treeId, segId, key);
 		byte[] value = dbObj.get(dbKey);
 		if (value != null) {
 			ByteBuffer intKeyBB = ByteBuffer.wrap(key.array());
-			ByteBuffer valueBB = ByteBuffer.wrap(value);
+			ByteBuffer valueBB = ByteBuffer.wrap(readSegmentDataDigest(value));
 			return new SegmentData(intKeyBB, valueBB);
 		}
 		return null;
@@ -221,6 +235,52 @@ public class HashTreesPersistentStore extends HashTreesBaseStore implements
 	public void deleteSegmentData(long treeId, int segId, ByteBuffer key) {
 		byte[] dbKey = generateSegmentDataKey(treeId, segId, key);
 		dbObj.delete(dbKey);
+	}
+
+	@Override
+	public Iterator<SegmentData> getSegmentDataIterator(long treeId) {
+		final byte[] startKey = generateBaseKey(BaseKey.SEG_DATA, treeId);
+		final DBIterator iterator = dbObj.iterator();
+		iterator.seek(startKey);
+		return new Iterator<SegmentData>() {
+
+			private Queue<SegmentData> internalQue = new ArrayDeque<>();
+
+			@Override
+			public boolean hasNext() {
+				loadNextElement();
+				return !internalQue.isEmpty();
+			}
+
+			@Override
+			public SegmentData next() {
+				if (internalQue.isEmpty())
+					throw new NoSuchElementException(
+							"There is no next tree id.");
+				return internalQue.remove();
+			}
+
+			@Override
+			public void remove() {
+				throw new UnsupportedOperationException(
+						"Remove is not supported.");
+			}
+
+			private void loadNextElement() {
+				if (internalQue.isEmpty() && iterator.hasNext()) {
+					byte[] key = readSegmentDataKey(iterator.peekNext()
+							.getKey());
+					byte[] value = iterator.peekNext().getValue();
+					if (ByteUtils.compareTo(startKey, 0, startKey.length, key,
+							0, startKey.length) != 0)
+						return;
+					SegmentData sd = new SegmentData();
+					sd.setKey(key);
+					sd.setDigest(readSegmentDataDigest(value));
+					internalQue.add(sd);
+				}
+			}
+		};
 	}
 
 	@Override
@@ -366,7 +426,7 @@ public class HashTreesPersistentStore extends HashTreesBaseStore implements
 	 * Deletes the db files.
 	 * 
 	 */
-	public void stopAndDelete() {
+	public void delete() {
 		stop();
 		File dbDirObj = new File(dbDir);
 		if (dbDirObj.exists())

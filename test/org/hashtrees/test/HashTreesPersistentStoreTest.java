@@ -10,6 +10,7 @@ import org.hashtrees.store.HashTreesPersistentStore;
 import org.hashtrees.test.utils.HashTreesImplTestUtils;
 import org.hashtrees.thrift.generated.SegmentData;
 import org.hashtrees.thrift.generated.SegmentHash;
+import org.hashtrees.util.ByteUtils;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -27,7 +28,8 @@ public class HashTreesPersistentStoreTest {
 		HashTreesPersistentStore dbObj = new HashTreesPersistentStore(dbDir);
 		try {
 			ByteBuffer key = ByteBuffer.wrap("key1".getBytes());
-			ByteBuffer digest = ByteBuffer.wrap("digest1".getBytes());
+			ByteBuffer digest = ByteBuffer.wrap(ByteUtils.sha1("digest1"
+					.getBytes()));
 
 			dbObj.putSegmentData(DEF_TREE_ID, DEF_SEG_ID, key, digest);
 
@@ -39,7 +41,7 @@ public class HashTreesPersistentStoreTest {
 			sd = dbObj.getSegmentData(DEF_TREE_ID, DEF_SEG_ID, key);
 			Assert.assertNull(sd);
 		} finally {
-			dbObj.stopAndDelete();
+			dbObj.delete();
 		}
 	}
 
@@ -63,7 +65,7 @@ public class HashTreesPersistentStoreTest {
 			Assert.assertTrue(actualResult.size() != 0);
 			Assert.assertEquals(list, actualResult);
 		} finally {
-			dbObj.stopAndDelete();
+			dbObj.delete();
 		}
 	}
 
@@ -91,7 +93,7 @@ public class HashTreesPersistentStoreTest {
 			Assert.assertNotNull(actual);
 			Assert.assertEquals(expected, actual);
 		} finally {
-			dbObj.stopAndDelete();
+			dbObj.delete();
 		}
 	}
 
@@ -109,7 +111,7 @@ public class HashTreesPersistentStoreTest {
 			SegmentData sd = dbObj.getSegmentData(DEF_TREE_ID, DEF_SEG_ID, key);
 			Assert.assertNull(sd);
 		} finally {
-			dbObj.stopAndDelete();
+			dbObj.delete();
 		}
 	}
 
@@ -120,11 +122,11 @@ public class HashTreesPersistentStoreTest {
 
 		try {
 			long exTs = System.currentTimeMillis();
-			dbObj.setLastFullyTreeBuiltTimestamp(DEF_TREE_ID, exTs);
-			long dbTs = dbObj.getLastFullyTreeBuiltTimestamp(DEF_TREE_ID);
+			dbObj.setCompleteRebuiltTimestamp(DEF_TREE_ID, exTs);
+			long dbTs = dbObj.getCompleteRebuiltTimestamp(DEF_TREE_ID);
 			Assert.assertEquals(exTs, dbTs);
 		} finally {
-			dbObj.stopAndDelete();
+			dbObj.delete();
 		}
 	}
 
@@ -147,7 +149,7 @@ public class HashTreesPersistentStoreTest {
 
 			Assert.assertEquals(totTreeIdsCounter, actualTreeIdCount);
 		} finally {
-			dbObj.stopAndDelete();
+			dbObj.delete();
 		}
 	}
 
@@ -173,7 +175,7 @@ public class HashTreesPersistentStoreTest {
 			Assert.assertNotNull(actualMarkedSegs);
 			Assert.assertEquals(0, actualMarkedSegs.size());
 		} finally {
-			dbObj.stopAndDelete();
+			dbObj.delete();
 		}
 	}
 
@@ -191,7 +193,7 @@ public class HashTreesPersistentStoreTest {
 			Assert.assertEquals(1, dirtySegments.size());
 			Assert.assertEquals(DEF_SEG_ID, dirtySegments.get(0).intValue());
 		} finally {
-			dbObj.stopAndDelete();
+			dbObj.delete();
 		}
 	}
 

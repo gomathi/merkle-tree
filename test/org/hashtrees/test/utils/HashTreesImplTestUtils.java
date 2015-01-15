@@ -82,8 +82,8 @@ public class HashTreesImplTestUtils {
 			final SegmentIdProvider segIdPro, final HashTreesStore hTStore)
 			throws Exception {
 		SimpleMemStore store = new SimpleMemStore();
-		HashTreesImpl hTree = new HashTreesImpl(noOfSegDataBlocks, treeIdProv,
-				segIdPro, hTStore, store);
+		HashTreesImpl hTree = new HashTreesImpl.Builder(store, treeIdProv,
+				hTStore).setNoOfSegments(noOfSegDataBlocks).build();
 		store.registerHashTrees(hTree);
 		return new HTreeComponents(hTStore, store, hTree);
 	}
@@ -93,8 +93,9 @@ public class HashTreesImplTestUtils {
 		SimpleMemStore store = new SimpleMemStore();
 		ModuloSegIdProvider segIdProvider = new ModuloSegIdProvider(
 				noOfSegments);
-		HashTrees hTree = new HashTreesImpl(noOfSegments, TREE_ID_PROVIDER,
-				segIdProvider, hTStore, store);
+		HashTrees hTree = new HashTreesImpl.Builder(store, TREE_ID_PROVIDER,
+				hTStore).setNoOfSegments(noOfSegments)
+				.setSegmentIdProvider(segIdProvider).build();
 		store.registerHashTrees(hTree);
 		return new HTreeComponents(hTStore, store, hTree);
 	}

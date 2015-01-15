@@ -379,8 +379,10 @@ public class HashTreesImplTest {
 	public void testEnableNonBlockingCalls() {
 		HashTreesStore htStore = generateInMemoryStore();
 		SimpleMemStore store = new SimpleMemStore();
-		HashTreesImpl hTrees = new HashTreesImpl(DEFAULT_SEG_DATA_BLOCKS_COUNT,
-				TREE_ID_PROVIDER, SEG_ID_PROVIDER, htStore, store);
+		HashTreesImpl hTrees = new HashTreesImpl.Builder(store,
+				TREE_ID_PROVIDER, htStore)
+				.setNoOfSegments(DEFAULT_SEG_DATA_BLOCKS_COUNT)
+				.setSegmentIdProvider(SEG_ID_PROVIDER).build();
 		Assert.assertFalse(hTrees.enableNonblockingOperations());
 		Assert.assertTrue(hTrees.isNonBlockingCallsEnabled());
 		Assert.assertTrue(hTrees.enableNonblockingOperations());
@@ -415,8 +417,10 @@ public class HashTreesImplTest {
 		};
 
 		SimpleMemStore store = new SimpleMemStore();
-		HashTreesImpl hTrees = new HashTreesImpl(DEFAULT_SEG_DATA_BLOCKS_COUNT,
-				TREE_ID_PROVIDER, SEG_ID_PROVIDER, htStore, store);
+		HashTreesImpl hTrees = new HashTreesImpl.Builder(store,
+				TREE_ID_PROVIDER, htStore)
+				.setNoOfSegments(DEFAULT_SEG_DATA_BLOCKS_COUNT)
+				.setSegmentIdProvider(SEG_ID_PROVIDER).build();
 		hTrees.enableNonblockingOperations(maxQueueSize);
 		Thread.sleep(100);
 
@@ -430,8 +434,9 @@ public class HashTreesImplTest {
 		}
 		Assert.assertTrue(exceptionOccurred);
 
-		hTrees = new HashTreesImpl(DEFAULT_SEG_DATA_BLOCKS_COUNT,
-				TREE_ID_PROVIDER, SEG_ID_PROVIDER, htStore, store);
+		hTrees = new HashTreesImpl.Builder(store, TREE_ID_PROVIDER, htStore)
+				.setNoOfSegments(DEFAULT_SEG_DATA_BLOCKS_COUNT)
+				.setSegmentIdProvider(SEG_ID_PROVIDER).build();
 		hTrees.enableNonblockingOperations(maxQueueSize);
 		Thread.sleep(100);
 		exceptionOccurred = false;
@@ -463,7 +468,7 @@ public class HashTreesImplTest {
 			Collections.sort(actualSegIds);
 			Assert.assertEquals(expectedSegIds, actualSegIds);
 		} finally {
-			htStore.stopAndDelete();
+			htStore.delete();
 		}
 	}
 
@@ -471,8 +476,10 @@ public class HashTreesImplTest {
 	public void testStop() {
 		HashTreesStore htStore = generateInMemoryStore();
 		SimpleMemStore store = new SimpleMemStore();
-		HashTreesImpl hTrees = new HashTreesImpl(DEFAULT_SEG_DATA_BLOCKS_COUNT,
-				TREE_ID_PROVIDER, SEG_ID_PROVIDER, htStore, store);
+		HashTreesImpl hTrees = new HashTreesImpl.Builder(store,
+				TREE_ID_PROVIDER, htStore)
+				.setNoOfSegments(DEFAULT_SEG_DATA_BLOCKS_COUNT)
+				.setSegmentIdProvider(SEG_ID_PROVIDER).build();
 		hTrees.enableNonblockingOperations();
 		Assert.assertTrue(hTrees.isNonBlockingCallsEnabled());
 		hTrees.stop();

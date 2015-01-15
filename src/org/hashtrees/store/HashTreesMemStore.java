@@ -7,6 +7,7 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ConcurrentSkipListMap;
@@ -18,6 +19,7 @@ import javax.annotation.concurrent.ThreadSafe;
 import org.hashtrees.thrift.generated.RemoteTreeInfo;
 import org.hashtrees.thrift.generated.SegmentData;
 import org.hashtrees.thrift.generated.SegmentHash;
+import org.hashtrees.util.Pair;
 
 /**
  * In memory implementation of {@link HashTreesStore}.
@@ -27,12 +29,13 @@ import org.hashtrees.thrift.generated.SegmentHash;
 public class HashTreesMemStore extends HashTreesBaseStore implements
 		HashTreesManagerStore {
 
+	private final static ByteBuffer NULL_BYTE_BUFFER = null;
 	private final ConcurrentMap<Long, HashTreeMemStore> treeIdAndIndHashTree = new ConcurrentHashMap<>();
 	private final ConcurrentMap<Long, ConcurrentSkipListSet<RemoteTreeInfo>> servers = new ConcurrentSkipListMap<>();
 
 	private static class HashTreeMemStore {
 		private final ConcurrentMap<Integer, ByteBuffer> segmentHashes = new ConcurrentSkipListMap<Integer, ByteBuffer>();
-		private final ConcurrentMap<Integer, ConcurrentSkipListMap<ByteBuffer, ByteBuffer>> segDataBlocks = new ConcurrentHashMap<Integer, ConcurrentSkipListMap<ByteBuffer, ByteBuffer>>();
+		private final ConcurrentMap<Integer, ConcurrentSkipListMap<ByteBuffer, Pair<ByteBuffer, ByteBuffer>>> segDataBlocks = new ConcurrentHashMap<Integer, ConcurrentSkipListMap<ByteBuffer, Pair<ByteBuffer, ByteBuffer>>>();
 		private final AtomicLong fullyRebuiltTreeTs = new AtomicLong(0);
 	}
 
@@ -45,17 +48,26 @@ public class HashTreesMemStore extends HashTreesBaseStore implements
 	@Override
 	public void putSegmentData(long treeId, int segId, ByteBuffer key,
 			ByteBuffer digest) {
+		putSegmentData(treeId, segId, key, NULL_BYTE_BUFFER, digest);
+	}
+
+	@Override
+	public void putSegmentData(long treeId, int segId, ByteBuffer key,
+			ByteBuffer value, ByteBuffer digest) {
 		HashTreeMemStore hTreeStore = getIndHTree(treeId);
 		if (!hTreeStore.segDataBlocks.containsKey(segId))
-			hTreeStore.segDataBlocks.putIfAbsent(segId,
-					new ConcurrentSkipListMap<ByteBuffer, ByteBuffer>());
-		hTreeStore.segDataBlocks.get(segId).put(key, digest);
+			hTreeStore.segDataBlocks
+					.putIfAbsent(
+							segId,
+							new ConcurrentSkipListMap<ByteBuffer, Pair<ByteBuffer, ByteBuffer>>());
+		hTreeStore.segDataBlocks.get(segId)
+				.put(key, Pair.create(digest, value));
 	}
 
 	@Override
 	public void deleteSegmentData(long treeId, int segId, ByteBuffer key) {
 		HashTreeMemStore indPartition = getIndHTree(treeId);
-		Map<ByteBuffer, ByteBuffer> segDataBlock = indPartition.segDataBlocks
+		Map<ByteBuffer, Pair<ByteBuffer, ByteBuffer>> segDataBlock = indPartition.segDataBlocks
 				.get(segId);
 		if (segDataBlock != null)
 			segDataBlock.remove(key);
@@ -64,13 +76,15 @@ public class HashTreesMemStore extends HashTreesBaseStore implements
 	@Override
 	public List<SegmentData> getSegment(long treeId, int segId) {
 		HashTreeMemStore indPartition = getIndHTree(treeId);
-		ConcurrentMap<ByteBuffer, ByteBuffer> segDataBlock = indPartition.segDataBlocks
+		ConcurrentMap<ByteBuffer, Pair<ByteBuffer, ByteBuffer>> segDataBlock = indPartition.segDataBlocks
 				.get(segId);
 		if (segDataBlock == null)
 			return Collections.emptyList();
 		List<SegmentData> result = new ArrayList<SegmentData>();
-		for (Map.Entry<ByteBuffer, ByteBuffer> entry : segDataBlock.entrySet())
-			result.add(new SegmentData(entry.getKey(), entry.getValue()));
+		for (Map.Entry<ByteBuffer, Pair<ByteBuffer, ByteBuffer>> entry : segDataBlock
+				.entrySet())
+			result.add(new SegmentData(entry.getKey(), entry.getValue()
+					.getFirst()));
 		return result;
 	}
 
@@ -100,13 +114,13 @@ public class HashTreesMemStore extends HashTreesBaseStore implements
 
 	@Override
 	public SegmentData getSegmentData(long treeId, int segId, ByteBuffer key) {
-		ConcurrentSkipListMap<ByteBuffer, ByteBuffer> segDataBlock = getIndHTree(treeId).segDataBlocks
+		ConcurrentSkipListMap<ByteBuffer, Pair<ByteBuffer, ByteBuffer>> segDataBlock = getIndHTree(treeId).segDataBlocks
 				.get(segId);
 		if (segDataBlock != null) {
-			ByteBuffer value = segDataBlock.get(key);
+			Pair<ByteBuffer, ByteBuffer> value = segDataBlock.get(key);
 			if (value != null) {
 				ByteBuffer intKey = ByteBuffer.wrap(key.array());
-				return new SegmentData(intKey, value);
+				return new SegmentData(intKey, value.getFirst());
 			}
 		}
 		return null;
@@ -122,13 +136,13 @@ public class HashTreesMemStore extends HashTreesBaseStore implements
 	}
 
 	@Override
-	public void setLastFullyTreeBuiltTimestamp(long treeId, long timestamp) {
+	public void setCompleteRebuiltTimestamp(long treeId, long timestamp) {
 		HashTreeMemStore indTree = getIndHTree(treeId);
 		setValueIfNewValueIsGreater(indTree.fullyRebuiltTreeTs, timestamp);
 	}
 
 	@Override
-	public long getLastFullyTreeBuiltTimestamp(long treeId) {
+	public long getCompleteRebuiltTimestamp(long treeId) {
 		long value = getIndHTree(treeId).fullyRebuiltTreeTs.get();
 		return value;
 	}
@@ -176,16 +190,74 @@ public class HashTreesMemStore extends HashTreesBaseStore implements
 
 	@Override
 	public void markSegments(long treeId, List<Integer> segIds) {
-
+		// Intended to be reused across process restarts. This is in memory
+		// store, and does not persist anything. Implementing anything won't
+		// help here.
 	}
 
 	@Override
 	public void unmarkSegments(long treeId, List<Integer> segIds) {
-
+		// Intended to be reused across process restarts. This is in memory
+		// store, and does not persist anything. Implementing anything won't
+		// help here.
 	}
 
 	@Override
 	public List<Integer> getMarkedSegments(long treeId) {
+		// Intended to be reused across process restarts. This is in memory
+		// store, and does not persist anything. Implementing anything won't
+		// help here.
 		return Collections.emptyList();
 	}
+
+	/**
+	 * Iterator returned by this method is not thread safe.
+	 */
+	@Override
+	public Iterator<SegmentData> getSegmentDataIterator(long treeId) {
+		final HashTreeMemStore memStore = getIndHTree(treeId);
+		final Iterator<Map.Entry<Integer, ConcurrentSkipListMap<ByteBuffer, Pair<ByteBuffer, ByteBuffer>>>> dataBlocksItr = memStore.segDataBlocks
+				.entrySet().iterator();
+		return new Iterator<SegmentData>() {
+
+			Iterator<Map.Entry<ByteBuffer, Pair<ByteBuffer, ByteBuffer>>> itr = null;
+
+			@Override
+			public boolean hasNext() {
+				if (itr == null || !itr.hasNext()) {
+					while (dataBlocksItr.hasNext()) {
+						itr = dataBlocksItr.next().getValue().entrySet()
+								.iterator();
+						if (itr.hasNext())
+							break;
+					}
+				}
+				return (itr != null) && itr.hasNext();
+			}
+
+			@Override
+			public SegmentData next() {
+				if (itr == null || !itr.hasNext())
+					throw new NoSuchElementException(
+							"No more elements exist to return.");
+				Map.Entry<ByteBuffer, Pair<ByteBuffer, ByteBuffer>> entry = itr
+						.next();
+				return new SegmentData(entry.getKey(), entry.getValue()
+						.getFirst());
+			}
+		};
+	}
+
+	@Override
+	public ByteBuffer getValue(long treeId, int segId, ByteBuffer key) {
+		ConcurrentSkipListMap<ByteBuffer, Pair<ByteBuffer, ByteBuffer>> segDataBlock = getIndHTree(treeId).segDataBlocks
+				.get(segId);
+		if (segDataBlock != null) {
+			Pair<ByteBuffer, ByteBuffer> value = segDataBlock.get(key);
+			if (value != null)
+				return value.getSecond();
+		}
+		return null;
+	}
+
 }

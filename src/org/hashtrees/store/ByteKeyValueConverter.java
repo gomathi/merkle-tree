@@ -10,6 +10,9 @@ public class ByteKeyValueConverter {
 
 	public static final int LEN_BASEKEY_AND_TREEID = BaseKey.LENGTH
 			+ ByteUtils.SIZEOF_LONG;
+	public static final int DIGEST_LENTH = 20; // Sha1 is used for digest
+												// calculation, which provides a
+												// 20 bytes digest.
 
 	public static enum BaseKey {
 
@@ -26,8 +29,7 @@ public class ByteKeyValueConverter {
 
 	public static enum MetaDataKey {
 
-		LAST_FULLY_TREE_BUILT_TS("ltfbTs".getBytes()), SERVER_NAME("sn"
-				.getBytes());
+		FULL_REBUILT_TS("ltfbTs".getBytes()), SERVER_NAME("sn".getBytes());
 
 		public final byte[] key;
 		public final int length;
@@ -60,6 +62,21 @@ public class ByteKeyValueConverter {
 		int from = LEN_BASEKEY_AND_TREEID + ByteUtils.SIZEOF_INT;
 		byte[] key = ByteUtils.copy(dbSegDataKey, from, dbSegDataKey.length);
 		return key;
+	}
+
+	public static byte[] readSegmentDataDigest(byte[] sdInBytes) {
+		byte[] digest = new byte[DIGEST_LENTH];
+		ByteBuffer bb = ByteBuffer.wrap(sdInBytes);
+		bb.get(digest, 0, DIGEST_LENTH);
+		return digest;
+	}
+
+	public static byte[] readSegmentDataValue(byte[] sdInBytes) {
+		int length = sdInBytes.length - DIGEST_LENTH;
+		byte[] value = new byte[length];
+		ByteBuffer bb = ByteBuffer.wrap(sdInBytes);
+		bb.get(value, DIGEST_LENTH, length);
+		return value;
 	}
 
 	public static void fillSegmentKey(ByteBuffer keyToFill, BaseKey baseKey,
@@ -95,6 +112,16 @@ public class ByteKeyValueConverter {
 		fillSegmentDataKey(bb, treeId, segId);
 		bb.put(segDataKey.array());
 		return key;
+	}
+
+	public static byte[] generateSegmentDataValue(ByteBuffer digest,
+			ByteBuffer actualValue) {
+		byte[] value = new byte[digest.array().length
+				+ actualValue.array().length];
+		ByteBuffer bb = ByteBuffer.wrap(value);
+		bb.put(digest.array());
+		bb.put(actualValue.array());
+		return value;
 	}
 
 	public static byte[] generateSegmentHashKey(long treeId, int nodeId) {

@@ -85,7 +85,7 @@ public class HashTreesManagerTest {
 		HashTreesManager syncManager = components.syncMgrImpl;
 		HashTreesStore hashTreesStore = components.htStore;
 
-		hashTreesStore.setLastFullyTreeBuiltTimestamp(1,
+		hashTreesStore.setCompleteRebuiltTimestamp(1,
 				System.currentTimeMillis());
 		syncManager.init();
 		waitForTheEvent(events, HTSynchEvent.UPDATE_SEGMENT, 10000);

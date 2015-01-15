@@ -84,12 +84,6 @@ public class HashTreesRemoteClient implements HashTrees {
 	}
 
 	@Override
-	public long getLastFullyRebuiltTimeStamp(long treeId) {
-		throw new UnsupportedOperationException(
-				"Remote tree does not support this operation.");
-	}
-
-	@Override
 	public void rebuildHashTree(long treeId, long fullRebuildPeriod)
 			throws Exception {
 		throw new UnsupportedOperationException(

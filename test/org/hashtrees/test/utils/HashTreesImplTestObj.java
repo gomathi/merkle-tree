@@ -25,7 +25,7 @@ public class HashTreesImplTestObj extends HashTreesImpl {
 			final HashTreesStore htStore, final Store store,
 			BlockingQueue<HTSynchEvent> events) {
 		super(noOfSegments, TREE_ID_PROVIDER, new ModuloSegIdProvider(
-				noOfSegments), htStore, store);
+				noOfSegments), htStore, store, null);
 		this.events = events;
 	}
 

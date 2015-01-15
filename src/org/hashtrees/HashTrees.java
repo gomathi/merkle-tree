@@ -164,12 +164,4 @@ public interface HashTrees {
 	 * @throws Exception
 	 */
 	void rebuildHashTree(long treeId, boolean fullRebuild) throws Exception;
-
-	/**
-	 * Returns the timestamp at which the tree was fully rebuilt.
-	 * 
-	 * @param treeId
-	 * @return
-	 */
-	long getLastFullyRebuiltTimeStamp(long treeId) throws Exception;
 }

@@ -34,13 +34,27 @@ public class HashTreesMemStore extends HashTreesBaseStore implements
 	private static class HashTreeMemStore {
 		private final ConcurrentMap<Integer, ByteBuffer> segmentHashes = new ConcurrentSkipListMap<Integer, ByteBuffer>();
 		private final ConcurrentMap<Integer, ConcurrentSkipListMap<ByteBuffer, ByteBuffer>> segDataBlocks = new ConcurrentHashMap<Integer, ConcurrentSkipListMap<ByteBuffer, ByteBuffer>>();
-		private final AtomicLong fullyRebuiltTreeTs = new AtomicLong(0);
+		private final AtomicLong lastRebuiltTS = new AtomicLong(0);
 	}
 
 	private HashTreeMemStore getIndHTree(long treeId) {
 		if (!treeIdAndIndHashTree.containsKey(treeId))
 			treeIdAndIndHashTree.putIfAbsent(treeId, new HashTreeMemStore());
 		return treeIdAndIndHashTree.get(treeId);
+	}
+
+	@Override
+	public SegmentData getSegmentData(long treeId, int segId, ByteBuffer key) {
+		ConcurrentSkipListMap<ByteBuffer, ByteBuffer> segDataBlock = getIndHTree(treeId).segDataBlocks
+				.get(segId);
+		if (segDataBlock != null) {
+			ByteBuffer value = segDataBlock.get(key);
+			if (value != null) {
+				ByteBuffer intKey = ByteBuffer.wrap(key.array());
+				return new SegmentData(intKey, value);
+			}
+		}
+		return null;
 	}
 
 	@Override
@@ -73,128 +87,6 @@ public class HashTreesMemStore extends HashTreesBaseStore implements
 		for (Map.Entry<ByteBuffer, ByteBuffer> entry : segDataBlock.entrySet())
 			result.add(new SegmentData(entry.getKey(), entry.getValue()));
 		return result;
-	}
-
-	@Override
-	public void putSegmentHash(long treeId, int nodeId, ByteBuffer digest) {
-		HashTreeMemStore indPartition = getIndHTree(treeId);
-		ByteBuffer intDigest = ByteBuffer.wrap(digest.array());
-		indPartition.segmentHashes.put(nodeId, intDigest);
-	}
-
-	@Override
-	public List<SegmentHash> getSegmentHashes(long treeId,
-			Collection<Integer> nodeIds) {
-		List<SegmentHash> result = new ArrayList<SegmentHash>();
-		for (int nodeId : nodeIds) {
-			ByteBuffer hash = getIndHTree(treeId).segmentHashes.get(nodeId);
-			if (hash != null)
-				result.add(new SegmentHash(nodeId, hash));
-		}
-		return result;
-	}
-
-	@Override
-	public void deleteTree(long treeId) {
-		treeIdAndIndHashTree.remove(treeId);
-	}
-
-	@Override
-	public SegmentData getSegmentData(long treeId, int segId, ByteBuffer key) {
-		ConcurrentSkipListMap<ByteBuffer, ByteBuffer> segDataBlock = getIndHTree(treeId).segDataBlocks
-				.get(segId);
-		if (segDataBlock != null) {
-			ByteBuffer value = segDataBlock.get(key);
-			if (value != null) {
-				ByteBuffer intKey = ByteBuffer.wrap(key.array());
-				return new SegmentData(intKey, value);
-			}
-		}
-		return null;
-	}
-
-	@Override
-	public SegmentHash getSegmentHash(long treeId, int nodeId) {
-		HashTreeMemStore indPartition = getIndHTree(treeId);
-		ByteBuffer hash = indPartition.segmentHashes.get(nodeId);
-		if (hash == null)
-			return null;
-		return new SegmentHash(nodeId, hash);
-	}
-
-	@Override
-	public void setCompleteRebuiltTimestamp(long treeId, long timestamp) {
-		HashTreeMemStore indTree = getIndHTree(treeId);
-		setValueIfNewValueIsGreater(indTree.fullyRebuiltTreeTs, timestamp);
-	}
-
-	@Override
-	public long getCompleteRebuiltTimestamp(long treeId) {
-		long value = getIndHTree(treeId).fullyRebuiltTreeTs.get();
-		return value;
-	}
-
-	@Override
-	public Iterator<Long> getAllTreeIds() {
-		return treeIdAndIndHashTree.keySet().iterator();
-	}
-
-	private static void setValueIfNewValueIsGreater(AtomicLong val, long value) {
-		long oldValue = val.get();
-		while (oldValue < value) {
-			if (val.compareAndSet(oldValue, value))
-				break;
-			oldValue = val.get();
-		}
-	}
-
-	private ConcurrentSkipListSet<RemoteTreeInfo> getRemoteTreeList(long treeId) {
-		if (!servers.containsKey(treeId))
-			servers.putIfAbsent(treeId,
-					new ConcurrentSkipListSet<RemoteTreeInfo>());
-		return servers.get(treeId);
-	}
-
-	@Override
-	public void addToSyncList(RemoteTreeInfo rTree) {
-		getRemoteTreeList(rTree.treeId).add(rTree);
-	}
-
-	@Override
-	public void removeFromSyncList(RemoteTreeInfo rTree) {
-		getRemoteTreeList(rTree.treeId).remove(rTree);
-	}
-
-	@Override
-	public List<RemoteTreeInfo> getSyncList(long treeId) {
-		return new ArrayList<RemoteTreeInfo>(getRemoteTreeList(treeId));
-	}
-
-	@Override
-	public void stop() {
-		// Nothing to stop.
-	}
-
-	@Override
-	public void markSegments(long treeId, List<Integer> segIds) {
-		// Intended to be reused across process restarts. This is in memory
-		// store, and does not persist anything. Implementing anything won't
-		// help here.
-	}
-
-	@Override
-	public void unmarkSegments(long treeId, List<Integer> segIds) {
-		// Intended to be reused across process restarts. This is in memory
-		// store, and does not persist anything. Implementing anything won't
-		// help here.
-	}
-
-	@Override
-	public List<Integer> getMarkedSegments(long treeId) {
-		// Intended to be reused across process restarts. This is in memory
-		// store, and does not persist anything. Implementing anything won't
-		// help here.
-		return Collections.emptyList();
 	}
 
 	/**
@@ -231,5 +123,104 @@ public class HashTreesMemStore extends HashTreesBaseStore implements
 				return new SegmentData(entry.getKey(), entry.getValue());
 			}
 		};
+	}
+
+	@Override
+	public void putSegmentHash(long treeId, int nodeId, ByteBuffer digest) {
+		HashTreeMemStore indPartition = getIndHTree(treeId);
+		ByteBuffer intDigest = ByteBuffer.wrap(digest.array());
+		indPartition.segmentHashes.put(nodeId, intDigest);
+	}
+
+	@Override
+	public SegmentHash getSegmentHash(long treeId, int nodeId) {
+		HashTreeMemStore indPartition = getIndHTree(treeId);
+		ByteBuffer hash = indPartition.segmentHashes.get(nodeId);
+		if (hash == null)
+			return null;
+		return new SegmentHash(nodeId, hash);
+	}
+
+	@Override
+	public List<SegmentHash> getSegmentHashes(long treeId,
+			Collection<Integer> nodeIds) {
+		List<SegmentHash> result = new ArrayList<SegmentHash>();
+		for (int nodeId : nodeIds) {
+			ByteBuffer hash = getIndHTree(treeId).segmentHashes.get(nodeId);
+			if (hash != null)
+				result.add(new SegmentHash(nodeId, hash));
+		}
+		return result;
+	}
+
+	@Override
+	public void setCompleteRebuiltTimestamp(long treeId, long timestamp) {
+		HashTreeMemStore indTree = getIndHTree(treeId);
+		indTree.lastRebuiltTS.set(timestamp);
+	}
+
+	@Override
+	public long getCompleteRebuiltTimestamp(long treeId) {
+		long value = getIndHTree(treeId).lastRebuiltTS.get();
+		return value;
+	}
+
+	@Override
+	public Iterator<Long> getAllTreeIds() {
+		return treeIdAndIndHashTree.keySet().iterator();
+	}
+
+	@Override
+	public void deleteTree(long treeId) {
+		treeIdAndIndHashTree.remove(treeId);
+	}
+
+	private ConcurrentSkipListSet<RemoteTreeInfo> getRemoteTreeList(long treeId) {
+		if (!servers.containsKey(treeId))
+			servers.putIfAbsent(treeId,
+					new ConcurrentSkipListSet<RemoteTreeInfo>());
+		return servers.get(treeId);
+	}
+
+	@Override
+	public void addToSyncList(RemoteTreeInfo rTree) {
+		getRemoteTreeList(rTree.treeId).add(rTree);
+	}
+
+	@Override
+	public void removeFromSyncList(RemoteTreeInfo rTree) {
+		getRemoteTreeList(rTree.treeId).remove(rTree);
+	}
+
+	@Override
+	public List<RemoteTreeInfo> getSyncList(long treeId) {
+		return new ArrayList<RemoteTreeInfo>(getRemoteTreeList(treeId));
+	}
+
+	@Override
+	public void markSegments(long treeId, List<Integer> segIds) {
+		// Intended to be reused across process restarts. This is in memory
+		// store, and does not persist anything. Implementing anything won't
+		// help here.
+	}
+
+	@Override
+	public void unmarkSegments(long treeId, List<Integer> segIds) {
+		// Intended to be reused across process restarts. This is in memory
+		// store, and does not persist anything. Implementing anything won't
+		// help here.
+	}
+
+	@Override
+	public List<Integer> getMarkedSegments(long treeId) {
+		// Intended to be reused across process restarts. This is in memory
+		// store, and does not persist anything. Implementing anything won't
+		// help here.
+		return Collections.emptyList();
+	}
+
+	@Override
+	public void stop() {
+		// Nothing to stop.
 	}
 }

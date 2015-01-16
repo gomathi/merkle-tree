@@ -64,21 +64,6 @@ public class ByteKeyValueConverter {
 		return key;
 	}
 
-	public static byte[] readSegmentDataDigest(byte[] sdInBytes) {
-		byte[] digest = new byte[DIGEST_LENTH];
-		ByteBuffer bb = ByteBuffer.wrap(sdInBytes);
-		bb.get(digest, 0, DIGEST_LENTH);
-		return digest;
-	}
-
-	public static byte[] readSegmentDataValue(byte[] sdInBytes) {
-		int length = sdInBytes.length - DIGEST_LENTH;
-		byte[] value = new byte[length];
-		ByteBuffer bb = ByteBuffer.wrap(sdInBytes);
-		bb.get(value, DIGEST_LENTH, length);
-		return value;
-	}
-
 	public static void fillSegmentKey(ByteBuffer keyToFill, BaseKey baseKey,
 			long treeId, int id) {
 		fillBaseKey(keyToFill, baseKey, treeId);

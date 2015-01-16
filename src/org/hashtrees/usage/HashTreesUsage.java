@@ -101,7 +101,7 @@ public class HashTreesUsage {
 	/**
 	 * Following test case creates a primary and backup database, with hashtree
 	 * support. It does some modifications on the primary database, and using
-	 * hash tree of the primary database to synch backup database.
+	 * hash tree of the primary database synchs up the backup database.
 	 * 
 	 * @throws Exception
 	 */

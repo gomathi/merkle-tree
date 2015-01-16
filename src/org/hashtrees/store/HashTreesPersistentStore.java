@@ -11,7 +11,6 @@ import static org.hashtrees.store.ByteKeyValueConverter.generateSegmentDataKey;
 import static org.hashtrees.store.ByteKeyValueConverter.generateSegmentHashKey;
 import static org.hashtrees.store.ByteKeyValueConverter.generateTreeIdKey;
 import static org.hashtrees.store.ByteKeyValueConverter.readRemoteTreeInfoFrom;
-import static org.hashtrees.store.ByteKeyValueConverter.readSegmentDataDigest;
 import static org.hashtrees.store.ByteKeyValueConverter.readSegmentDataKey;
 import static org.hashtrees.store.ByteKeyValueConverter.readTreeIdFromBaseKey;
 
@@ -49,9 +48,9 @@ import org.slf4j.LoggerFactory;
  * 
  * 1) Metadata info [Like when the tree was built fully last time]. Format is
  * ['M'|treeId|key] -> [value] 2) SegmentData, format is ['S'|treeId|segId|key]
- * -> [digest|marker|actualValue] 3) SegmentHash, format is ['H'|treeId|nodeId]
- * -> [value] 4) TreeId, format is ['T'|treeId] -> [EMPTY_VALUE] 5) Dirty
- * segment key ['D'|treeId|dirtySegId] -> [EMPTY_VALUE]
+ * -> [digest] 3) SegmentHash, format is ['H'|treeId|nodeId] -> [value] 4)
+ * TreeId, format is ['T'|treeId] -> [EMPTY_VALUE] 5) Dirty segment key
+ * ['D'|treeId|dirtySegId] -> [EMPTY_VALUE]
  * 
  */
 
@@ -208,7 +207,7 @@ public class HashTreesPersistentStore extends HashTreesBaseStore implements
 		byte[] value = dbObj.get(dbKey);
 		if (value != null) {
 			ByteBuffer intKeyBB = ByteBuffer.wrap(key.array());
-			ByteBuffer valueBB = ByteBuffer.wrap(readSegmentDataDigest(value));
+			ByteBuffer valueBB = ByteBuffer.wrap(value);
 			return new SegmentData(intKeyBB, valueBB);
 		}
 		return null;
@@ -259,7 +258,7 @@ public class HashTreesPersistentStore extends HashTreesBaseStore implements
 						return;
 					SegmentData sd = new SegmentData();
 					sd.setKey(key);
-					sd.setDigest(readSegmentDataDigest(value));
+					sd.setDigest(value);
 					internalQue.add(sd);
 				}
 			}

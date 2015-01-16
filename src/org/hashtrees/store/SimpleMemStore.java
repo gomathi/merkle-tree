@@ -5,7 +5,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ConcurrentSkipListMap;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.hashtrees.util.Pair;
 
@@ -13,12 +13,12 @@ import org.hashtrees.util.Pair;
  * In memory implementation of {@link Store}. Intended to be used in unit tests.
  * 
  * Note the {@link #hashCode()} is calculated by using the internal map of key
- * values.
+ * values. It does not use any other values to calculate hashCode.
  * 
  */
 public class SimpleMemStore extends BaseStore {
 
-	private final ConcurrentSkipListMap<ByteBuffer, ByteBuffer> kvMap = new ConcurrentSkipListMap<>();
+	private final ConcurrentHashMap<ByteBuffer, ByteBuffer> kvMap = new ConcurrentHashMap<>();
 
 	@Override
 	public byte[] get(byte[] key) {

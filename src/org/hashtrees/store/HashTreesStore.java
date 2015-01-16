@@ -31,30 +31,6 @@ public interface HashTreesStore {
 			ByteBuffer digest);
 
 	/**
-	 * Similar to {@link #putSegmentData(long, int, ByteBuffer, ByteBuffer)},
-	 * except that this stores actual value as well.
-	 * 
-	 * @param treeId
-	 * @param segId
-	 * @param key
-	 * @param value
-	 * @param digest
-	 */
-	void putSegmentData(long treeId, int segId, ByteBuffer key,
-			ByteBuffer value, ByteBuffer digest);
-
-	/**
-	 * {@link HashTrees} can store actual value of the given key on storage.
-	 * This returns that value. (Not the digest).
-	 * 
-	 * @param treeId
-	 * @param segId
-	 * @param key
-	 * @return
-	 */
-	ByteBuffer getValue(long treeId, int segId, ByteBuffer key);
-
-	/**
 	 * Returns the SegmentData for the given key if available, otherwise returns
 	 * null.
 	 * 

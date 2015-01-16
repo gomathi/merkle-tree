@@ -8,13 +8,11 @@ import static org.hashtrees.store.ByteKeyValueConverter.generateDirtySegmentKey;
 import static org.hashtrees.store.ByteKeyValueConverter.generateMetaDataKey;
 import static org.hashtrees.store.ByteKeyValueConverter.generateRebuildMarkerKey;
 import static org.hashtrees.store.ByteKeyValueConverter.generateSegmentDataKey;
-import static org.hashtrees.store.ByteKeyValueConverter.generateSegmentDataValue;
 import static org.hashtrees.store.ByteKeyValueConverter.generateSegmentHashKey;
 import static org.hashtrees.store.ByteKeyValueConverter.generateTreeIdKey;
 import static org.hashtrees.store.ByteKeyValueConverter.readRemoteTreeInfoFrom;
 import static org.hashtrees.store.ByteKeyValueConverter.readSegmentDataDigest;
 import static org.hashtrees.store.ByteKeyValueConverter.readSegmentDataKey;
-import static org.hashtrees.store.ByteKeyValueConverter.readSegmentDataValue;
 import static org.hashtrees.store.ByteKeyValueConverter.readTreeIdFromBaseKey;
 
 import java.io.File;
@@ -202,21 +200,6 @@ public class HashTreesPersistentStore extends HashTreesBaseStore implements
 		dbObj.put(generateTreeIdKey(treeId), EMPTY_VALUE);
 		byte[] dbKey = generateSegmentDataKey(treeId, segId, key);
 		dbObj.put(dbKey, digest.array());
-	}
-
-	@Override
-	public void putSegmentData(long treeId, int segId, ByteBuffer key,
-			ByteBuffer value, ByteBuffer digest) {
-		putSegmentData(treeId, segId, key,
-				ByteBuffer.wrap(generateSegmentDataValue(digest, value)));
-	}
-
-	@Override
-	public ByteBuffer getValue(long treeId, int segId, ByteBuffer key) {
-		byte[] dbKey = generateSegmentDataKey(treeId, segId, key);
-		byte[] dbValue = dbObj.get(dbKey);
-		return (dbValue == null) ? null : ByteBuffer
-				.wrap(readSegmentDataValue(dbValue));
 	}
 
 	@Override

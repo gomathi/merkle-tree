@@ -86,7 +86,6 @@ public class HashTreesImpl implements HashTrees {
 	private final HashTreesStore htStore;
 	private final HashTreesIdProvider treeIdProvider;
 	private final SegmentIdProvider segIdProvider;
-	private final HTValueConverter converter;
 
 	private final ConcurrentMap<Long, Lock> treeLocks = new ConcurrentHashMap<>();
 	private final Object nonBlockingCallsLock = new Object();
@@ -98,8 +97,7 @@ public class HashTreesImpl implements HashTrees {
 	public HashTreesImpl(int noOfSegments,
 			final HashTreesIdProvider treeIdProvider,
 			final SegmentIdProvider segIdProvider,
-			final HashTreesStore htStore, final Store store,
-			final HTValueConverter converter) {
+			final HashTreesStore htStore, final Store store) {
 		this.noOfChildren = BINARY_TREE;
 		this.segmentsCount = getValidSegmentsCount(noOfSegments);
 		this.internalNodesCount = getNoOfNodes(
@@ -108,7 +106,6 @@ public class HashTreesImpl implements HashTrees {
 		this.segIdProvider = segIdProvider;
 		this.htStore = htStore;
 		this.store = store;
-		this.converter = converter;
 		initDirtySegments();
 	}
 
@@ -143,14 +140,9 @@ public class HashTreesImpl implements HashTrees {
 	private void hPutInternal(final ByteBuffer key, final ByteBuffer value) {
 		long treeId = treeIdProvider.getTreeId(key);
 		int segId = segIdProvider.getSegmentId(key);
-		ByteBuffer newValue = (converter == null) ? value : (converter.apply(
-				htStore.getValue(treeId, segId, key), value));
-		ByteBuffer digest = ByteBuffer.wrap(sha1(newValue.array()));
+		ByteBuffer digest = ByteBuffer.wrap(sha1(value.array()));
 		htStore.setDirtySegment(treeId, segId);
-		if (converter == null)
-			htStore.putSegmentData(treeId, segId, key, digest);
-		else
-			htStore.putSegmentData(treeId, segId, key, newValue, digest);
+		htStore.putSegmentData(treeId, segId, key, digest);
 	}
 
 	@Override
@@ -762,7 +754,6 @@ public class HashTreesImpl implements HashTrees {
 		private final HashTreesIdProvider treeIdProvider;
 
 		private SegmentIdProvider segIdProvider;
-		private HTValueConverter converter;
 		private int noOfSegments = MAX_NO_OF_SEGMENTS;
 
 		public Builder(Store store, HashTreesIdProvider treeIdProvider,
@@ -818,16 +809,11 @@ public class HashTreesImpl implements HashTrees {
 			return this;
 		}
 
-		public Builder setValueConverter(HTValueConverter converter) {
-			this.converter = converter;
-			return this;
-		}
-
 		public HashTreesImpl build() {
 			if (segIdProvider == null)
 				segIdProvider = new ModuloSegIdProvider(noOfSegments);
 			return new HashTreesImpl(noOfSegments, treeIdProvider,
-					segIdProvider, htStore, store, converter);
+					segIdProvider, htStore, store);
 		}
 	}
 }

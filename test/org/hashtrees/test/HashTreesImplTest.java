@@ -29,6 +29,7 @@ import org.hashtrees.store.HashTreesMemStore;
 import org.hashtrees.store.HashTreesPersistentStore;
 import org.hashtrees.store.HashTreesStore;
 import org.hashtrees.store.SimpleMemStore;
+import org.hashtrees.store.Store;
 import org.hashtrees.synch.HashTreesManager;
 import org.hashtrees.synch.HashTreesThriftClientProvider;
 import org.hashtrees.test.utils.HashTreesImplTestUtils;
@@ -126,6 +127,56 @@ public class HashTreesImplTest {
 						.getDirtySegments(SimpleTreeIdProvider.TREE_ID);
 				Assert.assertEquals(1, dirtySegs.size());
 				Assert.assertEquals(2, dirtySegs.get(0).intValue());
+			}
+		} finally {
+			HashTreesImplTestUtils.closeStores(stores);
+		}
+	}
+
+	@Test
+	public void testCompleteRebuild() throws Exception {
+		int rootNodeId = 0;
+		int nodeId = 2;
+		int segId = 1;
+		int noOfSegments = 2;
+		HashTreesStore[] stores = generateInMemoryAndPersistentStores();
+
+		try {
+			for (HashTreesStore store : stores) {
+				HTreeComponents components = createHashTree(noOfSegments,
+						TREE_ID_PROVIDER, SEG_ID_PROVIDER, store);
+				HashTrees testTree = components.hTree;
+				Store kvStore = components.store;
+				kvStore.registerHashTrees(null);
+
+				ByteBuffer expectedKey = generateRandomKeyWithPrefix(segId);
+				ByteBuffer expectedValue = ByteBuffer.wrap(randomBytes());
+				StringBuffer sb = new StringBuffer();
+				ByteBuffer expectedDigest = ByteBuffer.wrap(ByteUtils
+						.sha1(expectedValue.array()));
+				sb.append(HashTreesImpl.getHexString(expectedKey,
+						expectedDigest) + "\n");
+				byte[] expectedLeafNodeDigest = ByteUtils.sha1(sb.toString()
+						.getBytes());
+
+				testTree.hPut(randomByteBuffer(), randomByteBuffer());
+				kvStore.put(expectedKey.array(), expectedValue.array());
+				testTree.rebuildHashTree(SimpleTreeIdProvider.TREE_ID, true);
+				SegmentHash segHash = testTree.getSegmentHash(
+						SimpleTreeIdProvider.TREE_ID, nodeId);
+				Assert.assertNotNull(segHash);
+				Assert.assertTrue(Arrays.equals(expectedLeafNodeDigest,
+						segHash.getHash()));
+
+				sb.setLength(0);
+				sb.append(Hex.encodeHexString(expectedLeafNodeDigest) + "\n");
+				byte[] expectedRootNodeDigest = ByteUtils.sha1(sb.toString()
+						.getBytes());
+				SegmentHash actualRootNodeDigest = testTree.getSegmentHash(
+						SimpleTreeIdProvider.TREE_ID, rootNodeId);
+				Assert.assertNotNull(actualRootNodeDigest);
+				Assert.assertTrue(Arrays.equals(expectedRootNodeDigest,
+						actualRootNodeDigest.getHash()));
 			}
 		} finally {
 			HashTreesImplTestUtils.closeStores(stores);

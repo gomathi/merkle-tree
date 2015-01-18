@@ -1,11 +1,10 @@
 package org.hashtrees.synch;
 
-import org.hashtrees.store.HashTreesManagerStore;
 import org.hashtrees.thrift.generated.HashTreesSyncInterface;
 import org.hashtrees.thrift.generated.RebuildHashTreeRequest;
 import org.hashtrees.thrift.generated.RebuildHashTreeResponse;
 
-public interface HashTreesSyncCallsObserver extends HashTreesManagerStore {
+public interface HashTreesSyncCallsObserver {
 
 	/**
 	 * This is a call forwarded by {@link HashTreesSyncInterface.Iface} to sync

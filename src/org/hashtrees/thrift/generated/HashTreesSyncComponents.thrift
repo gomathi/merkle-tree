@@ -122,20 +122,6 @@ service HashTreesSyncInterface
      * 
      */
     void submitRebuildResponse(1:RebuildHashTreeResponse response);
-    
-	/**
-	 * Adds a server to sync list. Hashtree with treeId on the local server will only
-	 * be synched against this server.
-	 *
-	 */
-	void addServerNameAndTreeIdToSyncList(1:ServerName sn, 2:i64 treeId);
-
-	/**
-	 * Removes a server from sync list. From the next iteration, the remote
-	 * server will not be synched by the local server for only the given treeId.
-	 * 
-	 */
-	void removeServerNameAndTreeIdFromSyncList(1:ServerName sn, 2:i64 treeId);
 
 	/**
 	 * Returns servers which are in sync list for the given treeId. The result will contain servers which are added through addServerToSyncList(treeId, sn) and 
@@ -143,14 +129,4 @@ service HashTreesSyncInterface
 	 *
 	 **/
 	list<ServerName> getServerNameListFor(1:i64 treeId);
-
-	/**
-	* All local hashtrees will be synced against this server from the next iteration. 
-	*
-	*/
-	void addServerNameToSyncList(1:ServerName sn);
-
-	void removeServerNameFromSyncList(1:ServerName sn);
-
-	list<ServerName> getServerNameList();
 }

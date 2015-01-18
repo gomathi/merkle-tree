@@ -8,7 +8,6 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ConcurrentSkipListMap;
-import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -23,13 +22,11 @@ import org.apache.thrift.TException;
 import org.apache.thrift.transport.TTransportException;
 import org.hashtrees.HashTrees;
 import org.hashtrees.HashTreesIdProvider;
-import org.hashtrees.store.HashTreesManagerStore;
 import org.hashtrees.thrift.generated.HashTreesSyncInterface;
 import org.hashtrees.thrift.generated.RebuildHashTreeRequest;
 import org.hashtrees.thrift.generated.RebuildHashTreeResponse;
 import org.hashtrees.thrift.generated.ServerName;
 import org.hashtrees.util.CustomThreadFactory;
-import org.hashtrees.util.NestedIterator;
 import org.hashtrees.util.Pair;
 import org.hashtrees.util.StoppableTask;
 import org.hashtrees.util.TaskQueue;
@@ -80,11 +77,10 @@ public class HashTreesManager extends StoppableTask implements
 	private final ServerName localServer;
 	private final HashTrees hashTrees;
 	private final HashTreesIdProvider treeIdProvider;
-	private final HashTreesManagerStore syncManagerStore;
+	private final HashTreesSynchListProvider syncListProvider;
 	private final HashTreesSynchAuthenticator authenticator;
 
 	private final ConcurrentSkipListMap<ServerName, HashTreesSyncInterface.Iface> servers = new ConcurrentSkipListMap<>();
-	private final ConcurrentSkipListSet<ServerName> serversToSync = new ConcurrentSkipListSet<>();
 	private final ConcurrentMap<Pair<ServerName, Long>, Pair<Long, Boolean>> remoteTreeAndLastBuildReqTS = new ConcurrentHashMap<>();
 	private final ConcurrentMap<Pair<ServerName, Long>, Long> remoteTreeAndLastSyncedTS = new ConcurrentHashMap<>();
 
@@ -99,7 +95,7 @@ public class HashTreesManager extends StoppableTask implements
 			long fullRebuildPeriod, boolean rebuildEnabled,
 			boolean synchEnabled, ServerName localServer, HashTrees hashTrees,
 			HashTreesIdProvider treeIdProvider,
-			HashTreesManagerStore syncMgrStore,
+			HashTreesSynchListProvider syncMgrStore,
 			HashTreesSynchAuthenticator authenticator) {
 		this.noOfThreads = noOfThreads;
 		this.period = period;
@@ -107,15 +103,10 @@ public class HashTreesManager extends StoppableTask implements
 		this.synchEnabled = synchEnabled;
 		this.rebuildEnabled = rebuildEnabled;
 		this.localServer = localServer;
-		this.syncManagerStore = syncMgrStore;
+		this.syncListProvider = syncMgrStore;
 		this.hashTrees = hashTrees;
 		this.treeIdProvider = treeIdProvider;
 		this.authenticator = authenticator;
-	}
-
-	private void initServersToSyncList() {
-		List<ServerName> servers = syncManagerStore.getServerNameList();
-		serversToSync.addAll(servers);
 	}
 
 	@Override
@@ -203,7 +194,8 @@ public class HashTreesManager extends StoppableTask implements
 	}
 
 	private void sendRebuildRequestToRemoteTrees(long treeId) {
-		Iterator<ServerName> serverItr = getSyncListServers(treeId);
+		Iterator<ServerName> serverItr = syncListProvider.getServerNameListFor(
+				treeId).iterator();
 		while (serverItr.hasNext()) {
 			ServerName sn = serverItr.next();
 			Pair<ServerName, Long> serverNameWTreeId = Pair.create(sn, treeId);
@@ -230,7 +222,8 @@ public class HashTreesManager extends StoppableTask implements
 
 		while (treeIds.hasNext()) {
 			long treeId = treeIds.next();
-			Iterator<ServerName> serverItr = getSyncListServers(treeId);
+			Iterator<ServerName> serverItr = syncListProvider
+					.getServerNameListFor(treeId).iterator();
 			while (serverItr.hasNext()) {
 				ServerName sn = serverItr.next();
 				Pair<ServerName, Long> serverNameATreeId = Pair.create(sn,
@@ -339,7 +332,6 @@ public class HashTreesManager extends StoppableTask implements
 
 	public void init() {
 		if (initialized.compareAndSet(false, true)) {
-			initServersToSyncList();
 			String hostNameAndPortNo = localServer.toString();
 			String threadPoolName = HT_MGR_TPOOL + "," + hostNameAndPortNo;
 			String executorThreadName = HT_MGR_SCHED_THREAD + ","
@@ -351,7 +343,7 @@ public class HashTreesManager extends StoppableTask implements
 
 			CountDownLatch initializedLatch = new CountDownLatch(1);
 			htThriftServer = new HashTreesThriftServerTask(hashTrees, this,
-					localServer.getPortNo(), initializedLatch);
+					syncListProvider, localServer.getPortNo(), initializedLatch);
 			new Thread(htThriftServer, HT_THRIFT_SERVER_THREAD).start();
 			try {
 				initializedLatch.await();
@@ -376,45 +368,6 @@ public class HashTreesManager extends StoppableTask implements
 		if (synchEnabled)
 			synchAllRemoteTrees();
 		LOG.info("Executing rebuild/synch operations - Done.");
-	}
-
-	private Iterator<ServerName> getSyncListServers(long treeId) {
-		List<Iterator<ServerName>> list = new ArrayList<>();
-		list.add(serversToSync.iterator());
-		list.add(getServerNameListFor(treeId).iterator());
-		return new NestedIterator<>(list);
-	}
-
-	@Override
-	public void addServerNameAndTreeIdToSyncList(ServerName sn, long treeId) {
-		syncManagerStore.addServerNameAndTreeIdToSyncList(sn, treeId);
-	}
-
-	@Override
-	public void removeServerNameAndTreeIdFromSyncList(ServerName sn, long treeId) {
-		syncManagerStore.removeServerNameAndTreeIdFromSyncList(sn, treeId);
-	}
-
-	@Override
-	public List<ServerName> getServerNameListFor(long treeId) {
-		return syncManagerStore.getServerNameListFor(treeId);
-	}
-
-	@Override
-	public void addServerNameToSyncList(ServerName sn) {
-		syncManagerStore.addServerNameToSyncList(sn);
-		serversToSync.add(sn);
-	}
-
-	@Override
-	public void removeServerNameFromSyncList(ServerName sn) {
-		syncManagerStore.removeServerNameFromSyncList(sn);
-		serversToSync.remove(sn);
-	}
-
-	@Override
-	public List<ServerName> getServerNameList() {
-		return syncManagerStore.getServerNameList();
 	}
 
 	public void shutdown() {
@@ -448,7 +401,7 @@ public class HashTreesManager extends StoppableTask implements
 		private final ServerName localServer;
 		private final HashTrees hashTrees;
 		private final HashTreesIdProvider treeIdProvider;
-		private final HashTreesManagerStore syncMgrStore;
+		private final HashTreesSynchListProvider syncListProvider;
 
 		private long period = DEF_SCHEDULE_PERIOD, fullRebuildPeriod = -1;
 		private int noOfThreads = DEF_NO_OF_THREADS;
@@ -457,11 +410,11 @@ public class HashTreesManager extends StoppableTask implements
 
 		public Builder(String serverName, int portNo, HashTrees hashTrees,
 				HashTreesIdProvider treeIdProvider,
-				HashTreesManagerStore syncMgrStore) {
+				HashTreesSynchListProvider syncListProvider) {
 			this.localServer = new ServerName(serverName, portNo);
 			this.hashTrees = hashTrees;
 			this.treeIdProvider = treeIdProvider;
-			this.syncMgrStore = syncMgrStore;
+			this.syncListProvider = syncListProvider;
 		}
 
 		/**
@@ -532,7 +485,7 @@ public class HashTreesManager extends StoppableTask implements
 				authenticator = new DefaultSynchAuthenticator();
 			return new HashTreesManager(noOfThreads, period, fullRebuildPeriod,
 					rebuildEnabled, syncEnabled, localServer, hashTrees,
-					treeIdProvider, syncMgrStore, authenticator);
+					treeIdProvider, syncListProvider, authenticator);
 		}
 	}
 }

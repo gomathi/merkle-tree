@@ -22,11 +22,14 @@ public class HashTreesThriftServer implements HashTreesSyncInterface.Iface {
 
 	private final HashTrees hashTrees;
 	private final HashTreesSyncCallsObserver syncCallsObserver;
+	private final HashTreesSynchListProvider syncListProvider;
 
 	public HashTreesThriftServer(final HashTrees hashTree,
-			final HashTreesSyncCallsObserver syncCallsObserver) {
+			final HashTreesSyncCallsObserver syncCallsObserver,
+			final HashTreesSynchListProvider syncListProvider) {
 		this.hashTrees = hashTree;
 		this.syncCallsObserver = syncCallsObserver;
+		this.syncListProvider = syncListProvider;
 	}
 
 	@Override
@@ -119,34 +122,7 @@ public class HashTreesThriftServer implements HashTreesSyncInterface.Iface {
 	}
 
 	@Override
-	public void addServerNameAndTreeIdToSyncList(ServerName sn, long treeId)
-			throws TException {
-		syncCallsObserver.addServerNameAndTreeIdToSyncList(sn, treeId);
-	}
-
-	@Override
-	public void removeServerNameAndTreeIdFromSyncList(ServerName sn, long treeId)
-			throws TException {
-		syncCallsObserver.removeServerNameAndTreeIdFromSyncList(sn, treeId);
-	}
-
-	@Override
 	public List<ServerName> getServerNameListFor(long treeId) throws TException {
-		return syncCallsObserver.getServerNameListFor(treeId);
-	}
-
-	@Override
-	public void addServerNameToSyncList(ServerName sn) throws TException {
-		syncCallsObserver.addServerNameToSyncList(sn);
-	}
-
-	@Override
-	public void removeServerNameFromSyncList(ServerName sn) throws TException {
-		syncCallsObserver.removeServerNameFromSyncList(sn);
-	}
-
-	@Override
-	public List<ServerName> getServerNameList() throws TException {
-		return syncCallsObserver.getServerNameList();
+		return syncListProvider.getServerNameListFor(treeId);
 	}
 }

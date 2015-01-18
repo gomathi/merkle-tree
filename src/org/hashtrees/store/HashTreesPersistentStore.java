@@ -1,14 +1,10 @@
 package org.hashtrees.store;
 
-import static org.hashtrees.store.ByteKeyValueConverter.KVBYTES_TO_SERVERNAME_FROM_METADATAKEY;
 import static org.hashtrees.store.ByteKeyValueConverter.KVBYTES_TO_SEGDATA_CONVERTER;
 import static org.hashtrees.store.ByteKeyValueConverter.KVBYTES_TO_SEGID_CONVERTER;
-import static org.hashtrees.store.ByteKeyValueConverter.KVBYTES_TO_SERVERNAME_CONVERTER;
 import static org.hashtrees.store.ByteKeyValueConverter.KVBYTES_TO_TREEID_CONVERTER;
 import static org.hashtrees.store.ByteKeyValueConverter.KVBYTES_TO_TREEID_SEGID_CONVERTER;
 import static org.hashtrees.store.ByteKeyValueConverter.LEN_BASEKEY_AND_TREEID;
-import static org.hashtrees.store.ByteKeyValueConverter.convertServerNameAndTreeIdToBytes;
-import static org.hashtrees.store.ByteKeyValueConverter.convertServerNameToBytes;
 import static org.hashtrees.store.ByteKeyValueConverter.fillBaseKey;
 import static org.hashtrees.store.ByteKeyValueConverter.generateBaseKey;
 import static org.hashtrees.store.ByteKeyValueConverter.generateDirtySegmentKey;
@@ -38,7 +34,6 @@ import org.hashtrees.store.ByteKeyValueConverter.BaseKey;
 import org.hashtrees.store.ByteKeyValueConverter.MetaDataKey;
 import org.hashtrees.thrift.generated.SegmentData;
 import org.hashtrees.thrift.generated.SegmentHash;
-import org.hashtrees.thrift.generated.ServerName;
 import org.hashtrees.util.ByteUtils;
 import org.hashtrees.util.Pair;
 import org.iq80.leveldb.DB;
@@ -64,8 +59,7 @@ import com.google.common.collect.Lists;
  * 
  */
 
-public class HashTreesPersistentStore extends HashTreesBaseStore implements
-		HashTreesManagerStore {
+public class HashTreesPersistentStore extends HashTreesBaseStore {
 
 	private static final Logger LOG = LoggerFactory
 			.getLogger(HashTreesPersistentStore.class);
@@ -281,47 +275,6 @@ public class HashTreesPersistentStore extends HashTreesBaseStore implements
 		final DBIterator itr = dbObj.iterator();
 		itr.seek(prefixKey);
 		return new DataIterator<>(prefixKey, KVBYTES_TO_TREEID_CONVERTER, itr);
-	}
-
-	@Override
-	public void addServerNameAndTreeIdToSyncList(ServerName rTree, long treeId) {
-		dbObj.put(convertServerNameAndTreeIdToBytes(rTree, treeId), EMPTY_VALUE);
-	}
-
-	@Override
-	public void removeServerNameAndTreeIdFromSyncList(ServerName sn, long treeId) {
-		dbObj.delete(convertServerNameAndTreeIdToBytes(sn, treeId));
-	}
-
-	@Override
-	public List<ServerName> getServerNameListFor(long treeId) {
-		byte[] prefixKey = generateMetaDataKey(MetaDataKey.SERVER_NAME, treeId);
-		DBIterator itr = dbObj.iterator();
-		itr.seek(prefixKey);
-		return Lists.newArrayList(new DataIterator<>(prefixKey,
-				KVBYTES_TO_SERVERNAME_FROM_METADATAKEY, itr));
-	}
-
-	@Override
-	public void addServerNameToSyncList(ServerName sn) {
-		dbObj.put(convertServerNameToBytes(sn), EMPTY_VALUE);
-	}
-
-	@Override
-	public void removeServerNameFromSyncList(ServerName sn) {
-		dbObj.delete(convertServerNameToBytes(sn));
-	}
-
-	@Override
-	public List<ServerName> getServerNameList() {
-		byte[] prefixKey = new byte[BaseKey.LENGTH];
-		ByteBuffer bb = ByteBuffer.wrap(prefixKey);
-		bb.put(BaseKey.SERVER_NAME.key);
-
-		DBIterator itr = dbObj.iterator();
-		itr.seek(prefixKey);
-		return Lists.newArrayList(new DataIterator<>(prefixKey,
-				KVBYTES_TO_SERVERNAME_CONVERTER, itr));
 	}
 
 	/**

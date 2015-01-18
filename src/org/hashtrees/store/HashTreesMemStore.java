@@ -11,26 +11,21 @@ import java.util.NoSuchElementException;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ConcurrentSkipListMap;
-import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.atomic.AtomicLong;
 
 import javax.annotation.concurrent.ThreadSafe;
 
 import org.hashtrees.thrift.generated.SegmentData;
 import org.hashtrees.thrift.generated.SegmentHash;
-import org.hashtrees.thrift.generated.ServerName;
 
 /**
  * In memory implementation of {@link HashTreesStore}.
  * 
  */
 @ThreadSafe
-public class HashTreesMemStore extends HashTreesBaseStore implements
-		HashTreesManagerStore {
+public class HashTreesMemStore extends HashTreesBaseStore {
 
 	private final ConcurrentMap<Long, HashTreeMemStore> treeIdAndIndHashTree = new ConcurrentHashMap<>();
-	private final ConcurrentMap<Long, ConcurrentSkipListSet<ServerName>> treeIdAndServers = new ConcurrentSkipListMap<>();
-	private final ConcurrentSkipListSet<ServerName> servers = new ConcurrentSkipListSet<>();
 
 	private static class HashTreeMemStore {
 		private final ConcurrentMap<Integer, ByteBuffer> segmentHashes = new ConcurrentSkipListMap<Integer, ByteBuffer>();
@@ -174,43 +169,6 @@ public class HashTreesMemStore extends HashTreesBaseStore implements
 	@Override
 	public void deleteTree(long treeId) {
 		treeIdAndIndHashTree.remove(treeId);
-	}
-
-	private ConcurrentSkipListSet<ServerName> getServersList(long treeId) {
-		if (!treeIdAndServers.containsKey(treeId))
-			treeIdAndServers.putIfAbsent(treeId,
-					new ConcurrentSkipListSet<ServerName>());
-		return treeIdAndServers.get(treeId);
-	}
-
-	@Override
-	public void addServerNameAndTreeIdToSyncList(ServerName sn, long treeId) {
-		getServersList(treeId).add(sn);
-	}
-
-	@Override
-	public void removeServerNameAndTreeIdFromSyncList(ServerName sn, long treeId) {
-		getServersList(treeId).remove(sn);
-	}
-
-	@Override
-	public List<ServerName> getServerNameListFor(long treeId) {
-		return new ArrayList<>(getServersList(treeId));
-	}
-
-	@Override
-	public void addServerNameToSyncList(ServerName sn) {
-		servers.add(sn);
-	}
-
-	@Override
-	public void removeServerNameFromSyncList(ServerName sn) {
-		servers.remove(sn);
-	}
-
-	@Override
-	public List<ServerName> getServerNameList() {
-		return new ArrayList<>(servers);
 	}
 
 	@Override

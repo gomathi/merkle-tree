@@ -24,13 +24,14 @@ import org.hashtrees.HashTrees;
 import org.hashtrees.HashTreesConstants;
 import org.hashtrees.HashTreesImpl;
 import org.hashtrees.SimpleTreeIdProvider;
-import org.hashtrees.store.HashTreesManagerStore;
 import org.hashtrees.store.HashTreesMemStore;
 import org.hashtrees.store.HashTreesPersistentStore;
 import org.hashtrees.store.HashTreesStore;
 import org.hashtrees.store.SimpleMemStore;
 import org.hashtrees.store.Store;
+import org.hashtrees.synch.EmptySyncListProvider;
 import org.hashtrees.synch.HashTreesManager;
+import org.hashtrees.synch.HashTreesSynchListProvider;
 import org.hashtrees.synch.HashTreesThriftClientProvider;
 import org.hashtrees.test.utils.HashTreesImplTestUtils;
 import org.hashtrees.test.utils.HashTreesImplTestUtils.HTreeComponents;
@@ -375,7 +376,7 @@ public class HashTreesImplTest {
 	public void testHashTreeServerAndClient() throws Exception {
 		HashTreesStore store = generateInMemoryStore();
 		HashTreesStore remoteStore = generateInMemoryStore();
-		HashTreesManagerStore syncMgrStore = generateInMemoryStore();
+		HashTreesSynchListProvider syncListProvider = new EmptySyncListProvider();
 
 		try {
 			HTreeComponents localHTreeComp = createHashTree(
@@ -385,7 +386,7 @@ public class HashTreesImplTest {
 			HashTreesManager hTreeManager = new HashTreesManager.Builder(
 					"test",
 					HashTreesConstants.DEFAULT_HASH_TREE_SERVER_PORT_NO,
-					remoteHTreeComp.hTree, TREE_ID_PROVIDER, syncMgrStore)
+					remoteHTreeComp.hTree, TREE_ID_PROVIDER, syncListProvider)
 					.build();
 
 			hTreeManager.init();

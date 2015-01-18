@@ -28,14 +28,17 @@ public class HashTreesThriftServerTask extends StoppableTask {
 	private volatile TServer server;
 	private final HashTrees localHashTree;
 	private final HashTreesSyncCallsObserver htSynchCallsObserver;
+	private final HashTreesSynchListProvider htSyncListProvider;
 	private final int serverPortNo;
 	private final CountDownLatch initializedLatch;
 
 	public HashTreesThriftServerTask(final HashTrees hTree,
 			final HashTreesSyncCallsObserver htSynchCallsObserver,
+			final HashTreesSynchListProvider htSyncListProvider,
 			final int serverPortNo, final CountDownLatch initializedLatch) {
 		this.localHashTree = hTree;
 		this.htSynchCallsObserver = htSynchCallsObserver;
+		this.htSyncListProvider = htSyncListProvider;
 		this.serverPortNo = serverPortNo;
 		this.initializedLatch = initializedLatch;
 	}
@@ -60,7 +63,7 @@ public class HashTreesThriftServerTask extends StoppableTask {
 	private void startServer() throws TTransportException {
 		if (server == null) {
 			this.server = createServer(serverPortNo, new HashTreesThriftServer(
-					localHashTree, htSynchCallsObserver));
+					localHashTree, htSynchCallsObserver, htSyncListProvider));
 			if (initializedLatch != null)
 				initializedLatch.countDown();
 			server.serve();

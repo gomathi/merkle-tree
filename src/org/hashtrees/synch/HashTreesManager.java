@@ -27,9 +27,9 @@ import org.hashtrees.store.HashTreesManagerStore;
 import org.hashtrees.thrift.generated.HashTreesSyncInterface;
 import org.hashtrees.thrift.generated.RebuildHashTreeRequest;
 import org.hashtrees.thrift.generated.RebuildHashTreeResponse;
-import org.hashtrees.thrift.generated.RemoteTreeInfo;
 import org.hashtrees.thrift.generated.ServerName;
 import org.hashtrees.util.CustomThreadFactory;
+import org.hashtrees.util.NestedIterator;
 import org.hashtrees.util.Pair;
 import org.hashtrees.util.StoppableTask;
 import org.hashtrees.util.TaskQueue;
@@ -71,7 +71,7 @@ public class HashTreesManager extends StoppableTask implements
 	private final static String HT_MGR_TPOOL = "HTMgrWorkerThreadPool";
 	private final static String HT_MGR_SCHED_THREAD = "HTMgrSchedulerThread";
 	private final static String HT_THRIFT_SERVER_THREAD = "HTThriftServerThread";
-	private final static long MAX_UNSYNCED_TIME = 15 * 60 * 1000; // in
+	private final static long MAX_UNSYNCED_TIME = 10 * 60 * 1000; // in
 																	// milliseconds
 
 	private final int noOfThreads;
@@ -83,7 +83,7 @@ public class HashTreesManager extends StoppableTask implements
 	private final HashTreesManagerStore syncManagerStore;
 
 	private final ConcurrentSkipListMap<ServerName, HashTreesSyncInterface.Iface> servers = new ConcurrentSkipListMap<>();
-	private final ConcurrentSkipListMap<Long, ConcurrentSkipListSet<ServerName>> serversToSync = new ConcurrentSkipListMap<>();
+	private final ConcurrentSkipListSet<ServerName> serversToSync = new ConcurrentSkipListSet<>();
 	private final ConcurrentMap<Pair<ServerName, Long>, Pair<Long, Boolean>> remoteTreeAndLastBuildReqTS = new ConcurrentHashMap<>();
 	private final ConcurrentMap<Pair<ServerName, Long>, Long> remoteTreeAndLastSyncedTS = new ConcurrentHashMap<>();
 
@@ -108,15 +108,12 @@ public class HashTreesManager extends StoppableTask implements
 		this.syncManagerStore = syncMgrStore;
 		this.hashTrees = hashTrees;
 		this.treeIdProvider = treeIdProvider;
-		initServersWithSyncList(treeIdProvider.getAllPrimaryTreeIds());
+		initServersToSyncList();
 	}
 
-	private void initServersWithSyncList(Iterator<Long> treeIds) {
-		while (treeIds.hasNext()) {
-			for (RemoteTreeInfo rTree : syncManagerStore.getSyncList(treeIds
-					.next()))
-				addToSyncList(rTree);
-		}
+	private void initServersToSyncList() {
+		List<ServerName> servers = syncManagerStore.getServerNameList();
+		serversToSync.addAll(servers);
 	}
 
 	@Override
@@ -204,7 +201,9 @@ public class HashTreesManager extends StoppableTask implements
 	}
 
 	private void sendRebuildRequestToRemoteTrees(long treeId) {
-		for (ServerName sn : getSyncListServers(treeId)) {
+		Iterator<ServerName> serverItr = getSyncListServers(treeId);
+		while (serverItr.hasNext()) {
+			ServerName sn = serverItr.next();
 			Pair<ServerName, Long> serverNameWTreeId = Pair.create(sn, treeId);
 			try {
 				long buildReqTS = System.currentTimeMillis();
@@ -229,8 +228,9 @@ public class HashTreesManager extends StoppableTask implements
 
 		while (treeIds.hasNext()) {
 			long treeId = treeIds.next();
-
-			for (ServerName sn : getSyncListServers(treeId)) {
+			Iterator<ServerName> serverItr = getSyncListServers(treeId);
+			while (serverItr.hasNext()) {
+				ServerName sn = serverItr.next();
 				Pair<ServerName, Long> serverNameATreeId = Pair.create(sn,
 						treeId);
 				Pair<Long, Boolean> lastBuildReqTSAndResponse = remoteTreeAndLastBuildReqTS
@@ -334,10 +334,10 @@ public class HashTreesManager extends StoppableTask implements
 	public void init() {
 		if (initialized.compareAndSet(false, true)) {
 
-			String hostNameAndPortNo = "," + localServer.hostName + ","
-					+ localServer.portNo;
-			String threadPoolName = HT_MGR_TPOOL + hostNameAndPortNo;
-			String executorThreadName = HT_MGR_SCHED_THREAD + hostNameAndPortNo;
+			String hostNameAndPortNo = localServer.toString();
+			String threadPoolName = HT_MGR_TPOOL + "," + hostNameAndPortNo;
+			String executorThreadName = HT_MGR_SCHED_THREAD + ","
+					+ hostNameAndPortNo;
 			threadPool = Executors.newFixedThreadPool(noOfThreads,
 					new CustomThreadFactory(threadPoolName));
 			scheduledExecutor = Executors.newScheduledThreadPool(1,
@@ -372,36 +372,43 @@ public class HashTreesManager extends StoppableTask implements
 		LOG.info("Executing rebuild/synch operations - Done.");
 	}
 
-	private ConcurrentSkipListSet<ServerName> getSyncListServers(long treeId) {
-		if (!serversToSync.containsKey(treeId))
-			serversToSync.putIfAbsent(treeId,
-					new ConcurrentSkipListSet<ServerName>());
-		return serversToSync.get(treeId);
+	private Iterator<ServerName> getSyncListServers(long treeId) {
+		List<Iterator<ServerName>> list = new ArrayList<>();
+		list.add(serversToSync.iterator());
+		list.add(getServerNameListFor(treeId).iterator());
+		return new NestedIterator<>(list);
 	}
 
 	@Override
-	public void addToSyncList(RemoteTreeInfo rTree) {
-		syncManagerStore.addToSyncList(rTree);
-		boolean added = getSyncListServers(rTree.treeId).add(rTree.sn);
-		if (added) {
-			LOG.info(rTree + " has been added to sync list.");
-		} else
-			LOG.info(rTree + "has been already on the sync list.");
+	public void addServerNameAndTreeIdToSyncList(ServerName sn, long treeId) {
+		syncManagerStore.addServerNameAndTreeIdToSyncList(sn, treeId);
 	}
 
 	@Override
-	public void removeFromSyncList(RemoteTreeInfo rTree) {
-		syncManagerStore.removeFromSyncList(rTree);
-		boolean removed = getSyncListServers(rTree.treeId).remove(rTree.sn);
-		if (removed)
-			LOG.info(rTree + "has been removed from sync list.");
-		else
-			LOG.info(rTree + " was not in the sync list to be removed.");
+	public void removeServerNameAndTreeIdFromSyncList(ServerName sn, long treeId) {
+		syncManagerStore.removeServerNameAndTreeIdFromSyncList(sn, treeId);
 	}
 
 	@Override
-	public List<RemoteTreeInfo> getSyncList(long treeId) {
-		return syncManagerStore.getSyncList(treeId);
+	public List<ServerName> getServerNameListFor(long treeId) {
+		return syncManagerStore.getServerNameListFor(treeId);
+	}
+
+	@Override
+	public void addServerNameToSyncList(ServerName sn) {
+		syncManagerStore.addServerNameToSyncList(sn);
+		serversToSync.add(sn);
+	}
+
+	@Override
+	public void removeServerNameFromSyncList(ServerName sn) {
+		syncManagerStore.removeServerNameFromSyncList(sn);
+		serversToSync.remove(sn);
+	}
+
+	@Override
+	public List<ServerName> getServerNameList() {
+		return syncManagerStore.getServerNameList();
 	}
 
 	public void shutdown() {

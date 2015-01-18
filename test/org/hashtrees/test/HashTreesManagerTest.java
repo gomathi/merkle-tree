@@ -19,7 +19,6 @@ import org.hashtrees.synch.HashTreesManager;
 import org.hashtrees.test.utils.HashTreesImplTestObj;
 import org.hashtrees.test.utils.HashTreesImplTestObj.HTSynchEvent;
 import org.hashtrees.test.utils.HashTreesImplTestUtils;
-import org.hashtrees.thrift.generated.RemoteTreeInfo;
 import org.hashtrees.thrift.generated.ServerName;
 import org.junit.Test;
 
@@ -114,7 +113,8 @@ public class HashTreesManagerTest {
 				localEvents,
 				HashTreesConstants.DEFAULT_HASH_TREE_SERVER_PORT_NO, 3000, 300);
 		HashTreesManager localSyncManager = componentsLocal.htMgr;
-		componentsLocal.simpleMemStore.put(HashTreesImplTestUtils.randomBytes(),
+		componentsLocal.simpleMemStore.put(
+				HashTreesImplTestUtils.randomBytes(),
 				HashTreesImplTestUtils.randomBytes());
 
 		BlockingQueue<HTSynchEvent> remoteEvents = new ArrayBlockingQueue<HTSynchEvent>(
@@ -124,8 +124,8 @@ public class HashTreesManagerTest {
 		HashTreesManager remoteSyncManager = componentsRemote.htMgr;
 
 		remoteSyncManager.init();
-		localSyncManager.addToSyncList(new RemoteTreeInfo(new ServerName(
-				"localhost", 8999), 1));
+		ServerName rTreeInfo = new ServerName("localhost", 8999);
+		localSyncManager.addServerNameAndTreeIdToSyncList(rTreeInfo, 1);
 		localSyncManager.init();
 
 		waitForTheEvent(localEvents, HTSynchEvent.SYNCH, 10000);

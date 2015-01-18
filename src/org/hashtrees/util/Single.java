@@ -2,6 +2,8 @@ package org.hashtrees.util;
 
 import java.util.concurrent.ConcurrentMap;
 
+import com.google.common.base.Objects;
+
 /**
  * A wrapper object of another object. It can be used in cases where you want to
  * store null object in a data structure, and the data structure does not allow
@@ -29,25 +31,16 @@ public class Single<T> {
 		if (that == null || !(that instanceof Single<?>))
 			return false;
 		Single<?> thatObj = (Single<?>) that;
-		return equals(data, thatObj.data);
-	}
-
-	private static <T> boolean equals(T first, T second) {
-		if (first == null && second == null)
-			return true;
-		if (first == null || second == null)
-			return false;
-		return first.equals(second);
+		return Objects.equal(data, thatObj.data);
 	}
 
 	@Override
 	public int hashCode() {
-		int result = (data == null) ? 0 : (data.hashCode());
-		return result;
+		return Objects.hashCode(data);
 	}
 
 	@Override
 	public String toString() {
-		return "[" + ((data == null) ? " " : data.toString()) + "]";
+		return Objects.toStringHelper(this).add("object", data).toString();
 	}
 }

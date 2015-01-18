@@ -1,5 +1,7 @@
 package org.hashtrees.util;
 
+import com.google.common.base.Objects;
+
 public class Pair<F, S> {
 
 	private final F f;
@@ -27,28 +29,17 @@ public class Pair<F, S> {
 		if (that == null || !(that instanceof Pair<?, ?>))
 			return false;
 		Pair<?, ?> thatObj = (Pair<?, ?>) that;
-		return equals(f, thatObj.f) && equals(s, thatObj.s);
-	}
-
-	private static <T> boolean equals(T first, T second) {
-		if (first == null && second == null)
-			return true;
-		if (first == null || second == null)
-			return false;
-		return first.equals(second);
+		return Objects.equal(f, thatObj.f) && Objects.equal(s, thatObj.s);
 	}
 
 	@Override
 	public int hashCode() {
-		int PRIME = 31;
-		int result = (f == null) ? 0 : (f.hashCode());
-		result = (result * PRIME) + ((s == null) ? 0 : s.hashCode());
-		return result;
+		return Objects.hashCode(f, s);
 	}
 
 	@Override
 	public String toString() {
-		return "[" + ((f == null) ? " " : f.toString()) + ","
-				+ ((s == null) ? " " : s.toString()) + "]";
+		return Objects.toStringHelper(this).add("first", f).add("second", s)
+				.toString();
 	}
 }

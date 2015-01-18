@@ -125,30 +125,46 @@ public class HashTreesSyncInterface {
     public void submitRebuildResponse(RebuildHashTreeResponse response) throws org.apache.thrift.TException;
 
     /**
-     * Adds a remote tree to sync list. Hashtrees on the local server will be synched
-     * against the remote tree.
+     * Adds a server to sync list. Hashtree with treeId on the local server will only
+     * be synched against this server.
      * 
      * 
-     * @param rTree
+     * @param sn
+     * @param treeId
      */
-    public void addToSyncList(RemoteTreeInfo rTree) throws org.apache.thrift.TException;
+    public void addServerNameAndTreeIdToSyncList(ServerName sn, long treeId) throws org.apache.thrift.TException;
 
     /**
-     * Removes a remote tree from sync list. From the next iteration, the remote
-     * tree will not be synched by the local server.
+     * Removes a server from sync list. From the next iteration, the remote
+     * server will not be synched by the local server for only the given treeId.
      * 
      * 
-     * @param rTree
+     * @param sn
+     * @param treeId
      */
-    public void removeFromSyncList(RemoteTreeInfo rTree) throws org.apache.thrift.TException;
+    public void removeServerNameAndTreeIdFromSyncList(ServerName sn, long treeId) throws org.apache.thrift.TException;
 
     /**
-     * Returns which remote trees are synced by this instance.
+     * Returns servers which are in sync list for the given treeId. The result will contain servers which are added through addServerToSyncList(treeId, sn) and
+     * removeServerFromSyncList(sn).
+     * 
      * 
      * 
      * @param treeId
      */
-    public List<RemoteTreeInfo> getSyncList(long treeId) throws org.apache.thrift.TException;
+    public List<ServerName> getServerNameListFor(long treeId) throws org.apache.thrift.TException;
+
+    /**
+     * All local hashtrees will be synced against this server from the next iteration.
+     * 
+     * 
+     * @param sn
+     */
+    public void addServerNameToSyncList(ServerName sn) throws org.apache.thrift.TException;
+
+    public void removeServerNameFromSyncList(ServerName sn) throws org.apache.thrift.TException;
+
+    public List<ServerName> getServerNameList() throws org.apache.thrift.TException;
 
   }
 
@@ -172,11 +188,17 @@ public class HashTreesSyncInterface {
 
     public void submitRebuildResponse(RebuildHashTreeResponse response, org.apache.thrift.async.AsyncMethodCallback<AsyncClient.submitRebuildResponse_call> resultHandler) throws org.apache.thrift.TException;
 
-    public void addToSyncList(RemoteTreeInfo rTree, org.apache.thrift.async.AsyncMethodCallback<AsyncClient.addToSyncList_call> resultHandler) throws org.apache.thrift.TException;
+    public void addServerNameAndTreeIdToSyncList(ServerName sn, long treeId, org.apache.thrift.async.AsyncMethodCallback<AsyncClient.addServerNameAndTreeIdToSyncList_call> resultHandler) throws org.apache.thrift.TException;
 
-    public void removeFromSyncList(RemoteTreeInfo rTree, org.apache.thrift.async.AsyncMethodCallback<AsyncClient.removeFromSyncList_call> resultHandler) throws org.apache.thrift.TException;
+    public void removeServerNameAndTreeIdFromSyncList(ServerName sn, long treeId, org.apache.thrift.async.AsyncMethodCallback<AsyncClient.removeServerNameAndTreeIdFromSyncList_call> resultHandler) throws org.apache.thrift.TException;
 
-    public void getSyncList(long treeId, org.apache.thrift.async.AsyncMethodCallback<AsyncClient.getSyncList_call> resultHandler) throws org.apache.thrift.TException;
+    public void getServerNameListFor(long treeId, org.apache.thrift.async.AsyncMethodCallback<AsyncClient.getServerNameListFor_call> resultHandler) throws org.apache.thrift.TException;
+
+    public void addServerNameToSyncList(ServerName sn, org.apache.thrift.async.AsyncMethodCallback<AsyncClient.addServerNameToSyncList_call> resultHandler) throws org.apache.thrift.TException;
+
+    public void removeServerNameFromSyncList(ServerName sn, org.apache.thrift.async.AsyncMethodCallback<AsyncClient.removeServerNameFromSyncList_call> resultHandler) throws org.apache.thrift.TException;
+
+    public void getServerNameList(org.apache.thrift.async.AsyncMethodCallback<AsyncClient.getServerNameList_call> resultHandler) throws org.apache.thrift.TException;
 
   }
 
@@ -398,67 +420,131 @@ public class HashTreesSyncInterface {
       return;
     }
 
-    public void addToSyncList(RemoteTreeInfo rTree) throws org.apache.thrift.TException
+    public void addServerNameAndTreeIdToSyncList(ServerName sn, long treeId) throws org.apache.thrift.TException
     {
-      send_addToSyncList(rTree);
-      recv_addToSyncList();
+      send_addServerNameAndTreeIdToSyncList(sn, treeId);
+      recv_addServerNameAndTreeIdToSyncList();
     }
 
-    public void send_addToSyncList(RemoteTreeInfo rTree) throws org.apache.thrift.TException
+    public void send_addServerNameAndTreeIdToSyncList(ServerName sn, long treeId) throws org.apache.thrift.TException
     {
-      addToSyncList_args args = new addToSyncList_args();
-      args.setRTree(rTree);
-      sendBase("addToSyncList", args);
-    }
-
-    public void recv_addToSyncList() throws org.apache.thrift.TException
-    {
-      addToSyncList_result result = new addToSyncList_result();
-      receiveBase(result, "addToSyncList");
-      return;
-    }
-
-    public void removeFromSyncList(RemoteTreeInfo rTree) throws org.apache.thrift.TException
-    {
-      send_removeFromSyncList(rTree);
-      recv_removeFromSyncList();
-    }
-
-    public void send_removeFromSyncList(RemoteTreeInfo rTree) throws org.apache.thrift.TException
-    {
-      removeFromSyncList_args args = new removeFromSyncList_args();
-      args.setRTree(rTree);
-      sendBase("removeFromSyncList", args);
-    }
-
-    public void recv_removeFromSyncList() throws org.apache.thrift.TException
-    {
-      removeFromSyncList_result result = new removeFromSyncList_result();
-      receiveBase(result, "removeFromSyncList");
-      return;
-    }
-
-    public List<RemoteTreeInfo> getSyncList(long treeId) throws org.apache.thrift.TException
-    {
-      send_getSyncList(treeId);
-      return recv_getSyncList();
-    }
-
-    public void send_getSyncList(long treeId) throws org.apache.thrift.TException
-    {
-      getSyncList_args args = new getSyncList_args();
+      addServerNameAndTreeIdToSyncList_args args = new addServerNameAndTreeIdToSyncList_args();
+      args.setSn(sn);
       args.setTreeId(treeId);
-      sendBase("getSyncList", args);
+      sendBase("addServerNameAndTreeIdToSyncList", args);
     }
 
-    public List<RemoteTreeInfo> recv_getSyncList() throws org.apache.thrift.TException
+    public void recv_addServerNameAndTreeIdToSyncList() throws org.apache.thrift.TException
     {
-      getSyncList_result result = new getSyncList_result();
-      receiveBase(result, "getSyncList");
+      addServerNameAndTreeIdToSyncList_result result = new addServerNameAndTreeIdToSyncList_result();
+      receiveBase(result, "addServerNameAndTreeIdToSyncList");
+      return;
+    }
+
+    public void removeServerNameAndTreeIdFromSyncList(ServerName sn, long treeId) throws org.apache.thrift.TException
+    {
+      send_removeServerNameAndTreeIdFromSyncList(sn, treeId);
+      recv_removeServerNameAndTreeIdFromSyncList();
+    }
+
+    public void send_removeServerNameAndTreeIdFromSyncList(ServerName sn, long treeId) throws org.apache.thrift.TException
+    {
+      removeServerNameAndTreeIdFromSyncList_args args = new removeServerNameAndTreeIdFromSyncList_args();
+      args.setSn(sn);
+      args.setTreeId(treeId);
+      sendBase("removeServerNameAndTreeIdFromSyncList", args);
+    }
+
+    public void recv_removeServerNameAndTreeIdFromSyncList() throws org.apache.thrift.TException
+    {
+      removeServerNameAndTreeIdFromSyncList_result result = new removeServerNameAndTreeIdFromSyncList_result();
+      receiveBase(result, "removeServerNameAndTreeIdFromSyncList");
+      return;
+    }
+
+    public List<ServerName> getServerNameListFor(long treeId) throws org.apache.thrift.TException
+    {
+      send_getServerNameListFor(treeId);
+      return recv_getServerNameListFor();
+    }
+
+    public void send_getServerNameListFor(long treeId) throws org.apache.thrift.TException
+    {
+      getServerNameListFor_args args = new getServerNameListFor_args();
+      args.setTreeId(treeId);
+      sendBase("getServerNameListFor", args);
+    }
+
+    public List<ServerName> recv_getServerNameListFor() throws org.apache.thrift.TException
+    {
+      getServerNameListFor_result result = new getServerNameListFor_result();
+      receiveBase(result, "getServerNameListFor");
       if (result.isSetSuccess()) {
         return result.success;
       }
-      throw new org.apache.thrift.TApplicationException(org.apache.thrift.TApplicationException.MISSING_RESULT, "getSyncList failed: unknown result");
+      throw new org.apache.thrift.TApplicationException(org.apache.thrift.TApplicationException.MISSING_RESULT, "getServerNameListFor failed: unknown result");
+    }
+
+    public void addServerNameToSyncList(ServerName sn) throws org.apache.thrift.TException
+    {
+      send_addServerNameToSyncList(sn);
+      recv_addServerNameToSyncList();
+    }
+
+    public void send_addServerNameToSyncList(ServerName sn) throws org.apache.thrift.TException
+    {
+      addServerNameToSyncList_args args = new addServerNameToSyncList_args();
+      args.setSn(sn);
+      sendBase("addServerNameToSyncList", args);
+    }
+
+    public void recv_addServerNameToSyncList() throws org.apache.thrift.TException
+    {
+      addServerNameToSyncList_result result = new addServerNameToSyncList_result();
+      receiveBase(result, "addServerNameToSyncList");
+      return;
+    }
+
+    public void removeServerNameFromSyncList(ServerName sn) throws org.apache.thrift.TException
+    {
+      send_removeServerNameFromSyncList(sn);
+      recv_removeServerNameFromSyncList();
+    }
+
+    public void send_removeServerNameFromSyncList(ServerName sn) throws org.apache.thrift.TException
+    {
+      removeServerNameFromSyncList_args args = new removeServerNameFromSyncList_args();
+      args.setSn(sn);
+      sendBase("removeServerNameFromSyncList", args);
+    }
+
+    public void recv_removeServerNameFromSyncList() throws org.apache.thrift.TException
+    {
+      removeServerNameFromSyncList_result result = new removeServerNameFromSyncList_result();
+      receiveBase(result, "removeServerNameFromSyncList");
+      return;
+    }
+
+    public List<ServerName> getServerNameList() throws org.apache.thrift.TException
+    {
+      send_getServerNameList();
+      return recv_getServerNameList();
+    }
+
+    public void send_getServerNameList() throws org.apache.thrift.TException
+    {
+      getServerNameList_args args = new getServerNameList_args();
+      sendBase("getServerNameList", args);
+    }
+
+    public List<ServerName> recv_getServerNameList() throws org.apache.thrift.TException
+    {
+      getServerNameList_result result = new getServerNameList_result();
+      receiveBase(result, "getServerNameList");
+      if (result.isSetSuccess()) {
+        return result.success;
+      }
+      throw new org.apache.thrift.TApplicationException(org.apache.thrift.TApplicationException.MISSING_RESULT, "getServerNameList failed: unknown result");
     }
 
   }
@@ -785,99 +871,198 @@ public class HashTreesSyncInterface {
       }
     }
 
-    public void addToSyncList(RemoteTreeInfo rTree, org.apache.thrift.async.AsyncMethodCallback<addToSyncList_call> resultHandler) throws org.apache.thrift.TException {
+    public void addServerNameAndTreeIdToSyncList(ServerName sn, long treeId, org.apache.thrift.async.AsyncMethodCallback<addServerNameAndTreeIdToSyncList_call> resultHandler) throws org.apache.thrift.TException {
       checkReady();
-      addToSyncList_call method_call = new addToSyncList_call(rTree, resultHandler, this, ___protocolFactory, ___transport);
+      addServerNameAndTreeIdToSyncList_call method_call = new addServerNameAndTreeIdToSyncList_call(sn, treeId, resultHandler, this, ___protocolFactory, ___transport);
       this.___currentMethod = method_call;
       ___manager.call(method_call);
     }
 
-    public static class addToSyncList_call extends org.apache.thrift.async.TAsyncMethodCall {
-      private RemoteTreeInfo rTree;
-      public addToSyncList_call(RemoteTreeInfo rTree, org.apache.thrift.async.AsyncMethodCallback<addToSyncList_call> resultHandler, org.apache.thrift.async.TAsyncClient client, org.apache.thrift.protocol.TProtocolFactory protocolFactory, org.apache.thrift.transport.TNonblockingTransport transport) throws org.apache.thrift.TException {
-        super(client, protocolFactory, transport, resultHandler, false);
-        this.rTree = rTree;
-      }
-
-      public void write_args(org.apache.thrift.protocol.TProtocol prot) throws org.apache.thrift.TException {
-        prot.writeMessageBegin(new org.apache.thrift.protocol.TMessage("addToSyncList", org.apache.thrift.protocol.TMessageType.CALL, 0));
-        addToSyncList_args args = new addToSyncList_args();
-        args.setRTree(rTree);
-        args.write(prot);
-        prot.writeMessageEnd();
-      }
-
-      public void getResult() throws org.apache.thrift.TException {
-        if (getState() != org.apache.thrift.async.TAsyncMethodCall.State.RESPONSE_READ) {
-          throw new IllegalStateException("Method call not finished!");
-        }
-        org.apache.thrift.transport.TMemoryInputTransport memoryTransport = new org.apache.thrift.transport.TMemoryInputTransport(getFrameBuffer().array());
-        org.apache.thrift.protocol.TProtocol prot = client.getProtocolFactory().getProtocol(memoryTransport);
-        (new Client(prot)).recv_addToSyncList();
-      }
-    }
-
-    public void removeFromSyncList(RemoteTreeInfo rTree, org.apache.thrift.async.AsyncMethodCallback<removeFromSyncList_call> resultHandler) throws org.apache.thrift.TException {
-      checkReady();
-      removeFromSyncList_call method_call = new removeFromSyncList_call(rTree, resultHandler, this, ___protocolFactory, ___transport);
-      this.___currentMethod = method_call;
-      ___manager.call(method_call);
-    }
-
-    public static class removeFromSyncList_call extends org.apache.thrift.async.TAsyncMethodCall {
-      private RemoteTreeInfo rTree;
-      public removeFromSyncList_call(RemoteTreeInfo rTree, org.apache.thrift.async.AsyncMethodCallback<removeFromSyncList_call> resultHandler, org.apache.thrift.async.TAsyncClient client, org.apache.thrift.protocol.TProtocolFactory protocolFactory, org.apache.thrift.transport.TNonblockingTransport transport) throws org.apache.thrift.TException {
-        super(client, protocolFactory, transport, resultHandler, false);
-        this.rTree = rTree;
-      }
-
-      public void write_args(org.apache.thrift.protocol.TProtocol prot) throws org.apache.thrift.TException {
-        prot.writeMessageBegin(new org.apache.thrift.protocol.TMessage("removeFromSyncList", org.apache.thrift.protocol.TMessageType.CALL, 0));
-        removeFromSyncList_args args = new removeFromSyncList_args();
-        args.setRTree(rTree);
-        args.write(prot);
-        prot.writeMessageEnd();
-      }
-
-      public void getResult() throws org.apache.thrift.TException {
-        if (getState() != org.apache.thrift.async.TAsyncMethodCall.State.RESPONSE_READ) {
-          throw new IllegalStateException("Method call not finished!");
-        }
-        org.apache.thrift.transport.TMemoryInputTransport memoryTransport = new org.apache.thrift.transport.TMemoryInputTransport(getFrameBuffer().array());
-        org.apache.thrift.protocol.TProtocol prot = client.getProtocolFactory().getProtocol(memoryTransport);
-        (new Client(prot)).recv_removeFromSyncList();
-      }
-    }
-
-    public void getSyncList(long treeId, org.apache.thrift.async.AsyncMethodCallback<getSyncList_call> resultHandler) throws org.apache.thrift.TException {
-      checkReady();
-      getSyncList_call method_call = new getSyncList_call(treeId, resultHandler, this, ___protocolFactory, ___transport);
-      this.___currentMethod = method_call;
-      ___manager.call(method_call);
-    }
-
-    public static class getSyncList_call extends org.apache.thrift.async.TAsyncMethodCall {
+    public static class addServerNameAndTreeIdToSyncList_call extends org.apache.thrift.async.TAsyncMethodCall {
+      private ServerName sn;
       private long treeId;
-      public getSyncList_call(long treeId, org.apache.thrift.async.AsyncMethodCallback<getSyncList_call> resultHandler, org.apache.thrift.async.TAsyncClient client, org.apache.thrift.protocol.TProtocolFactory protocolFactory, org.apache.thrift.transport.TNonblockingTransport transport) throws org.apache.thrift.TException {
+      public addServerNameAndTreeIdToSyncList_call(ServerName sn, long treeId, org.apache.thrift.async.AsyncMethodCallback<addServerNameAndTreeIdToSyncList_call> resultHandler, org.apache.thrift.async.TAsyncClient client, org.apache.thrift.protocol.TProtocolFactory protocolFactory, org.apache.thrift.transport.TNonblockingTransport transport) throws org.apache.thrift.TException {
         super(client, protocolFactory, transport, resultHandler, false);
+        this.sn = sn;
         this.treeId = treeId;
       }
 
       public void write_args(org.apache.thrift.protocol.TProtocol prot) throws org.apache.thrift.TException {
-        prot.writeMessageBegin(new org.apache.thrift.protocol.TMessage("getSyncList", org.apache.thrift.protocol.TMessageType.CALL, 0));
-        getSyncList_args args = new getSyncList_args();
+        prot.writeMessageBegin(new org.apache.thrift.protocol.TMessage("addServerNameAndTreeIdToSyncList", org.apache.thrift.protocol.TMessageType.CALL, 0));
+        addServerNameAndTreeIdToSyncList_args args = new addServerNameAndTreeIdToSyncList_args();
+        args.setSn(sn);
         args.setTreeId(treeId);
         args.write(prot);
         prot.writeMessageEnd();
       }
 
-      public List<RemoteTreeInfo> getResult() throws org.apache.thrift.TException {
+      public void getResult() throws org.apache.thrift.TException {
         if (getState() != org.apache.thrift.async.TAsyncMethodCall.State.RESPONSE_READ) {
           throw new IllegalStateException("Method call not finished!");
         }
         org.apache.thrift.transport.TMemoryInputTransport memoryTransport = new org.apache.thrift.transport.TMemoryInputTransport(getFrameBuffer().array());
         org.apache.thrift.protocol.TProtocol prot = client.getProtocolFactory().getProtocol(memoryTransport);
-        return (new Client(prot)).recv_getSyncList();
+        (new Client(prot)).recv_addServerNameAndTreeIdToSyncList();
+      }
+    }
+
+    public void removeServerNameAndTreeIdFromSyncList(ServerName sn, long treeId, org.apache.thrift.async.AsyncMethodCallback<removeServerNameAndTreeIdFromSyncList_call> resultHandler) throws org.apache.thrift.TException {
+      checkReady();
+      removeServerNameAndTreeIdFromSyncList_call method_call = new removeServerNameAndTreeIdFromSyncList_call(sn, treeId, resultHandler, this, ___protocolFactory, ___transport);
+      this.___currentMethod = method_call;
+      ___manager.call(method_call);
+    }
+
+    public static class removeServerNameAndTreeIdFromSyncList_call extends org.apache.thrift.async.TAsyncMethodCall {
+      private ServerName sn;
+      private long treeId;
+      public removeServerNameAndTreeIdFromSyncList_call(ServerName sn, long treeId, org.apache.thrift.async.AsyncMethodCallback<removeServerNameAndTreeIdFromSyncList_call> resultHandler, org.apache.thrift.async.TAsyncClient client, org.apache.thrift.protocol.TProtocolFactory protocolFactory, org.apache.thrift.transport.TNonblockingTransport transport) throws org.apache.thrift.TException {
+        super(client, protocolFactory, transport, resultHandler, false);
+        this.sn = sn;
+        this.treeId = treeId;
+      }
+
+      public void write_args(org.apache.thrift.protocol.TProtocol prot) throws org.apache.thrift.TException {
+        prot.writeMessageBegin(new org.apache.thrift.protocol.TMessage("removeServerNameAndTreeIdFromSyncList", org.apache.thrift.protocol.TMessageType.CALL, 0));
+        removeServerNameAndTreeIdFromSyncList_args args = new removeServerNameAndTreeIdFromSyncList_args();
+        args.setSn(sn);
+        args.setTreeId(treeId);
+        args.write(prot);
+        prot.writeMessageEnd();
+      }
+
+      public void getResult() throws org.apache.thrift.TException {
+        if (getState() != org.apache.thrift.async.TAsyncMethodCall.State.RESPONSE_READ) {
+          throw new IllegalStateException("Method call not finished!");
+        }
+        org.apache.thrift.transport.TMemoryInputTransport memoryTransport = new org.apache.thrift.transport.TMemoryInputTransport(getFrameBuffer().array());
+        org.apache.thrift.protocol.TProtocol prot = client.getProtocolFactory().getProtocol(memoryTransport);
+        (new Client(prot)).recv_removeServerNameAndTreeIdFromSyncList();
+      }
+    }
+
+    public void getServerNameListFor(long treeId, org.apache.thrift.async.AsyncMethodCallback<getServerNameListFor_call> resultHandler) throws org.apache.thrift.TException {
+      checkReady();
+      getServerNameListFor_call method_call = new getServerNameListFor_call(treeId, resultHandler, this, ___protocolFactory, ___transport);
+      this.___currentMethod = method_call;
+      ___manager.call(method_call);
+    }
+
+    public static class getServerNameListFor_call extends org.apache.thrift.async.TAsyncMethodCall {
+      private long treeId;
+      public getServerNameListFor_call(long treeId, org.apache.thrift.async.AsyncMethodCallback<getServerNameListFor_call> resultHandler, org.apache.thrift.async.TAsyncClient client, org.apache.thrift.protocol.TProtocolFactory protocolFactory, org.apache.thrift.transport.TNonblockingTransport transport) throws org.apache.thrift.TException {
+        super(client, protocolFactory, transport, resultHandler, false);
+        this.treeId = treeId;
+      }
+
+      public void write_args(org.apache.thrift.protocol.TProtocol prot) throws org.apache.thrift.TException {
+        prot.writeMessageBegin(new org.apache.thrift.protocol.TMessage("getServerNameListFor", org.apache.thrift.protocol.TMessageType.CALL, 0));
+        getServerNameListFor_args args = new getServerNameListFor_args();
+        args.setTreeId(treeId);
+        args.write(prot);
+        prot.writeMessageEnd();
+      }
+
+      public List<ServerName> getResult() throws org.apache.thrift.TException {
+        if (getState() != org.apache.thrift.async.TAsyncMethodCall.State.RESPONSE_READ) {
+          throw new IllegalStateException("Method call not finished!");
+        }
+        org.apache.thrift.transport.TMemoryInputTransport memoryTransport = new org.apache.thrift.transport.TMemoryInputTransport(getFrameBuffer().array());
+        org.apache.thrift.protocol.TProtocol prot = client.getProtocolFactory().getProtocol(memoryTransport);
+        return (new Client(prot)).recv_getServerNameListFor();
+      }
+    }
+
+    public void addServerNameToSyncList(ServerName sn, org.apache.thrift.async.AsyncMethodCallback<addServerNameToSyncList_call> resultHandler) throws org.apache.thrift.TException {
+      checkReady();
+      addServerNameToSyncList_call method_call = new addServerNameToSyncList_call(sn, resultHandler, this, ___protocolFactory, ___transport);
+      this.___currentMethod = method_call;
+      ___manager.call(method_call);
+    }
+
+    public static class addServerNameToSyncList_call extends org.apache.thrift.async.TAsyncMethodCall {
+      private ServerName sn;
+      public addServerNameToSyncList_call(ServerName sn, org.apache.thrift.async.AsyncMethodCallback<addServerNameToSyncList_call> resultHandler, org.apache.thrift.async.TAsyncClient client, org.apache.thrift.protocol.TProtocolFactory protocolFactory, org.apache.thrift.transport.TNonblockingTransport transport) throws org.apache.thrift.TException {
+        super(client, protocolFactory, transport, resultHandler, false);
+        this.sn = sn;
+      }
+
+      public void write_args(org.apache.thrift.protocol.TProtocol prot) throws org.apache.thrift.TException {
+        prot.writeMessageBegin(new org.apache.thrift.protocol.TMessage("addServerNameToSyncList", org.apache.thrift.protocol.TMessageType.CALL, 0));
+        addServerNameToSyncList_args args = new addServerNameToSyncList_args();
+        args.setSn(sn);
+        args.write(prot);
+        prot.writeMessageEnd();
+      }
+
+      public void getResult() throws org.apache.thrift.TException {
+        if (getState() != org.apache.thrift.async.TAsyncMethodCall.State.RESPONSE_READ) {
+          throw new IllegalStateException("Method call not finished!");
+        }
+        org.apache.thrift.transport.TMemoryInputTransport memoryTransport = new org.apache.thrift.transport.TMemoryInputTransport(getFrameBuffer().array());
+        org.apache.thrift.protocol.TProtocol prot = client.getProtocolFactory().getProtocol(memoryTransport);
+        (new Client(prot)).recv_addServerNameToSyncList();
+      }
+    }
+
+    public void removeServerNameFromSyncList(ServerName sn, org.apache.thrift.async.AsyncMethodCallback<removeServerNameFromSyncList_call> resultHandler) throws org.apache.thrift.TException {
+      checkReady();
+      removeServerNameFromSyncList_call method_call = new removeServerNameFromSyncList_call(sn, resultHandler, this, ___protocolFactory, ___transport);
+      this.___currentMethod = method_call;
+      ___manager.call(method_call);
+    }
+
+    public static class removeServerNameFromSyncList_call extends org.apache.thrift.async.TAsyncMethodCall {
+      private ServerName sn;
+      public removeServerNameFromSyncList_call(ServerName sn, org.apache.thrift.async.AsyncMethodCallback<removeServerNameFromSyncList_call> resultHandler, org.apache.thrift.async.TAsyncClient client, org.apache.thrift.protocol.TProtocolFactory protocolFactory, org.apache.thrift.transport.TNonblockingTransport transport) throws org.apache.thrift.TException {
+        super(client, protocolFactory, transport, resultHandler, false);
+        this.sn = sn;
+      }
+
+      public void write_args(org.apache.thrift.protocol.TProtocol prot) throws org.apache.thrift.TException {
+        prot.writeMessageBegin(new org.apache.thrift.protocol.TMessage("removeServerNameFromSyncList", org.apache.thrift.protocol.TMessageType.CALL, 0));
+        removeServerNameFromSyncList_args args = new removeServerNameFromSyncList_args();
+        args.setSn(sn);
+        args.write(prot);
+        prot.writeMessageEnd();
+      }
+
+      public void getResult() throws org.apache.thrift.TException {
+        if (getState() != org.apache.thrift.async.TAsyncMethodCall.State.RESPONSE_READ) {
+          throw new IllegalStateException("Method call not finished!");
+        }
+        org.apache.thrift.transport.TMemoryInputTransport memoryTransport = new org.apache.thrift.transport.TMemoryInputTransport(getFrameBuffer().array());
+        org.apache.thrift.protocol.TProtocol prot = client.getProtocolFactory().getProtocol(memoryTransport);
+        (new Client(prot)).recv_removeServerNameFromSyncList();
+      }
+    }
+
+    public void getServerNameList(org.apache.thrift.async.AsyncMethodCallback<getServerNameList_call> resultHandler) throws org.apache.thrift.TException {
+      checkReady();
+      getServerNameList_call method_call = new getServerNameList_call(resultHandler, this, ___protocolFactory, ___transport);
+      this.___currentMethod = method_call;
+      ___manager.call(method_call);
+    }
+
+    public static class getServerNameList_call extends org.apache.thrift.async.TAsyncMethodCall {
+      public getServerNameList_call(org.apache.thrift.async.AsyncMethodCallback<getServerNameList_call> resultHandler, org.apache.thrift.async.TAsyncClient client, org.apache.thrift.protocol.TProtocolFactory protocolFactory, org.apache.thrift.transport.TNonblockingTransport transport) throws org.apache.thrift.TException {
+        super(client, protocolFactory, transport, resultHandler, false);
+      }
+
+      public void write_args(org.apache.thrift.protocol.TProtocol prot) throws org.apache.thrift.TException {
+        prot.writeMessageBegin(new org.apache.thrift.protocol.TMessage("getServerNameList", org.apache.thrift.protocol.TMessageType.CALL, 0));
+        getServerNameList_args args = new getServerNameList_args();
+        args.write(prot);
+        prot.writeMessageEnd();
+      }
+
+      public List<ServerName> getResult() throws org.apache.thrift.TException {
+        if (getState() != org.apache.thrift.async.TAsyncMethodCall.State.RESPONSE_READ) {
+          throw new IllegalStateException("Method call not finished!");
+        }
+        org.apache.thrift.transport.TMemoryInputTransport memoryTransport = new org.apache.thrift.transport.TMemoryInputTransport(getFrameBuffer().array());
+        org.apache.thrift.protocol.TProtocol prot = client.getProtocolFactory().getProtocol(memoryTransport);
+        return (new Client(prot)).recv_getServerNameList();
       }
     }
 
@@ -903,9 +1088,12 @@ public class HashTreesSyncInterface {
       processMap.put("deleteTreeNodes", new deleteTreeNodes());
       processMap.put("submitRebuildRequest", new submitRebuildRequest());
       processMap.put("submitRebuildResponse", new submitRebuildResponse());
-      processMap.put("addToSyncList", new addToSyncList());
-      processMap.put("removeFromSyncList", new removeFromSyncList());
-      processMap.put("getSyncList", new getSyncList());
+      processMap.put("addServerNameAndTreeIdToSyncList", new addServerNameAndTreeIdToSyncList());
+      processMap.put("removeServerNameAndTreeIdFromSyncList", new removeServerNameAndTreeIdFromSyncList());
+      processMap.put("getServerNameListFor", new getServerNameListFor());
+      processMap.put("addServerNameToSyncList", new addServerNameToSyncList());
+      processMap.put("removeServerNameFromSyncList", new removeServerNameFromSyncList());
+      processMap.put("getServerNameList", new getServerNameList());
       return processMap;
     }
 
@@ -1053,50 +1241,98 @@ public class HashTreesSyncInterface {
       }
     }
 
-    private static class addToSyncList<I extends Iface> extends org.apache.thrift.ProcessFunction<I, addToSyncList_args> {
-      public addToSyncList() {
-        super("addToSyncList");
+    private static class addServerNameAndTreeIdToSyncList<I extends Iface> extends org.apache.thrift.ProcessFunction<I, addServerNameAndTreeIdToSyncList_args> {
+      public addServerNameAndTreeIdToSyncList() {
+        super("addServerNameAndTreeIdToSyncList");
       }
 
-      protected addToSyncList_args getEmptyArgsInstance() {
-        return new addToSyncList_args();
+      protected addServerNameAndTreeIdToSyncList_args getEmptyArgsInstance() {
+        return new addServerNameAndTreeIdToSyncList_args();
       }
 
-      protected addToSyncList_result getResult(I iface, addToSyncList_args args) throws org.apache.thrift.TException {
-        addToSyncList_result result = new addToSyncList_result();
-        iface.addToSyncList(args.rTree);
+      protected addServerNameAndTreeIdToSyncList_result getResult(I iface, addServerNameAndTreeIdToSyncList_args args) throws org.apache.thrift.TException {
+        addServerNameAndTreeIdToSyncList_result result = new addServerNameAndTreeIdToSyncList_result();
+        iface.addServerNameAndTreeIdToSyncList(args.sn, args.treeId);
         return result;
       }
     }
 
-    private static class removeFromSyncList<I extends Iface> extends org.apache.thrift.ProcessFunction<I, removeFromSyncList_args> {
-      public removeFromSyncList() {
-        super("removeFromSyncList");
+    private static class removeServerNameAndTreeIdFromSyncList<I extends Iface> extends org.apache.thrift.ProcessFunction<I, removeServerNameAndTreeIdFromSyncList_args> {
+      public removeServerNameAndTreeIdFromSyncList() {
+        super("removeServerNameAndTreeIdFromSyncList");
       }
 
-      protected removeFromSyncList_args getEmptyArgsInstance() {
-        return new removeFromSyncList_args();
+      protected removeServerNameAndTreeIdFromSyncList_args getEmptyArgsInstance() {
+        return new removeServerNameAndTreeIdFromSyncList_args();
       }
 
-      protected removeFromSyncList_result getResult(I iface, removeFromSyncList_args args) throws org.apache.thrift.TException {
-        removeFromSyncList_result result = new removeFromSyncList_result();
-        iface.removeFromSyncList(args.rTree);
+      protected removeServerNameAndTreeIdFromSyncList_result getResult(I iface, removeServerNameAndTreeIdFromSyncList_args args) throws org.apache.thrift.TException {
+        removeServerNameAndTreeIdFromSyncList_result result = new removeServerNameAndTreeIdFromSyncList_result();
+        iface.removeServerNameAndTreeIdFromSyncList(args.sn, args.treeId);
         return result;
       }
     }
 
-    private static class getSyncList<I extends Iface> extends org.apache.thrift.ProcessFunction<I, getSyncList_args> {
-      public getSyncList() {
-        super("getSyncList");
+    private static class getServerNameListFor<I extends Iface> extends org.apache.thrift.ProcessFunction<I, getServerNameListFor_args> {
+      public getServerNameListFor() {
+        super("getServerNameListFor");
       }
 
-      protected getSyncList_args getEmptyArgsInstance() {
-        return new getSyncList_args();
+      protected getServerNameListFor_args getEmptyArgsInstance() {
+        return new getServerNameListFor_args();
       }
 
-      protected getSyncList_result getResult(I iface, getSyncList_args args) throws org.apache.thrift.TException {
-        getSyncList_result result = new getSyncList_result();
-        result.success = iface.getSyncList(args.treeId);
+      protected getServerNameListFor_result getResult(I iface, getServerNameListFor_args args) throws org.apache.thrift.TException {
+        getServerNameListFor_result result = new getServerNameListFor_result();
+        result.success = iface.getServerNameListFor(args.treeId);
+        return result;
+      }
+    }
+
+    private static class addServerNameToSyncList<I extends Iface> extends org.apache.thrift.ProcessFunction<I, addServerNameToSyncList_args> {
+      public addServerNameToSyncList() {
+        super("addServerNameToSyncList");
+      }
+
+      protected addServerNameToSyncList_args getEmptyArgsInstance() {
+        return new addServerNameToSyncList_args();
+      }
+
+      protected addServerNameToSyncList_result getResult(I iface, addServerNameToSyncList_args args) throws org.apache.thrift.TException {
+        addServerNameToSyncList_result result = new addServerNameToSyncList_result();
+        iface.addServerNameToSyncList(args.sn);
+        return result;
+      }
+    }
+
+    private static class removeServerNameFromSyncList<I extends Iface> extends org.apache.thrift.ProcessFunction<I, removeServerNameFromSyncList_args> {
+      public removeServerNameFromSyncList() {
+        super("removeServerNameFromSyncList");
+      }
+
+      protected removeServerNameFromSyncList_args getEmptyArgsInstance() {
+        return new removeServerNameFromSyncList_args();
+      }
+
+      protected removeServerNameFromSyncList_result getResult(I iface, removeServerNameFromSyncList_args args) throws org.apache.thrift.TException {
+        removeServerNameFromSyncList_result result = new removeServerNameFromSyncList_result();
+        iface.removeServerNameFromSyncList(args.sn);
+        return result;
+      }
+    }
+
+    private static class getServerNameList<I extends Iface> extends org.apache.thrift.ProcessFunction<I, getServerNameList_args> {
+      public getServerNameList() {
+        super("getServerNameList");
+      }
+
+      protected getServerNameList_args getEmptyArgsInstance() {
+        return new getServerNameList_args();
+      }
+
+      protected getServerNameList_result getResult(I iface, getServerNameList_args args) throws org.apache.thrift.TException {
+        getServerNameList_result result = new getServerNameList_result();
+        result.success = iface.getServerNameList();
         return result;
       }
     }
@@ -2775,8 +3011,6 @@ public class HashTreesSyncInterface {
 
     private void readObject(java.io.ObjectInputStream in) throws java.io.IOException, ClassNotFoundException {
       try {
-        // it doesn't seem like you should have to do this, but java serialization is wacky, and doesn't call the default constructor.
-        __isset_bit_vector = new BitSet(1);
         read(new org.apache.thrift.protocol.TCompactProtocol(new org.apache.thrift.transport.TIOStreamTransport(in)));
       } catch (org.apache.thrift.TException te) {
         throw new java.io.IOException(te);
@@ -7838,22 +8072,25 @@ public class HashTreesSyncInterface {
 
   }
 
-  public static class addToSyncList_args implements org.apache.thrift.TBase<addToSyncList_args, addToSyncList_args._Fields>, java.io.Serializable, Cloneable   {
-    private static final org.apache.thrift.protocol.TStruct STRUCT_DESC = new org.apache.thrift.protocol.TStruct("addToSyncList_args");
+  public static class addServerNameAndTreeIdToSyncList_args implements org.apache.thrift.TBase<addServerNameAndTreeIdToSyncList_args, addServerNameAndTreeIdToSyncList_args._Fields>, java.io.Serializable, Cloneable   {
+    private static final org.apache.thrift.protocol.TStruct STRUCT_DESC = new org.apache.thrift.protocol.TStruct("addServerNameAndTreeIdToSyncList_args");
 
-    private static final org.apache.thrift.protocol.TField R_TREE_FIELD_DESC = new org.apache.thrift.protocol.TField("rTree", org.apache.thrift.protocol.TType.STRUCT, (short)1);
+    private static final org.apache.thrift.protocol.TField SN_FIELD_DESC = new org.apache.thrift.protocol.TField("sn", org.apache.thrift.protocol.TType.STRUCT, (short)1);
+    private static final org.apache.thrift.protocol.TField TREE_ID_FIELD_DESC = new org.apache.thrift.protocol.TField("treeId", org.apache.thrift.protocol.TType.I64, (short)2);
 
     private static final Map<Class<? extends IScheme>, SchemeFactory> schemes = new HashMap<Class<? extends IScheme>, SchemeFactory>();
     static {
-      schemes.put(StandardScheme.class, new addToSyncList_argsStandardSchemeFactory());
-      schemes.put(TupleScheme.class, new addToSyncList_argsTupleSchemeFactory());
+      schemes.put(StandardScheme.class, new addServerNameAndTreeIdToSyncList_argsStandardSchemeFactory());
+      schemes.put(TupleScheme.class, new addServerNameAndTreeIdToSyncList_argsTupleSchemeFactory());
     }
 
-    public RemoteTreeInfo rTree; // required
+    public ServerName sn; // required
+    public long treeId; // required
 
     /** The set of fields this struct contains, along with convenience methods for finding and manipulating them. */
     public enum _Fields implements org.apache.thrift.TFieldIdEnum {
-      R_TREE((short)1, "rTree");
+      SN((short)1, "sn"),
+      TREE_ID((short)2, "treeId");
 
       private static final Map<String, _Fields> byName = new HashMap<String, _Fields>();
 
@@ -7868,8 +8105,10 @@ public class HashTreesSyncInterface {
        */
       public static _Fields findByThriftId(int fieldId) {
         switch(fieldId) {
-          case 1: // R_TREE
-            return R_TREE;
+          case 1: // SN
+            return SN;
+          case 2: // TREE_ID
+            return TREE_ID;
           default:
             return null;
         }
@@ -7910,74 +8149,117 @@ public class HashTreesSyncInterface {
     }
 
     // isset id assignments
+    private static final int __TREEID_ISSET_ID = 0;
+    private BitSet __isset_bit_vector = new BitSet(1);
     public static final Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> metaDataMap;
     static {
       Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> tmpMap = new EnumMap<_Fields, org.apache.thrift.meta_data.FieldMetaData>(_Fields.class);
-      tmpMap.put(_Fields.R_TREE, new org.apache.thrift.meta_data.FieldMetaData("rTree", org.apache.thrift.TFieldRequirementType.DEFAULT, 
-          new org.apache.thrift.meta_data.StructMetaData(org.apache.thrift.protocol.TType.STRUCT, RemoteTreeInfo.class)));
+      tmpMap.put(_Fields.SN, new org.apache.thrift.meta_data.FieldMetaData("sn", org.apache.thrift.TFieldRequirementType.DEFAULT, 
+          new org.apache.thrift.meta_data.StructMetaData(org.apache.thrift.protocol.TType.STRUCT, ServerName.class)));
+      tmpMap.put(_Fields.TREE_ID, new org.apache.thrift.meta_data.FieldMetaData("treeId", org.apache.thrift.TFieldRequirementType.DEFAULT, 
+          new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.I64)));
       metaDataMap = Collections.unmodifiableMap(tmpMap);
-      org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(addToSyncList_args.class, metaDataMap);
+      org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(addServerNameAndTreeIdToSyncList_args.class, metaDataMap);
     }
 
-    public addToSyncList_args() {
+    public addServerNameAndTreeIdToSyncList_args() {
     }
 
-    public addToSyncList_args(
-      RemoteTreeInfo rTree)
+    public addServerNameAndTreeIdToSyncList_args(
+      ServerName sn,
+      long treeId)
     {
       this();
-      this.rTree = rTree;
+      this.sn = sn;
+      this.treeId = treeId;
+      setTreeIdIsSet(true);
     }
 
     /**
      * Performs a deep copy on <i>other</i>.
      */
-    public addToSyncList_args(addToSyncList_args other) {
-      if (other.isSetRTree()) {
-        this.rTree = new RemoteTreeInfo(other.rTree);
+    public addServerNameAndTreeIdToSyncList_args(addServerNameAndTreeIdToSyncList_args other) {
+      __isset_bit_vector.clear();
+      __isset_bit_vector.or(other.__isset_bit_vector);
+      if (other.isSetSn()) {
+        this.sn = new ServerName(other.sn);
       }
+      this.treeId = other.treeId;
     }
 
-    public addToSyncList_args deepCopy() {
-      return new addToSyncList_args(this);
+    public addServerNameAndTreeIdToSyncList_args deepCopy() {
+      return new addServerNameAndTreeIdToSyncList_args(this);
     }
 
     @Override
     public void clear() {
-      this.rTree = null;
+      this.sn = null;
+      setTreeIdIsSet(false);
+      this.treeId = 0;
     }
 
-    public RemoteTreeInfo getRTree() {
-      return this.rTree;
+    public ServerName getSn() {
+      return this.sn;
     }
 
-    public addToSyncList_args setRTree(RemoteTreeInfo rTree) {
-      this.rTree = rTree;
+    public addServerNameAndTreeIdToSyncList_args setSn(ServerName sn) {
+      this.sn = sn;
       return this;
     }
 
-    public void unsetRTree() {
-      this.rTree = null;
+    public void unsetSn() {
+      this.sn = null;
     }
 
-    /** Returns true if field rTree is set (has been assigned a value) and false otherwise */
-    public boolean isSetRTree() {
-      return this.rTree != null;
+    /** Returns true if field sn is set (has been assigned a value) and false otherwise */
+    public boolean isSetSn() {
+      return this.sn != null;
     }
 
-    public void setRTreeIsSet(boolean value) {
+    public void setSnIsSet(boolean value) {
       if (!value) {
-        this.rTree = null;
+        this.sn = null;
       }
+    }
+
+    public long getTreeId() {
+      return this.treeId;
+    }
+
+    public addServerNameAndTreeIdToSyncList_args setTreeId(long treeId) {
+      this.treeId = treeId;
+      setTreeIdIsSet(true);
+      return this;
+    }
+
+    public void unsetTreeId() {
+      __isset_bit_vector.clear(__TREEID_ISSET_ID);
+    }
+
+    /** Returns true if field treeId is set (has been assigned a value) and false otherwise */
+    public boolean isSetTreeId() {
+      return __isset_bit_vector.get(__TREEID_ISSET_ID);
+    }
+
+    public void setTreeIdIsSet(boolean value) {
+      __isset_bit_vector.set(__TREEID_ISSET_ID, value);
     }
 
     public void setFieldValue(_Fields field, Object value) {
       switch (field) {
-      case R_TREE:
+      case SN:
         if (value == null) {
-          unsetRTree();
+          unsetSn();
         } else {
-          setRTree((RemoteTreeInfo)value);
+          setSn((ServerName)value);
+        }
+        break;
+
+      case TREE_ID:
+        if (value == null) {
+          unsetTreeId();
+        } else {
+          setTreeId((Long)value);
         }
         break;
 
@@ -7986,8 +8268,11 @@ public class HashTreesSyncInterface {
 
     public Object getFieldValue(_Fields field) {
       switch (field) {
-      case R_TREE:
-        return getRTree();
+      case SN:
+        return getSn();
+
+      case TREE_ID:
+        return Long.valueOf(getTreeId());
 
       }
       throw new IllegalStateException();
@@ -8000,8 +8285,10 @@ public class HashTreesSyncInterface {
       }
 
       switch (field) {
-      case R_TREE:
-        return isSetRTree();
+      case SN:
+        return isSetSn();
+      case TREE_ID:
+        return isSetTreeId();
       }
       throw new IllegalStateException();
     }
@@ -8010,21 +8297,30 @@ public class HashTreesSyncInterface {
     public boolean equals(Object that) {
       if (that == null)
         return false;
-      if (that instanceof addToSyncList_args)
-        return this.equals((addToSyncList_args)that);
+      if (that instanceof addServerNameAndTreeIdToSyncList_args)
+        return this.equals((addServerNameAndTreeIdToSyncList_args)that);
       return false;
     }
 
-    public boolean equals(addToSyncList_args that) {
+    public boolean equals(addServerNameAndTreeIdToSyncList_args that) {
       if (that == null)
         return false;
 
-      boolean this_present_rTree = true && this.isSetRTree();
-      boolean that_present_rTree = true && that.isSetRTree();
-      if (this_present_rTree || that_present_rTree) {
-        if (!(this_present_rTree && that_present_rTree))
+      boolean this_present_sn = true && this.isSetSn();
+      boolean that_present_sn = true && that.isSetSn();
+      if (this_present_sn || that_present_sn) {
+        if (!(this_present_sn && that_present_sn))
           return false;
-        if (!this.rTree.equals(that.rTree))
+        if (!this.sn.equals(that.sn))
+          return false;
+      }
+
+      boolean this_present_treeId = true;
+      boolean that_present_treeId = true;
+      if (this_present_treeId || that_present_treeId) {
+        if (!(this_present_treeId && that_present_treeId))
+          return false;
+        if (this.treeId != that.treeId)
           return false;
       }
 
@@ -8036,20 +8332,30 @@ public class HashTreesSyncInterface {
       return 0;
     }
 
-    public int compareTo(addToSyncList_args other) {
+    public int compareTo(addServerNameAndTreeIdToSyncList_args other) {
       if (!getClass().equals(other.getClass())) {
         return getClass().getName().compareTo(other.getClass().getName());
       }
 
       int lastComparison = 0;
-      addToSyncList_args typedOther = (addToSyncList_args)other;
+      addServerNameAndTreeIdToSyncList_args typedOther = (addServerNameAndTreeIdToSyncList_args)other;
 
-      lastComparison = Boolean.valueOf(isSetRTree()).compareTo(typedOther.isSetRTree());
+      lastComparison = Boolean.valueOf(isSetSn()).compareTo(typedOther.isSetSn());
       if (lastComparison != 0) {
         return lastComparison;
       }
-      if (isSetRTree()) {
-        lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.rTree, typedOther.rTree);
+      if (isSetSn()) {
+        lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.sn, typedOther.sn);
+        if (lastComparison != 0) {
+          return lastComparison;
+        }
+      }
+      lastComparison = Boolean.valueOf(isSetTreeId()).compareTo(typedOther.isSetTreeId());
+      if (lastComparison != 0) {
+        return lastComparison;
+      }
+      if (isSetTreeId()) {
+        lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.treeId, typedOther.treeId);
         if (lastComparison != 0) {
           return lastComparison;
         }
@@ -8071,15 +8377,19 @@ public class HashTreesSyncInterface {
 
     @Override
     public String toString() {
-      StringBuilder sb = new StringBuilder("addToSyncList_args(");
+      StringBuilder sb = new StringBuilder("addServerNameAndTreeIdToSyncList_args(");
       boolean first = true;
 
-      sb.append("rTree:");
-      if (this.rTree == null) {
+      sb.append("sn:");
+      if (this.sn == null) {
         sb.append("null");
       } else {
-        sb.append(this.rTree);
+        sb.append(this.sn);
       }
+      first = false;
+      if (!first) sb.append(", ");
+      sb.append("treeId:");
+      sb.append(this.treeId);
       first = false;
       sb.append(")");
       return sb.toString();
@@ -8099,21 +8409,23 @@ public class HashTreesSyncInterface {
 
     private void readObject(java.io.ObjectInputStream in) throws java.io.IOException, ClassNotFoundException {
       try {
+        // it doesn't seem like you should have to do this, but java serialization is wacky, and doesn't call the default constructor.
+        __isset_bit_vector = new BitSet(1);
         read(new org.apache.thrift.protocol.TCompactProtocol(new org.apache.thrift.transport.TIOStreamTransport(in)));
       } catch (org.apache.thrift.TException te) {
         throw new java.io.IOException(te);
       }
     }
 
-    private static class addToSyncList_argsStandardSchemeFactory implements SchemeFactory {
-      public addToSyncList_argsStandardScheme getScheme() {
-        return new addToSyncList_argsStandardScheme();
+    private static class addServerNameAndTreeIdToSyncList_argsStandardSchemeFactory implements SchemeFactory {
+      public addServerNameAndTreeIdToSyncList_argsStandardScheme getScheme() {
+        return new addServerNameAndTreeIdToSyncList_argsStandardScheme();
       }
     }
 
-    private static class addToSyncList_argsStandardScheme extends StandardScheme<addToSyncList_args> {
+    private static class addServerNameAndTreeIdToSyncList_argsStandardScheme extends StandardScheme<addServerNameAndTreeIdToSyncList_args> {
 
-      public void read(org.apache.thrift.protocol.TProtocol iprot, addToSyncList_args struct) throws org.apache.thrift.TException {
+      public void read(org.apache.thrift.protocol.TProtocol iprot, addServerNameAndTreeIdToSyncList_args struct) throws org.apache.thrift.TException {
         org.apache.thrift.protocol.TField schemeField;
         iprot.readStructBegin();
         while (true)
@@ -8123,11 +8435,19 @@ public class HashTreesSyncInterface {
             break;
           }
           switch (schemeField.id) {
-            case 1: // R_TREE
+            case 1: // SN
               if (schemeField.type == org.apache.thrift.protocol.TType.STRUCT) {
-                struct.rTree = new RemoteTreeInfo();
-                struct.rTree.read(iprot);
-                struct.setRTreeIsSet(true);
+                struct.sn = new ServerName();
+                struct.sn.read(iprot);
+                struct.setSnIsSet(true);
+              } else { 
+                org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
+              }
+              break;
+            case 2: // TREE_ID
+              if (schemeField.type == org.apache.thrift.protocol.TType.I64) {
+                struct.treeId = iprot.readI64();
+                struct.setTreeIdIsSet(true);
               } else { 
                 org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
               }
@@ -8143,64 +8463,77 @@ public class HashTreesSyncInterface {
         struct.validate();
       }
 
-      public void write(org.apache.thrift.protocol.TProtocol oprot, addToSyncList_args struct) throws org.apache.thrift.TException {
+      public void write(org.apache.thrift.protocol.TProtocol oprot, addServerNameAndTreeIdToSyncList_args struct) throws org.apache.thrift.TException {
         struct.validate();
 
         oprot.writeStructBegin(STRUCT_DESC);
-        if (struct.rTree != null) {
-          oprot.writeFieldBegin(R_TREE_FIELD_DESC);
-          struct.rTree.write(oprot);
+        if (struct.sn != null) {
+          oprot.writeFieldBegin(SN_FIELD_DESC);
+          struct.sn.write(oprot);
           oprot.writeFieldEnd();
         }
+        oprot.writeFieldBegin(TREE_ID_FIELD_DESC);
+        oprot.writeI64(struct.treeId);
+        oprot.writeFieldEnd();
         oprot.writeFieldStop();
         oprot.writeStructEnd();
       }
 
     }
 
-    private static class addToSyncList_argsTupleSchemeFactory implements SchemeFactory {
-      public addToSyncList_argsTupleScheme getScheme() {
-        return new addToSyncList_argsTupleScheme();
+    private static class addServerNameAndTreeIdToSyncList_argsTupleSchemeFactory implements SchemeFactory {
+      public addServerNameAndTreeIdToSyncList_argsTupleScheme getScheme() {
+        return new addServerNameAndTreeIdToSyncList_argsTupleScheme();
       }
     }
 
-    private static class addToSyncList_argsTupleScheme extends TupleScheme<addToSyncList_args> {
+    private static class addServerNameAndTreeIdToSyncList_argsTupleScheme extends TupleScheme<addServerNameAndTreeIdToSyncList_args> {
 
       @Override
-      public void write(org.apache.thrift.protocol.TProtocol prot, addToSyncList_args struct) throws org.apache.thrift.TException {
+      public void write(org.apache.thrift.protocol.TProtocol prot, addServerNameAndTreeIdToSyncList_args struct) throws org.apache.thrift.TException {
         TTupleProtocol oprot = (TTupleProtocol) prot;
         BitSet optionals = new BitSet();
-        if (struct.isSetRTree()) {
+        if (struct.isSetSn()) {
           optionals.set(0);
         }
-        oprot.writeBitSet(optionals, 1);
-        if (struct.isSetRTree()) {
-          struct.rTree.write(oprot);
+        if (struct.isSetTreeId()) {
+          optionals.set(1);
+        }
+        oprot.writeBitSet(optionals, 2);
+        if (struct.isSetSn()) {
+          struct.sn.write(oprot);
+        }
+        if (struct.isSetTreeId()) {
+          oprot.writeI64(struct.treeId);
         }
       }
 
       @Override
-      public void read(org.apache.thrift.protocol.TProtocol prot, addToSyncList_args struct) throws org.apache.thrift.TException {
+      public void read(org.apache.thrift.protocol.TProtocol prot, addServerNameAndTreeIdToSyncList_args struct) throws org.apache.thrift.TException {
         TTupleProtocol iprot = (TTupleProtocol) prot;
-        BitSet incoming = iprot.readBitSet(1);
+        BitSet incoming = iprot.readBitSet(2);
         if (incoming.get(0)) {
-          struct.rTree = new RemoteTreeInfo();
-          struct.rTree.read(iprot);
-          struct.setRTreeIsSet(true);
+          struct.sn = new ServerName();
+          struct.sn.read(iprot);
+          struct.setSnIsSet(true);
+        }
+        if (incoming.get(1)) {
+          struct.treeId = iprot.readI64();
+          struct.setTreeIdIsSet(true);
         }
       }
     }
 
   }
 
-  public static class addToSyncList_result implements org.apache.thrift.TBase<addToSyncList_result, addToSyncList_result._Fields>, java.io.Serializable, Cloneable   {
-    private static final org.apache.thrift.protocol.TStruct STRUCT_DESC = new org.apache.thrift.protocol.TStruct("addToSyncList_result");
+  public static class addServerNameAndTreeIdToSyncList_result implements org.apache.thrift.TBase<addServerNameAndTreeIdToSyncList_result, addServerNameAndTreeIdToSyncList_result._Fields>, java.io.Serializable, Cloneable   {
+    private static final org.apache.thrift.protocol.TStruct STRUCT_DESC = new org.apache.thrift.protocol.TStruct("addServerNameAndTreeIdToSyncList_result");
 
 
     private static final Map<Class<? extends IScheme>, SchemeFactory> schemes = new HashMap<Class<? extends IScheme>, SchemeFactory>();
     static {
-      schemes.put(StandardScheme.class, new addToSyncList_resultStandardSchemeFactory());
-      schemes.put(TupleScheme.class, new addToSyncList_resultTupleSchemeFactory());
+      schemes.put(StandardScheme.class, new addServerNameAndTreeIdToSyncList_resultStandardSchemeFactory());
+      schemes.put(TupleScheme.class, new addServerNameAndTreeIdToSyncList_resultTupleSchemeFactory());
     }
 
 
@@ -8263,20 +8596,20 @@ public class HashTreesSyncInterface {
     static {
       Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> tmpMap = new EnumMap<_Fields, org.apache.thrift.meta_data.FieldMetaData>(_Fields.class);
       metaDataMap = Collections.unmodifiableMap(tmpMap);
-      org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(addToSyncList_result.class, metaDataMap);
+      org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(addServerNameAndTreeIdToSyncList_result.class, metaDataMap);
     }
 
-    public addToSyncList_result() {
+    public addServerNameAndTreeIdToSyncList_result() {
     }
 
     /**
      * Performs a deep copy on <i>other</i>.
      */
-    public addToSyncList_result(addToSyncList_result other) {
+    public addServerNameAndTreeIdToSyncList_result(addServerNameAndTreeIdToSyncList_result other) {
     }
 
-    public addToSyncList_result deepCopy() {
-      return new addToSyncList_result(this);
+    public addServerNameAndTreeIdToSyncList_result deepCopy() {
+      return new addServerNameAndTreeIdToSyncList_result(this);
     }
 
     @Override
@@ -8309,12 +8642,12 @@ public class HashTreesSyncInterface {
     public boolean equals(Object that) {
       if (that == null)
         return false;
-      if (that instanceof addToSyncList_result)
-        return this.equals((addToSyncList_result)that);
+      if (that instanceof addServerNameAndTreeIdToSyncList_result)
+        return this.equals((addServerNameAndTreeIdToSyncList_result)that);
       return false;
     }
 
-    public boolean equals(addToSyncList_result that) {
+    public boolean equals(addServerNameAndTreeIdToSyncList_result that) {
       if (that == null)
         return false;
 
@@ -8326,13 +8659,13 @@ public class HashTreesSyncInterface {
       return 0;
     }
 
-    public int compareTo(addToSyncList_result other) {
+    public int compareTo(addServerNameAndTreeIdToSyncList_result other) {
       if (!getClass().equals(other.getClass())) {
         return getClass().getName().compareTo(other.getClass().getName());
       }
 
       int lastComparison = 0;
-      addToSyncList_result typedOther = (addToSyncList_result)other;
+      addServerNameAndTreeIdToSyncList_result typedOther = (addServerNameAndTreeIdToSyncList_result)other;
 
       return 0;
     }
@@ -8351,7 +8684,7 @@ public class HashTreesSyncInterface {
 
     @Override
     public String toString() {
-      StringBuilder sb = new StringBuilder("addToSyncList_result(");
+      StringBuilder sb = new StringBuilder("addServerNameAndTreeIdToSyncList_result(");
       boolean first = true;
 
       sb.append(")");
@@ -8378,15 +8711,15 @@ public class HashTreesSyncInterface {
       }
     }
 
-    private static class addToSyncList_resultStandardSchemeFactory implements SchemeFactory {
-      public addToSyncList_resultStandardScheme getScheme() {
-        return new addToSyncList_resultStandardScheme();
+    private static class addServerNameAndTreeIdToSyncList_resultStandardSchemeFactory implements SchemeFactory {
+      public addServerNameAndTreeIdToSyncList_resultStandardScheme getScheme() {
+        return new addServerNameAndTreeIdToSyncList_resultStandardScheme();
       }
     }
 
-    private static class addToSyncList_resultStandardScheme extends StandardScheme<addToSyncList_result> {
+    private static class addServerNameAndTreeIdToSyncList_resultStandardScheme extends StandardScheme<addServerNameAndTreeIdToSyncList_result> {
 
-      public void read(org.apache.thrift.protocol.TProtocol iprot, addToSyncList_result struct) throws org.apache.thrift.TException {
+      public void read(org.apache.thrift.protocol.TProtocol iprot, addServerNameAndTreeIdToSyncList_result struct) throws org.apache.thrift.TException {
         org.apache.thrift.protocol.TField schemeField;
         iprot.readStructBegin();
         while (true)
@@ -8407,7 +8740,7 @@ public class HashTreesSyncInterface {
         struct.validate();
       }
 
-      public void write(org.apache.thrift.protocol.TProtocol oprot, addToSyncList_result struct) throws org.apache.thrift.TException {
+      public void write(org.apache.thrift.protocol.TProtocol oprot, addServerNameAndTreeIdToSyncList_result struct) throws org.apache.thrift.TException {
         struct.validate();
 
         oprot.writeStructBegin(STRUCT_DESC);
@@ -8417,43 +8750,46 @@ public class HashTreesSyncInterface {
 
     }
 
-    private static class addToSyncList_resultTupleSchemeFactory implements SchemeFactory {
-      public addToSyncList_resultTupleScheme getScheme() {
-        return new addToSyncList_resultTupleScheme();
+    private static class addServerNameAndTreeIdToSyncList_resultTupleSchemeFactory implements SchemeFactory {
+      public addServerNameAndTreeIdToSyncList_resultTupleScheme getScheme() {
+        return new addServerNameAndTreeIdToSyncList_resultTupleScheme();
       }
     }
 
-    private static class addToSyncList_resultTupleScheme extends TupleScheme<addToSyncList_result> {
+    private static class addServerNameAndTreeIdToSyncList_resultTupleScheme extends TupleScheme<addServerNameAndTreeIdToSyncList_result> {
 
       @Override
-      public void write(org.apache.thrift.protocol.TProtocol prot, addToSyncList_result struct) throws org.apache.thrift.TException {
+      public void write(org.apache.thrift.protocol.TProtocol prot, addServerNameAndTreeIdToSyncList_result struct) throws org.apache.thrift.TException {
         TTupleProtocol oprot = (TTupleProtocol) prot;
       }
 
       @Override
-      public void read(org.apache.thrift.protocol.TProtocol prot, addToSyncList_result struct) throws org.apache.thrift.TException {
+      public void read(org.apache.thrift.protocol.TProtocol prot, addServerNameAndTreeIdToSyncList_result struct) throws org.apache.thrift.TException {
         TTupleProtocol iprot = (TTupleProtocol) prot;
       }
     }
 
   }
 
-  public static class removeFromSyncList_args implements org.apache.thrift.TBase<removeFromSyncList_args, removeFromSyncList_args._Fields>, java.io.Serializable, Cloneable   {
-    private static final org.apache.thrift.protocol.TStruct STRUCT_DESC = new org.apache.thrift.protocol.TStruct("removeFromSyncList_args");
+  public static class removeServerNameAndTreeIdFromSyncList_args implements org.apache.thrift.TBase<removeServerNameAndTreeIdFromSyncList_args, removeServerNameAndTreeIdFromSyncList_args._Fields>, java.io.Serializable, Cloneable   {
+    private static final org.apache.thrift.protocol.TStruct STRUCT_DESC = new org.apache.thrift.protocol.TStruct("removeServerNameAndTreeIdFromSyncList_args");
 
-    private static final org.apache.thrift.protocol.TField R_TREE_FIELD_DESC = new org.apache.thrift.protocol.TField("rTree", org.apache.thrift.protocol.TType.STRUCT, (short)1);
+    private static final org.apache.thrift.protocol.TField SN_FIELD_DESC = new org.apache.thrift.protocol.TField("sn", org.apache.thrift.protocol.TType.STRUCT, (short)1);
+    private static final org.apache.thrift.protocol.TField TREE_ID_FIELD_DESC = new org.apache.thrift.protocol.TField("treeId", org.apache.thrift.protocol.TType.I64, (short)2);
 
     private static final Map<Class<? extends IScheme>, SchemeFactory> schemes = new HashMap<Class<? extends IScheme>, SchemeFactory>();
     static {
-      schemes.put(StandardScheme.class, new removeFromSyncList_argsStandardSchemeFactory());
-      schemes.put(TupleScheme.class, new removeFromSyncList_argsTupleSchemeFactory());
+      schemes.put(StandardScheme.class, new removeServerNameAndTreeIdFromSyncList_argsStandardSchemeFactory());
+      schemes.put(TupleScheme.class, new removeServerNameAndTreeIdFromSyncList_argsTupleSchemeFactory());
     }
 
-    public RemoteTreeInfo rTree; // required
+    public ServerName sn; // required
+    public long treeId; // required
 
     /** The set of fields this struct contains, along with convenience methods for finding and manipulating them. */
     public enum _Fields implements org.apache.thrift.TFieldIdEnum {
-      R_TREE((short)1, "rTree");
+      SN((short)1, "sn"),
+      TREE_ID((short)2, "treeId");
 
       private static final Map<String, _Fields> byName = new HashMap<String, _Fields>();
 
@@ -8468,8 +8804,10 @@ public class HashTreesSyncInterface {
        */
       public static _Fields findByThriftId(int fieldId) {
         switch(fieldId) {
-          case 1: // R_TREE
-            return R_TREE;
+          case 1: // SN
+            return SN;
+          case 2: // TREE_ID
+            return TREE_ID;
           default:
             return null;
         }
@@ -8510,74 +8848,117 @@ public class HashTreesSyncInterface {
     }
 
     // isset id assignments
+    private static final int __TREEID_ISSET_ID = 0;
+    private BitSet __isset_bit_vector = new BitSet(1);
     public static final Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> metaDataMap;
     static {
       Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> tmpMap = new EnumMap<_Fields, org.apache.thrift.meta_data.FieldMetaData>(_Fields.class);
-      tmpMap.put(_Fields.R_TREE, new org.apache.thrift.meta_data.FieldMetaData("rTree", org.apache.thrift.TFieldRequirementType.DEFAULT, 
-          new org.apache.thrift.meta_data.StructMetaData(org.apache.thrift.protocol.TType.STRUCT, RemoteTreeInfo.class)));
+      tmpMap.put(_Fields.SN, new org.apache.thrift.meta_data.FieldMetaData("sn", org.apache.thrift.TFieldRequirementType.DEFAULT, 
+          new org.apache.thrift.meta_data.StructMetaData(org.apache.thrift.protocol.TType.STRUCT, ServerName.class)));
+      tmpMap.put(_Fields.TREE_ID, new org.apache.thrift.meta_data.FieldMetaData("treeId", org.apache.thrift.TFieldRequirementType.DEFAULT, 
+          new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.I64)));
       metaDataMap = Collections.unmodifiableMap(tmpMap);
-      org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(removeFromSyncList_args.class, metaDataMap);
+      org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(removeServerNameAndTreeIdFromSyncList_args.class, metaDataMap);
     }
 
-    public removeFromSyncList_args() {
+    public removeServerNameAndTreeIdFromSyncList_args() {
     }
 
-    public removeFromSyncList_args(
-      RemoteTreeInfo rTree)
+    public removeServerNameAndTreeIdFromSyncList_args(
+      ServerName sn,
+      long treeId)
     {
       this();
-      this.rTree = rTree;
+      this.sn = sn;
+      this.treeId = treeId;
+      setTreeIdIsSet(true);
     }
 
     /**
      * Performs a deep copy on <i>other</i>.
      */
-    public removeFromSyncList_args(removeFromSyncList_args other) {
-      if (other.isSetRTree()) {
-        this.rTree = new RemoteTreeInfo(other.rTree);
+    public removeServerNameAndTreeIdFromSyncList_args(removeServerNameAndTreeIdFromSyncList_args other) {
+      __isset_bit_vector.clear();
+      __isset_bit_vector.or(other.__isset_bit_vector);
+      if (other.isSetSn()) {
+        this.sn = new ServerName(other.sn);
       }
+      this.treeId = other.treeId;
     }
 
-    public removeFromSyncList_args deepCopy() {
-      return new removeFromSyncList_args(this);
+    public removeServerNameAndTreeIdFromSyncList_args deepCopy() {
+      return new removeServerNameAndTreeIdFromSyncList_args(this);
     }
 
     @Override
     public void clear() {
-      this.rTree = null;
+      this.sn = null;
+      setTreeIdIsSet(false);
+      this.treeId = 0;
     }
 
-    public RemoteTreeInfo getRTree() {
-      return this.rTree;
+    public ServerName getSn() {
+      return this.sn;
     }
 
-    public removeFromSyncList_args setRTree(RemoteTreeInfo rTree) {
-      this.rTree = rTree;
+    public removeServerNameAndTreeIdFromSyncList_args setSn(ServerName sn) {
+      this.sn = sn;
       return this;
     }
 
-    public void unsetRTree() {
-      this.rTree = null;
+    public void unsetSn() {
+      this.sn = null;
     }
 
-    /** Returns true if field rTree is set (has been assigned a value) and false otherwise */
-    public boolean isSetRTree() {
-      return this.rTree != null;
+    /** Returns true if field sn is set (has been assigned a value) and false otherwise */
+    public boolean isSetSn() {
+      return this.sn != null;
     }
 
-    public void setRTreeIsSet(boolean value) {
+    public void setSnIsSet(boolean value) {
       if (!value) {
-        this.rTree = null;
+        this.sn = null;
       }
+    }
+
+    public long getTreeId() {
+      return this.treeId;
+    }
+
+    public removeServerNameAndTreeIdFromSyncList_args setTreeId(long treeId) {
+      this.treeId = treeId;
+      setTreeIdIsSet(true);
+      return this;
+    }
+
+    public void unsetTreeId() {
+      __isset_bit_vector.clear(__TREEID_ISSET_ID);
+    }
+
+    /** Returns true if field treeId is set (has been assigned a value) and false otherwise */
+    public boolean isSetTreeId() {
+      return __isset_bit_vector.get(__TREEID_ISSET_ID);
+    }
+
+    public void setTreeIdIsSet(boolean value) {
+      __isset_bit_vector.set(__TREEID_ISSET_ID, value);
     }
 
     public void setFieldValue(_Fields field, Object value) {
       switch (field) {
-      case R_TREE:
+      case SN:
         if (value == null) {
-          unsetRTree();
+          unsetSn();
         } else {
-          setRTree((RemoteTreeInfo)value);
+          setSn((ServerName)value);
+        }
+        break;
+
+      case TREE_ID:
+        if (value == null) {
+          unsetTreeId();
+        } else {
+          setTreeId((Long)value);
         }
         break;
 
@@ -8586,8 +8967,11 @@ public class HashTreesSyncInterface {
 
     public Object getFieldValue(_Fields field) {
       switch (field) {
-      case R_TREE:
-        return getRTree();
+      case SN:
+        return getSn();
+
+      case TREE_ID:
+        return Long.valueOf(getTreeId());
 
       }
       throw new IllegalStateException();
@@ -8600,8 +8984,10 @@ public class HashTreesSyncInterface {
       }
 
       switch (field) {
-      case R_TREE:
-        return isSetRTree();
+      case SN:
+        return isSetSn();
+      case TREE_ID:
+        return isSetTreeId();
       }
       throw new IllegalStateException();
     }
@@ -8610,21 +8996,30 @@ public class HashTreesSyncInterface {
     public boolean equals(Object that) {
       if (that == null)
         return false;
-      if (that instanceof removeFromSyncList_args)
-        return this.equals((removeFromSyncList_args)that);
+      if (that instanceof removeServerNameAndTreeIdFromSyncList_args)
+        return this.equals((removeServerNameAndTreeIdFromSyncList_args)that);
       return false;
     }
 
-    public boolean equals(removeFromSyncList_args that) {
+    public boolean equals(removeServerNameAndTreeIdFromSyncList_args that) {
       if (that == null)
         return false;
 
-      boolean this_present_rTree = true && this.isSetRTree();
-      boolean that_present_rTree = true && that.isSetRTree();
-      if (this_present_rTree || that_present_rTree) {
-        if (!(this_present_rTree && that_present_rTree))
+      boolean this_present_sn = true && this.isSetSn();
+      boolean that_present_sn = true && that.isSetSn();
+      if (this_present_sn || that_present_sn) {
+        if (!(this_present_sn && that_present_sn))
           return false;
-        if (!this.rTree.equals(that.rTree))
+        if (!this.sn.equals(that.sn))
+          return false;
+      }
+
+      boolean this_present_treeId = true;
+      boolean that_present_treeId = true;
+      if (this_present_treeId || that_present_treeId) {
+        if (!(this_present_treeId && that_present_treeId))
+          return false;
+        if (this.treeId != that.treeId)
           return false;
       }
 
@@ -8636,20 +9031,30 @@ public class HashTreesSyncInterface {
       return 0;
     }
 
-    public int compareTo(removeFromSyncList_args other) {
+    public int compareTo(removeServerNameAndTreeIdFromSyncList_args other) {
       if (!getClass().equals(other.getClass())) {
         return getClass().getName().compareTo(other.getClass().getName());
       }
 
       int lastComparison = 0;
-      removeFromSyncList_args typedOther = (removeFromSyncList_args)other;
+      removeServerNameAndTreeIdFromSyncList_args typedOther = (removeServerNameAndTreeIdFromSyncList_args)other;
 
-      lastComparison = Boolean.valueOf(isSetRTree()).compareTo(typedOther.isSetRTree());
+      lastComparison = Boolean.valueOf(isSetSn()).compareTo(typedOther.isSetSn());
       if (lastComparison != 0) {
         return lastComparison;
       }
-      if (isSetRTree()) {
-        lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.rTree, typedOther.rTree);
+      if (isSetSn()) {
+        lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.sn, typedOther.sn);
+        if (lastComparison != 0) {
+          return lastComparison;
+        }
+      }
+      lastComparison = Boolean.valueOf(isSetTreeId()).compareTo(typedOther.isSetTreeId());
+      if (lastComparison != 0) {
+        return lastComparison;
+      }
+      if (isSetTreeId()) {
+        lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.treeId, typedOther.treeId);
         if (lastComparison != 0) {
           return lastComparison;
         }
@@ -8671,15 +9076,19 @@ public class HashTreesSyncInterface {
 
     @Override
     public String toString() {
-      StringBuilder sb = new StringBuilder("removeFromSyncList_args(");
+      StringBuilder sb = new StringBuilder("removeServerNameAndTreeIdFromSyncList_args(");
       boolean first = true;
 
-      sb.append("rTree:");
-      if (this.rTree == null) {
+      sb.append("sn:");
+      if (this.sn == null) {
         sb.append("null");
       } else {
-        sb.append(this.rTree);
+        sb.append(this.sn);
       }
+      first = false;
+      if (!first) sb.append(", ");
+      sb.append("treeId:");
+      sb.append(this.treeId);
       first = false;
       sb.append(")");
       return sb.toString();
@@ -8705,15 +9114,15 @@ public class HashTreesSyncInterface {
       }
     }
 
-    private static class removeFromSyncList_argsStandardSchemeFactory implements SchemeFactory {
-      public removeFromSyncList_argsStandardScheme getScheme() {
-        return new removeFromSyncList_argsStandardScheme();
+    private static class removeServerNameAndTreeIdFromSyncList_argsStandardSchemeFactory implements SchemeFactory {
+      public removeServerNameAndTreeIdFromSyncList_argsStandardScheme getScheme() {
+        return new removeServerNameAndTreeIdFromSyncList_argsStandardScheme();
       }
     }
 
-    private static class removeFromSyncList_argsStandardScheme extends StandardScheme<removeFromSyncList_args> {
+    private static class removeServerNameAndTreeIdFromSyncList_argsStandardScheme extends StandardScheme<removeServerNameAndTreeIdFromSyncList_args> {
 
-      public void read(org.apache.thrift.protocol.TProtocol iprot, removeFromSyncList_args struct) throws org.apache.thrift.TException {
+      public void read(org.apache.thrift.protocol.TProtocol iprot, removeServerNameAndTreeIdFromSyncList_args struct) throws org.apache.thrift.TException {
         org.apache.thrift.protocol.TField schemeField;
         iprot.readStructBegin();
         while (true)
@@ -8723,11 +9132,19 @@ public class HashTreesSyncInterface {
             break;
           }
           switch (schemeField.id) {
-            case 1: // R_TREE
+            case 1: // SN
               if (schemeField.type == org.apache.thrift.protocol.TType.STRUCT) {
-                struct.rTree = new RemoteTreeInfo();
-                struct.rTree.read(iprot);
-                struct.setRTreeIsSet(true);
+                struct.sn = new ServerName();
+                struct.sn.read(iprot);
+                struct.setSnIsSet(true);
+              } else { 
+                org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
+              }
+              break;
+            case 2: // TREE_ID
+              if (schemeField.type == org.apache.thrift.protocol.TType.I64) {
+                struct.treeId = iprot.readI64();
+                struct.setTreeIdIsSet(true);
               } else { 
                 org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
               }
@@ -8743,64 +9160,77 @@ public class HashTreesSyncInterface {
         struct.validate();
       }
 
-      public void write(org.apache.thrift.protocol.TProtocol oprot, removeFromSyncList_args struct) throws org.apache.thrift.TException {
+      public void write(org.apache.thrift.protocol.TProtocol oprot, removeServerNameAndTreeIdFromSyncList_args struct) throws org.apache.thrift.TException {
         struct.validate();
 
         oprot.writeStructBegin(STRUCT_DESC);
-        if (struct.rTree != null) {
-          oprot.writeFieldBegin(R_TREE_FIELD_DESC);
-          struct.rTree.write(oprot);
+        if (struct.sn != null) {
+          oprot.writeFieldBegin(SN_FIELD_DESC);
+          struct.sn.write(oprot);
           oprot.writeFieldEnd();
         }
+        oprot.writeFieldBegin(TREE_ID_FIELD_DESC);
+        oprot.writeI64(struct.treeId);
+        oprot.writeFieldEnd();
         oprot.writeFieldStop();
         oprot.writeStructEnd();
       }
 
     }
 
-    private static class removeFromSyncList_argsTupleSchemeFactory implements SchemeFactory {
-      public removeFromSyncList_argsTupleScheme getScheme() {
-        return new removeFromSyncList_argsTupleScheme();
+    private static class removeServerNameAndTreeIdFromSyncList_argsTupleSchemeFactory implements SchemeFactory {
+      public removeServerNameAndTreeIdFromSyncList_argsTupleScheme getScheme() {
+        return new removeServerNameAndTreeIdFromSyncList_argsTupleScheme();
       }
     }
 
-    private static class removeFromSyncList_argsTupleScheme extends TupleScheme<removeFromSyncList_args> {
+    private static class removeServerNameAndTreeIdFromSyncList_argsTupleScheme extends TupleScheme<removeServerNameAndTreeIdFromSyncList_args> {
 
       @Override
-      public void write(org.apache.thrift.protocol.TProtocol prot, removeFromSyncList_args struct) throws org.apache.thrift.TException {
+      public void write(org.apache.thrift.protocol.TProtocol prot, removeServerNameAndTreeIdFromSyncList_args struct) throws org.apache.thrift.TException {
         TTupleProtocol oprot = (TTupleProtocol) prot;
         BitSet optionals = new BitSet();
-        if (struct.isSetRTree()) {
+        if (struct.isSetSn()) {
           optionals.set(0);
         }
-        oprot.writeBitSet(optionals, 1);
-        if (struct.isSetRTree()) {
-          struct.rTree.write(oprot);
+        if (struct.isSetTreeId()) {
+          optionals.set(1);
+        }
+        oprot.writeBitSet(optionals, 2);
+        if (struct.isSetSn()) {
+          struct.sn.write(oprot);
+        }
+        if (struct.isSetTreeId()) {
+          oprot.writeI64(struct.treeId);
         }
       }
 
       @Override
-      public void read(org.apache.thrift.protocol.TProtocol prot, removeFromSyncList_args struct) throws org.apache.thrift.TException {
+      public void read(org.apache.thrift.protocol.TProtocol prot, removeServerNameAndTreeIdFromSyncList_args struct) throws org.apache.thrift.TException {
         TTupleProtocol iprot = (TTupleProtocol) prot;
-        BitSet incoming = iprot.readBitSet(1);
+        BitSet incoming = iprot.readBitSet(2);
         if (incoming.get(0)) {
-          struct.rTree = new RemoteTreeInfo();
-          struct.rTree.read(iprot);
-          struct.setRTreeIsSet(true);
+          struct.sn = new ServerName();
+          struct.sn.read(iprot);
+          struct.setSnIsSet(true);
+        }
+        if (incoming.get(1)) {
+          struct.treeId = iprot.readI64();
+          struct.setTreeIdIsSet(true);
         }
       }
     }
 
   }
 
-  public static class removeFromSyncList_result implements org.apache.thrift.TBase<removeFromSyncList_result, removeFromSyncList_result._Fields>, java.io.Serializable, Cloneable   {
-    private static final org.apache.thrift.protocol.TStruct STRUCT_DESC = new org.apache.thrift.protocol.TStruct("removeFromSyncList_result");
+  public static class removeServerNameAndTreeIdFromSyncList_result implements org.apache.thrift.TBase<removeServerNameAndTreeIdFromSyncList_result, removeServerNameAndTreeIdFromSyncList_result._Fields>, java.io.Serializable, Cloneable   {
+    private static final org.apache.thrift.protocol.TStruct STRUCT_DESC = new org.apache.thrift.protocol.TStruct("removeServerNameAndTreeIdFromSyncList_result");
 
 
     private static final Map<Class<? extends IScheme>, SchemeFactory> schemes = new HashMap<Class<? extends IScheme>, SchemeFactory>();
     static {
-      schemes.put(StandardScheme.class, new removeFromSyncList_resultStandardSchemeFactory());
-      schemes.put(TupleScheme.class, new removeFromSyncList_resultTupleSchemeFactory());
+      schemes.put(StandardScheme.class, new removeServerNameAndTreeIdFromSyncList_resultStandardSchemeFactory());
+      schemes.put(TupleScheme.class, new removeServerNameAndTreeIdFromSyncList_resultTupleSchemeFactory());
     }
 
 
@@ -8863,20 +9293,20 @@ public class HashTreesSyncInterface {
     static {
       Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> tmpMap = new EnumMap<_Fields, org.apache.thrift.meta_data.FieldMetaData>(_Fields.class);
       metaDataMap = Collections.unmodifiableMap(tmpMap);
-      org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(removeFromSyncList_result.class, metaDataMap);
+      org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(removeServerNameAndTreeIdFromSyncList_result.class, metaDataMap);
     }
 
-    public removeFromSyncList_result() {
+    public removeServerNameAndTreeIdFromSyncList_result() {
     }
 
     /**
      * Performs a deep copy on <i>other</i>.
      */
-    public removeFromSyncList_result(removeFromSyncList_result other) {
+    public removeServerNameAndTreeIdFromSyncList_result(removeServerNameAndTreeIdFromSyncList_result other) {
     }
 
-    public removeFromSyncList_result deepCopy() {
-      return new removeFromSyncList_result(this);
+    public removeServerNameAndTreeIdFromSyncList_result deepCopy() {
+      return new removeServerNameAndTreeIdFromSyncList_result(this);
     }
 
     @Override
@@ -8909,12 +9339,12 @@ public class HashTreesSyncInterface {
     public boolean equals(Object that) {
       if (that == null)
         return false;
-      if (that instanceof removeFromSyncList_result)
-        return this.equals((removeFromSyncList_result)that);
+      if (that instanceof removeServerNameAndTreeIdFromSyncList_result)
+        return this.equals((removeServerNameAndTreeIdFromSyncList_result)that);
       return false;
     }
 
-    public boolean equals(removeFromSyncList_result that) {
+    public boolean equals(removeServerNameAndTreeIdFromSyncList_result that) {
       if (that == null)
         return false;
 
@@ -8926,13 +9356,13 @@ public class HashTreesSyncInterface {
       return 0;
     }
 
-    public int compareTo(removeFromSyncList_result other) {
+    public int compareTo(removeServerNameAndTreeIdFromSyncList_result other) {
       if (!getClass().equals(other.getClass())) {
         return getClass().getName().compareTo(other.getClass().getName());
       }
 
       int lastComparison = 0;
-      removeFromSyncList_result typedOther = (removeFromSyncList_result)other;
+      removeServerNameAndTreeIdFromSyncList_result typedOther = (removeServerNameAndTreeIdFromSyncList_result)other;
 
       return 0;
     }
@@ -8951,7 +9381,7 @@ public class HashTreesSyncInterface {
 
     @Override
     public String toString() {
-      StringBuilder sb = new StringBuilder("removeFromSyncList_result(");
+      StringBuilder sb = new StringBuilder("removeServerNameAndTreeIdFromSyncList_result(");
       boolean first = true;
 
       sb.append(")");
@@ -8978,15 +9408,15 @@ public class HashTreesSyncInterface {
       }
     }
 
-    private static class removeFromSyncList_resultStandardSchemeFactory implements SchemeFactory {
-      public removeFromSyncList_resultStandardScheme getScheme() {
-        return new removeFromSyncList_resultStandardScheme();
+    private static class removeServerNameAndTreeIdFromSyncList_resultStandardSchemeFactory implements SchemeFactory {
+      public removeServerNameAndTreeIdFromSyncList_resultStandardScheme getScheme() {
+        return new removeServerNameAndTreeIdFromSyncList_resultStandardScheme();
       }
     }
 
-    private static class removeFromSyncList_resultStandardScheme extends StandardScheme<removeFromSyncList_result> {
+    private static class removeServerNameAndTreeIdFromSyncList_resultStandardScheme extends StandardScheme<removeServerNameAndTreeIdFromSyncList_result> {
 
-      public void read(org.apache.thrift.protocol.TProtocol iprot, removeFromSyncList_result struct) throws org.apache.thrift.TException {
+      public void read(org.apache.thrift.protocol.TProtocol iprot, removeServerNameAndTreeIdFromSyncList_result struct) throws org.apache.thrift.TException {
         org.apache.thrift.protocol.TField schemeField;
         iprot.readStructBegin();
         while (true)
@@ -9007,7 +9437,7 @@ public class HashTreesSyncInterface {
         struct.validate();
       }
 
-      public void write(org.apache.thrift.protocol.TProtocol oprot, removeFromSyncList_result struct) throws org.apache.thrift.TException {
+      public void write(org.apache.thrift.protocol.TProtocol oprot, removeServerNameAndTreeIdFromSyncList_result struct) throws org.apache.thrift.TException {
         struct.validate();
 
         oprot.writeStructBegin(STRUCT_DESC);
@@ -9017,36 +9447,36 @@ public class HashTreesSyncInterface {
 
     }
 
-    private static class removeFromSyncList_resultTupleSchemeFactory implements SchemeFactory {
-      public removeFromSyncList_resultTupleScheme getScheme() {
-        return new removeFromSyncList_resultTupleScheme();
+    private static class removeServerNameAndTreeIdFromSyncList_resultTupleSchemeFactory implements SchemeFactory {
+      public removeServerNameAndTreeIdFromSyncList_resultTupleScheme getScheme() {
+        return new removeServerNameAndTreeIdFromSyncList_resultTupleScheme();
       }
     }
 
-    private static class removeFromSyncList_resultTupleScheme extends TupleScheme<removeFromSyncList_result> {
+    private static class removeServerNameAndTreeIdFromSyncList_resultTupleScheme extends TupleScheme<removeServerNameAndTreeIdFromSyncList_result> {
 
       @Override
-      public void write(org.apache.thrift.protocol.TProtocol prot, removeFromSyncList_result struct) throws org.apache.thrift.TException {
+      public void write(org.apache.thrift.protocol.TProtocol prot, removeServerNameAndTreeIdFromSyncList_result struct) throws org.apache.thrift.TException {
         TTupleProtocol oprot = (TTupleProtocol) prot;
       }
 
       @Override
-      public void read(org.apache.thrift.protocol.TProtocol prot, removeFromSyncList_result struct) throws org.apache.thrift.TException {
+      public void read(org.apache.thrift.protocol.TProtocol prot, removeServerNameAndTreeIdFromSyncList_result struct) throws org.apache.thrift.TException {
         TTupleProtocol iprot = (TTupleProtocol) prot;
       }
     }
 
   }
 
-  public static class getSyncList_args implements org.apache.thrift.TBase<getSyncList_args, getSyncList_args._Fields>, java.io.Serializable, Cloneable   {
-    private static final org.apache.thrift.protocol.TStruct STRUCT_DESC = new org.apache.thrift.protocol.TStruct("getSyncList_args");
+  public static class getServerNameListFor_args implements org.apache.thrift.TBase<getServerNameListFor_args, getServerNameListFor_args._Fields>, java.io.Serializable, Cloneable   {
+    private static final org.apache.thrift.protocol.TStruct STRUCT_DESC = new org.apache.thrift.protocol.TStruct("getServerNameListFor_args");
 
     private static final org.apache.thrift.protocol.TField TREE_ID_FIELD_DESC = new org.apache.thrift.protocol.TField("treeId", org.apache.thrift.protocol.TType.I64, (short)1);
 
     private static final Map<Class<? extends IScheme>, SchemeFactory> schemes = new HashMap<Class<? extends IScheme>, SchemeFactory>();
     static {
-      schemes.put(StandardScheme.class, new getSyncList_argsStandardSchemeFactory());
-      schemes.put(TupleScheme.class, new getSyncList_argsTupleSchemeFactory());
+      schemes.put(StandardScheme.class, new getServerNameListFor_argsStandardSchemeFactory());
+      schemes.put(TupleScheme.class, new getServerNameListFor_argsTupleSchemeFactory());
     }
 
     public long treeId; // required
@@ -9118,13 +9548,13 @@ public class HashTreesSyncInterface {
       tmpMap.put(_Fields.TREE_ID, new org.apache.thrift.meta_data.FieldMetaData("treeId", org.apache.thrift.TFieldRequirementType.DEFAULT, 
           new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.I64)));
       metaDataMap = Collections.unmodifiableMap(tmpMap);
-      org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(getSyncList_args.class, metaDataMap);
+      org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(getServerNameListFor_args.class, metaDataMap);
     }
 
-    public getSyncList_args() {
+    public getServerNameListFor_args() {
     }
 
-    public getSyncList_args(
+    public getServerNameListFor_args(
       long treeId)
     {
       this();
@@ -9135,14 +9565,14 @@ public class HashTreesSyncInterface {
     /**
      * Performs a deep copy on <i>other</i>.
      */
-    public getSyncList_args(getSyncList_args other) {
+    public getServerNameListFor_args(getServerNameListFor_args other) {
       __isset_bit_vector.clear();
       __isset_bit_vector.or(other.__isset_bit_vector);
       this.treeId = other.treeId;
     }
 
-    public getSyncList_args deepCopy() {
-      return new getSyncList_args(this);
+    public getServerNameListFor_args deepCopy() {
+      return new getServerNameListFor_args(this);
     }
 
     @Override
@@ -9155,7 +9585,7 @@ public class HashTreesSyncInterface {
       return this.treeId;
     }
 
-    public getSyncList_args setTreeId(long treeId) {
+    public getServerNameListFor_args setTreeId(long treeId) {
       this.treeId = treeId;
       setTreeIdIsSet(true);
       return this;
@@ -9213,12 +9643,12 @@ public class HashTreesSyncInterface {
     public boolean equals(Object that) {
       if (that == null)
         return false;
-      if (that instanceof getSyncList_args)
-        return this.equals((getSyncList_args)that);
+      if (that instanceof getServerNameListFor_args)
+        return this.equals((getServerNameListFor_args)that);
       return false;
     }
 
-    public boolean equals(getSyncList_args that) {
+    public boolean equals(getServerNameListFor_args that) {
       if (that == null)
         return false;
 
@@ -9239,13 +9669,13 @@ public class HashTreesSyncInterface {
       return 0;
     }
 
-    public int compareTo(getSyncList_args other) {
+    public int compareTo(getServerNameListFor_args other) {
       if (!getClass().equals(other.getClass())) {
         return getClass().getName().compareTo(other.getClass().getName());
       }
 
       int lastComparison = 0;
-      getSyncList_args typedOther = (getSyncList_args)other;
+      getServerNameListFor_args typedOther = (getServerNameListFor_args)other;
 
       lastComparison = Boolean.valueOf(isSetTreeId()).compareTo(typedOther.isSetTreeId());
       if (lastComparison != 0) {
@@ -9274,7 +9704,7 @@ public class HashTreesSyncInterface {
 
     @Override
     public String toString() {
-      StringBuilder sb = new StringBuilder("getSyncList_args(");
+      StringBuilder sb = new StringBuilder("getServerNameListFor_args(");
       boolean first = true;
 
       sb.append("treeId:");
@@ -9298,23 +9728,21 @@ public class HashTreesSyncInterface {
 
     private void readObject(java.io.ObjectInputStream in) throws java.io.IOException, ClassNotFoundException {
       try {
-        // it doesn't seem like you should have to do this, but java serialization is wacky, and doesn't call the default constructor.
-        __isset_bit_vector = new BitSet(1);
         read(new org.apache.thrift.protocol.TCompactProtocol(new org.apache.thrift.transport.TIOStreamTransport(in)));
       } catch (org.apache.thrift.TException te) {
         throw new java.io.IOException(te);
       }
     }
 
-    private static class getSyncList_argsStandardSchemeFactory implements SchemeFactory {
-      public getSyncList_argsStandardScheme getScheme() {
-        return new getSyncList_argsStandardScheme();
+    private static class getServerNameListFor_argsStandardSchemeFactory implements SchemeFactory {
+      public getServerNameListFor_argsStandardScheme getScheme() {
+        return new getServerNameListFor_argsStandardScheme();
       }
     }
 
-    private static class getSyncList_argsStandardScheme extends StandardScheme<getSyncList_args> {
+    private static class getServerNameListFor_argsStandardScheme extends StandardScheme<getServerNameListFor_args> {
 
-      public void read(org.apache.thrift.protocol.TProtocol iprot, getSyncList_args struct) throws org.apache.thrift.TException {
+      public void read(org.apache.thrift.protocol.TProtocol iprot, getServerNameListFor_args struct) throws org.apache.thrift.TException {
         org.apache.thrift.protocol.TField schemeField;
         iprot.readStructBegin();
         while (true)
@@ -9343,7 +9771,7 @@ public class HashTreesSyncInterface {
         struct.validate();
       }
 
-      public void write(org.apache.thrift.protocol.TProtocol oprot, getSyncList_args struct) throws org.apache.thrift.TException {
+      public void write(org.apache.thrift.protocol.TProtocol oprot, getServerNameListFor_args struct) throws org.apache.thrift.TException {
         struct.validate();
 
         oprot.writeStructBegin(STRUCT_DESC);
@@ -9356,16 +9784,16 @@ public class HashTreesSyncInterface {
 
     }
 
-    private static class getSyncList_argsTupleSchemeFactory implements SchemeFactory {
-      public getSyncList_argsTupleScheme getScheme() {
-        return new getSyncList_argsTupleScheme();
+    private static class getServerNameListFor_argsTupleSchemeFactory implements SchemeFactory {
+      public getServerNameListFor_argsTupleScheme getScheme() {
+        return new getServerNameListFor_argsTupleScheme();
       }
     }
 
-    private static class getSyncList_argsTupleScheme extends TupleScheme<getSyncList_args> {
+    private static class getServerNameListFor_argsTupleScheme extends TupleScheme<getServerNameListFor_args> {
 
       @Override
-      public void write(org.apache.thrift.protocol.TProtocol prot, getSyncList_args struct) throws org.apache.thrift.TException {
+      public void write(org.apache.thrift.protocol.TProtocol prot, getServerNameListFor_args struct) throws org.apache.thrift.TException {
         TTupleProtocol oprot = (TTupleProtocol) prot;
         BitSet optionals = new BitSet();
         if (struct.isSetTreeId()) {
@@ -9378,7 +9806,7 @@ public class HashTreesSyncInterface {
       }
 
       @Override
-      public void read(org.apache.thrift.protocol.TProtocol prot, getSyncList_args struct) throws org.apache.thrift.TException {
+      public void read(org.apache.thrift.protocol.TProtocol prot, getServerNameListFor_args struct) throws org.apache.thrift.TException {
         TTupleProtocol iprot = (TTupleProtocol) prot;
         BitSet incoming = iprot.readBitSet(1);
         if (incoming.get(0)) {
@@ -9390,18 +9818,18 @@ public class HashTreesSyncInterface {
 
   }
 
-  public static class getSyncList_result implements org.apache.thrift.TBase<getSyncList_result, getSyncList_result._Fields>, java.io.Serializable, Cloneable   {
-    private static final org.apache.thrift.protocol.TStruct STRUCT_DESC = new org.apache.thrift.protocol.TStruct("getSyncList_result");
+  public static class getServerNameListFor_result implements org.apache.thrift.TBase<getServerNameListFor_result, getServerNameListFor_result._Fields>, java.io.Serializable, Cloneable   {
+    private static final org.apache.thrift.protocol.TStruct STRUCT_DESC = new org.apache.thrift.protocol.TStruct("getServerNameListFor_result");
 
     private static final org.apache.thrift.protocol.TField SUCCESS_FIELD_DESC = new org.apache.thrift.protocol.TField("success", org.apache.thrift.protocol.TType.LIST, (short)0);
 
     private static final Map<Class<? extends IScheme>, SchemeFactory> schemes = new HashMap<Class<? extends IScheme>, SchemeFactory>();
     static {
-      schemes.put(StandardScheme.class, new getSyncList_resultStandardSchemeFactory());
-      schemes.put(TupleScheme.class, new getSyncList_resultTupleSchemeFactory());
+      schemes.put(StandardScheme.class, new getServerNameListFor_resultStandardSchemeFactory());
+      schemes.put(TupleScheme.class, new getServerNameListFor_resultTupleSchemeFactory());
     }
 
-    public List<RemoteTreeInfo> success; // required
+    public List<ServerName> success; // required
 
     /** The set of fields this struct contains, along with convenience methods for finding and manipulating them. */
     public enum _Fields implements org.apache.thrift.TFieldIdEnum {
@@ -9467,16 +9895,16 @@ public class HashTreesSyncInterface {
       Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> tmpMap = new EnumMap<_Fields, org.apache.thrift.meta_data.FieldMetaData>(_Fields.class);
       tmpMap.put(_Fields.SUCCESS, new org.apache.thrift.meta_data.FieldMetaData("success", org.apache.thrift.TFieldRequirementType.DEFAULT, 
           new org.apache.thrift.meta_data.ListMetaData(org.apache.thrift.protocol.TType.LIST, 
-              new org.apache.thrift.meta_data.StructMetaData(org.apache.thrift.protocol.TType.STRUCT, RemoteTreeInfo.class))));
+              new org.apache.thrift.meta_data.StructMetaData(org.apache.thrift.protocol.TType.STRUCT, ServerName.class))));
       metaDataMap = Collections.unmodifiableMap(tmpMap);
-      org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(getSyncList_result.class, metaDataMap);
+      org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(getServerNameListFor_result.class, metaDataMap);
     }
 
-    public getSyncList_result() {
+    public getServerNameListFor_result() {
     }
 
-    public getSyncList_result(
-      List<RemoteTreeInfo> success)
+    public getServerNameListFor_result(
+      List<ServerName> success)
     {
       this();
       this.success = success;
@@ -9485,18 +9913,18 @@ public class HashTreesSyncInterface {
     /**
      * Performs a deep copy on <i>other</i>.
      */
-    public getSyncList_result(getSyncList_result other) {
+    public getServerNameListFor_result(getServerNameListFor_result other) {
       if (other.isSetSuccess()) {
-        List<RemoteTreeInfo> __this__success = new ArrayList<RemoteTreeInfo>();
-        for (RemoteTreeInfo other_element : other.success) {
-          __this__success.add(new RemoteTreeInfo(other_element));
+        List<ServerName> __this__success = new ArrayList<ServerName>();
+        for (ServerName other_element : other.success) {
+          __this__success.add(new ServerName(other_element));
         }
         this.success = __this__success;
       }
     }
 
-    public getSyncList_result deepCopy() {
-      return new getSyncList_result(this);
+    public getServerNameListFor_result deepCopy() {
+      return new getServerNameListFor_result(this);
     }
 
     @Override
@@ -9508,22 +9936,22 @@ public class HashTreesSyncInterface {
       return (this.success == null) ? 0 : this.success.size();
     }
 
-    public java.util.Iterator<RemoteTreeInfo> getSuccessIterator() {
+    public java.util.Iterator<ServerName> getSuccessIterator() {
       return (this.success == null) ? null : this.success.iterator();
     }
 
-    public void addToSuccess(RemoteTreeInfo elem) {
+    public void addToSuccess(ServerName elem) {
       if (this.success == null) {
-        this.success = new ArrayList<RemoteTreeInfo>();
+        this.success = new ArrayList<ServerName>();
       }
       this.success.add(elem);
     }
 
-    public List<RemoteTreeInfo> getSuccess() {
+    public List<ServerName> getSuccess() {
       return this.success;
     }
 
-    public getSyncList_result setSuccess(List<RemoteTreeInfo> success) {
+    public getServerNameListFor_result setSuccess(List<ServerName> success) {
       this.success = success;
       return this;
     }
@@ -9549,7 +9977,7 @@ public class HashTreesSyncInterface {
         if (value == null) {
           unsetSuccess();
         } else {
-          setSuccess((List<RemoteTreeInfo>)value);
+          setSuccess((List<ServerName>)value);
         }
         break;
 
@@ -9582,12 +10010,12 @@ public class HashTreesSyncInterface {
     public boolean equals(Object that) {
       if (that == null)
         return false;
-      if (that instanceof getSyncList_result)
-        return this.equals((getSyncList_result)that);
+      if (that instanceof getServerNameListFor_result)
+        return this.equals((getServerNameListFor_result)that);
       return false;
     }
 
-    public boolean equals(getSyncList_result that) {
+    public boolean equals(getServerNameListFor_result that) {
       if (that == null)
         return false;
 
@@ -9608,13 +10036,13 @@ public class HashTreesSyncInterface {
       return 0;
     }
 
-    public int compareTo(getSyncList_result other) {
+    public int compareTo(getServerNameListFor_result other) {
       if (!getClass().equals(other.getClass())) {
         return getClass().getName().compareTo(other.getClass().getName());
       }
 
       int lastComparison = 0;
-      getSyncList_result typedOther = (getSyncList_result)other;
+      getServerNameListFor_result typedOther = (getServerNameListFor_result)other;
 
       lastComparison = Boolean.valueOf(isSetSuccess()).compareTo(typedOther.isSetSuccess());
       if (lastComparison != 0) {
@@ -9643,7 +10071,7 @@ public class HashTreesSyncInterface {
 
     @Override
     public String toString() {
-      StringBuilder sb = new StringBuilder("getSyncList_result(");
+      StringBuilder sb = new StringBuilder("getServerNameListFor_result(");
       boolean first = true;
 
       sb.append("success:");
@@ -9677,15 +10105,15 @@ public class HashTreesSyncInterface {
       }
     }
 
-    private static class getSyncList_resultStandardSchemeFactory implements SchemeFactory {
-      public getSyncList_resultStandardScheme getScheme() {
-        return new getSyncList_resultStandardScheme();
+    private static class getServerNameListFor_resultStandardSchemeFactory implements SchemeFactory {
+      public getServerNameListFor_resultStandardScheme getScheme() {
+        return new getServerNameListFor_resultStandardScheme();
       }
     }
 
-    private static class getSyncList_resultStandardScheme extends StandardScheme<getSyncList_result> {
+    private static class getServerNameListFor_resultStandardScheme extends StandardScheme<getServerNameListFor_result> {
 
-      public void read(org.apache.thrift.protocol.TProtocol iprot, getSyncList_result struct) throws org.apache.thrift.TException {
+      public void read(org.apache.thrift.protocol.TProtocol iprot, getServerNameListFor_result struct) throws org.apache.thrift.TException {
         org.apache.thrift.protocol.TField schemeField;
         iprot.readStructBegin();
         while (true)
@@ -9699,11 +10127,11 @@ public class HashTreesSyncInterface {
               if (schemeField.type == org.apache.thrift.protocol.TType.LIST) {
                 {
                   org.apache.thrift.protocol.TList _list50 = iprot.readListBegin();
-                  struct.success = new ArrayList<RemoteTreeInfo>(_list50.size);
+                  struct.success = new ArrayList<ServerName>(_list50.size);
                   for (int _i51 = 0; _i51 < _list50.size; ++_i51)
                   {
-                    RemoteTreeInfo _elem52; // required
-                    _elem52 = new RemoteTreeInfo();
+                    ServerName _elem52; // required
+                    _elem52 = new ServerName();
                     _elem52.read(iprot);
                     struct.success.add(_elem52);
                   }
@@ -9725,7 +10153,7 @@ public class HashTreesSyncInterface {
         struct.validate();
       }
 
-      public void write(org.apache.thrift.protocol.TProtocol oprot, getSyncList_result struct) throws org.apache.thrift.TException {
+      public void write(org.apache.thrift.protocol.TProtocol oprot, getServerNameListFor_result struct) throws org.apache.thrift.TException {
         struct.validate();
 
         oprot.writeStructBegin(STRUCT_DESC);
@@ -9733,7 +10161,7 @@ public class HashTreesSyncInterface {
           oprot.writeFieldBegin(SUCCESS_FIELD_DESC);
           {
             oprot.writeListBegin(new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRUCT, struct.success.size()));
-            for (RemoteTreeInfo _iter53 : struct.success)
+            for (ServerName _iter53 : struct.success)
             {
               _iter53.write(oprot);
             }
@@ -9747,16 +10175,16 @@ public class HashTreesSyncInterface {
 
     }
 
-    private static class getSyncList_resultTupleSchemeFactory implements SchemeFactory {
-      public getSyncList_resultTupleScheme getScheme() {
-        return new getSyncList_resultTupleScheme();
+    private static class getServerNameListFor_resultTupleSchemeFactory implements SchemeFactory {
+      public getServerNameListFor_resultTupleScheme getScheme() {
+        return new getServerNameListFor_resultTupleScheme();
       }
     }
 
-    private static class getSyncList_resultTupleScheme extends TupleScheme<getSyncList_result> {
+    private static class getServerNameListFor_resultTupleScheme extends TupleScheme<getServerNameListFor_result> {
 
       @Override
-      public void write(org.apache.thrift.protocol.TProtocol prot, getSyncList_result struct) throws org.apache.thrift.TException {
+      public void write(org.apache.thrift.protocol.TProtocol prot, getServerNameListFor_result struct) throws org.apache.thrift.TException {
         TTupleProtocol oprot = (TTupleProtocol) prot;
         BitSet optionals = new BitSet();
         if (struct.isSetSuccess()) {
@@ -9766,7 +10194,7 @@ public class HashTreesSyncInterface {
         if (struct.isSetSuccess()) {
           {
             oprot.writeI32(struct.success.size());
-            for (RemoteTreeInfo _iter54 : struct.success)
+            for (ServerName _iter54 : struct.success)
             {
               _iter54.write(oprot);
             }
@@ -9775,19 +10203,1871 @@ public class HashTreesSyncInterface {
       }
 
       @Override
-      public void read(org.apache.thrift.protocol.TProtocol prot, getSyncList_result struct) throws org.apache.thrift.TException {
+      public void read(org.apache.thrift.protocol.TProtocol prot, getServerNameListFor_result struct) throws org.apache.thrift.TException {
         TTupleProtocol iprot = (TTupleProtocol) prot;
         BitSet incoming = iprot.readBitSet(1);
         if (incoming.get(0)) {
           {
             org.apache.thrift.protocol.TList _list55 = new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRUCT, iprot.readI32());
-            struct.success = new ArrayList<RemoteTreeInfo>(_list55.size);
+            struct.success = new ArrayList<ServerName>(_list55.size);
             for (int _i56 = 0; _i56 < _list55.size; ++_i56)
             {
-              RemoteTreeInfo _elem57; // required
-              _elem57 = new RemoteTreeInfo();
+              ServerName _elem57; // required
+              _elem57 = new ServerName();
               _elem57.read(iprot);
               struct.success.add(_elem57);
+            }
+          }
+          struct.setSuccessIsSet(true);
+        }
+      }
+    }
+
+  }
+
+  public static class addServerNameToSyncList_args implements org.apache.thrift.TBase<addServerNameToSyncList_args, addServerNameToSyncList_args._Fields>, java.io.Serializable, Cloneable   {
+    private static final org.apache.thrift.protocol.TStruct STRUCT_DESC = new org.apache.thrift.protocol.TStruct("addServerNameToSyncList_args");
+
+    private static final org.apache.thrift.protocol.TField SN_FIELD_DESC = new org.apache.thrift.protocol.TField("sn", org.apache.thrift.protocol.TType.STRUCT, (short)1);
+
+    private static final Map<Class<? extends IScheme>, SchemeFactory> schemes = new HashMap<Class<? extends IScheme>, SchemeFactory>();
+    static {
+      schemes.put(StandardScheme.class, new addServerNameToSyncList_argsStandardSchemeFactory());
+      schemes.put(TupleScheme.class, new addServerNameToSyncList_argsTupleSchemeFactory());
+    }
+
+    public ServerName sn; // required
+
+    /** The set of fields this struct contains, along with convenience methods for finding and manipulating them. */
+    public enum _Fields implements org.apache.thrift.TFieldIdEnum {
+      SN((short)1, "sn");
+
+      private static final Map<String, _Fields> byName = new HashMap<String, _Fields>();
+
+      static {
+        for (_Fields field : EnumSet.allOf(_Fields.class)) {
+          byName.put(field.getFieldName(), field);
+        }
+      }
+
+      /**
+       * Find the _Fields constant that matches fieldId, or null if its not found.
+       */
+      public static _Fields findByThriftId(int fieldId) {
+        switch(fieldId) {
+          case 1: // SN
+            return SN;
+          default:
+            return null;
+        }
+      }
+
+      /**
+       * Find the _Fields constant that matches fieldId, throwing an exception
+       * if it is not found.
+       */
+      public static _Fields findByThriftIdOrThrow(int fieldId) {
+        _Fields fields = findByThriftId(fieldId);
+        if (fields == null) throw new IllegalArgumentException("Field " + fieldId + " doesn't exist!");
+        return fields;
+      }
+
+      /**
+       * Find the _Fields constant that matches name, or null if its not found.
+       */
+      public static _Fields findByName(String name) {
+        return byName.get(name);
+      }
+
+      private final short _thriftId;
+      private final String _fieldName;
+
+      _Fields(short thriftId, String fieldName) {
+        _thriftId = thriftId;
+        _fieldName = fieldName;
+      }
+
+      public short getThriftFieldId() {
+        return _thriftId;
+      }
+
+      public String getFieldName() {
+        return _fieldName;
+      }
+    }
+
+    // isset id assignments
+    public static final Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> metaDataMap;
+    static {
+      Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> tmpMap = new EnumMap<_Fields, org.apache.thrift.meta_data.FieldMetaData>(_Fields.class);
+      tmpMap.put(_Fields.SN, new org.apache.thrift.meta_data.FieldMetaData("sn", org.apache.thrift.TFieldRequirementType.DEFAULT, 
+          new org.apache.thrift.meta_data.StructMetaData(org.apache.thrift.protocol.TType.STRUCT, ServerName.class)));
+      metaDataMap = Collections.unmodifiableMap(tmpMap);
+      org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(addServerNameToSyncList_args.class, metaDataMap);
+    }
+
+    public addServerNameToSyncList_args() {
+    }
+
+    public addServerNameToSyncList_args(
+      ServerName sn)
+    {
+      this();
+      this.sn = sn;
+    }
+
+    /**
+     * Performs a deep copy on <i>other</i>.
+     */
+    public addServerNameToSyncList_args(addServerNameToSyncList_args other) {
+      if (other.isSetSn()) {
+        this.sn = new ServerName(other.sn);
+      }
+    }
+
+    public addServerNameToSyncList_args deepCopy() {
+      return new addServerNameToSyncList_args(this);
+    }
+
+    @Override
+    public void clear() {
+      this.sn = null;
+    }
+
+    public ServerName getSn() {
+      return this.sn;
+    }
+
+    public addServerNameToSyncList_args setSn(ServerName sn) {
+      this.sn = sn;
+      return this;
+    }
+
+    public void unsetSn() {
+      this.sn = null;
+    }
+
+    /** Returns true if field sn is set (has been assigned a value) and false otherwise */
+    public boolean isSetSn() {
+      return this.sn != null;
+    }
+
+    public void setSnIsSet(boolean value) {
+      if (!value) {
+        this.sn = null;
+      }
+    }
+
+    public void setFieldValue(_Fields field, Object value) {
+      switch (field) {
+      case SN:
+        if (value == null) {
+          unsetSn();
+        } else {
+          setSn((ServerName)value);
+        }
+        break;
+
+      }
+    }
+
+    public Object getFieldValue(_Fields field) {
+      switch (field) {
+      case SN:
+        return getSn();
+
+      }
+      throw new IllegalStateException();
+    }
+
+    /** Returns true if field corresponding to fieldID is set (has been assigned a value) and false otherwise */
+    public boolean isSet(_Fields field) {
+      if (field == null) {
+        throw new IllegalArgumentException();
+      }
+
+      switch (field) {
+      case SN:
+        return isSetSn();
+      }
+      throw new IllegalStateException();
+    }
+
+    @Override
+    public boolean equals(Object that) {
+      if (that == null)
+        return false;
+      if (that instanceof addServerNameToSyncList_args)
+        return this.equals((addServerNameToSyncList_args)that);
+      return false;
+    }
+
+    public boolean equals(addServerNameToSyncList_args that) {
+      if (that == null)
+        return false;
+
+      boolean this_present_sn = true && this.isSetSn();
+      boolean that_present_sn = true && that.isSetSn();
+      if (this_present_sn || that_present_sn) {
+        if (!(this_present_sn && that_present_sn))
+          return false;
+        if (!this.sn.equals(that.sn))
+          return false;
+      }
+
+      return true;
+    }
+
+    @Override
+    public int hashCode() {
+      return 0;
+    }
+
+    public int compareTo(addServerNameToSyncList_args other) {
+      if (!getClass().equals(other.getClass())) {
+        return getClass().getName().compareTo(other.getClass().getName());
+      }
+
+      int lastComparison = 0;
+      addServerNameToSyncList_args typedOther = (addServerNameToSyncList_args)other;
+
+      lastComparison = Boolean.valueOf(isSetSn()).compareTo(typedOther.isSetSn());
+      if (lastComparison != 0) {
+        return lastComparison;
+      }
+      if (isSetSn()) {
+        lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.sn, typedOther.sn);
+        if (lastComparison != 0) {
+          return lastComparison;
+        }
+      }
+      return 0;
+    }
+
+    public _Fields fieldForId(int fieldId) {
+      return _Fields.findByThriftId(fieldId);
+    }
+
+    public void read(org.apache.thrift.protocol.TProtocol iprot) throws org.apache.thrift.TException {
+      schemes.get(iprot.getScheme()).getScheme().read(iprot, this);
+    }
+
+    public void write(org.apache.thrift.protocol.TProtocol oprot) throws org.apache.thrift.TException {
+      schemes.get(oprot.getScheme()).getScheme().write(oprot, this);
+    }
+
+    @Override
+    public String toString() {
+      StringBuilder sb = new StringBuilder("addServerNameToSyncList_args(");
+      boolean first = true;
+
+      sb.append("sn:");
+      if (this.sn == null) {
+        sb.append("null");
+      } else {
+        sb.append(this.sn);
+      }
+      first = false;
+      sb.append(")");
+      return sb.toString();
+    }
+
+    public void validate() throws org.apache.thrift.TException {
+      // check for required fields
+    }
+
+    private void writeObject(java.io.ObjectOutputStream out) throws java.io.IOException {
+      try {
+        write(new org.apache.thrift.protocol.TCompactProtocol(new org.apache.thrift.transport.TIOStreamTransport(out)));
+      } catch (org.apache.thrift.TException te) {
+        throw new java.io.IOException(te);
+      }
+    }
+
+    private void readObject(java.io.ObjectInputStream in) throws java.io.IOException, ClassNotFoundException {
+      try {
+        read(new org.apache.thrift.protocol.TCompactProtocol(new org.apache.thrift.transport.TIOStreamTransport(in)));
+      } catch (org.apache.thrift.TException te) {
+        throw new java.io.IOException(te);
+      }
+    }
+
+    private static class addServerNameToSyncList_argsStandardSchemeFactory implements SchemeFactory {
+      public addServerNameToSyncList_argsStandardScheme getScheme() {
+        return new addServerNameToSyncList_argsStandardScheme();
+      }
+    }
+
+    private static class addServerNameToSyncList_argsStandardScheme extends StandardScheme<addServerNameToSyncList_args> {
+
+      public void read(org.apache.thrift.protocol.TProtocol iprot, addServerNameToSyncList_args struct) throws org.apache.thrift.TException {
+        org.apache.thrift.protocol.TField schemeField;
+        iprot.readStructBegin();
+        while (true)
+        {
+          schemeField = iprot.readFieldBegin();
+          if (schemeField.type == org.apache.thrift.protocol.TType.STOP) { 
+            break;
+          }
+          switch (schemeField.id) {
+            case 1: // SN
+              if (schemeField.type == org.apache.thrift.protocol.TType.STRUCT) {
+                struct.sn = new ServerName();
+                struct.sn.read(iprot);
+                struct.setSnIsSet(true);
+              } else { 
+                org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
+              }
+              break;
+            default:
+              org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
+          }
+          iprot.readFieldEnd();
+        }
+        iprot.readStructEnd();
+
+        // check for required fields of primitive type, which can't be checked in the validate method
+        struct.validate();
+      }
+
+      public void write(org.apache.thrift.protocol.TProtocol oprot, addServerNameToSyncList_args struct) throws org.apache.thrift.TException {
+        struct.validate();
+
+        oprot.writeStructBegin(STRUCT_DESC);
+        if (struct.sn != null) {
+          oprot.writeFieldBegin(SN_FIELD_DESC);
+          struct.sn.write(oprot);
+          oprot.writeFieldEnd();
+        }
+        oprot.writeFieldStop();
+        oprot.writeStructEnd();
+      }
+
+    }
+
+    private static class addServerNameToSyncList_argsTupleSchemeFactory implements SchemeFactory {
+      public addServerNameToSyncList_argsTupleScheme getScheme() {
+        return new addServerNameToSyncList_argsTupleScheme();
+      }
+    }
+
+    private static class addServerNameToSyncList_argsTupleScheme extends TupleScheme<addServerNameToSyncList_args> {
+
+      @Override
+      public void write(org.apache.thrift.protocol.TProtocol prot, addServerNameToSyncList_args struct) throws org.apache.thrift.TException {
+        TTupleProtocol oprot = (TTupleProtocol) prot;
+        BitSet optionals = new BitSet();
+        if (struct.isSetSn()) {
+          optionals.set(0);
+        }
+        oprot.writeBitSet(optionals, 1);
+        if (struct.isSetSn()) {
+          struct.sn.write(oprot);
+        }
+      }
+
+      @Override
+      public void read(org.apache.thrift.protocol.TProtocol prot, addServerNameToSyncList_args struct) throws org.apache.thrift.TException {
+        TTupleProtocol iprot = (TTupleProtocol) prot;
+        BitSet incoming = iprot.readBitSet(1);
+        if (incoming.get(0)) {
+          struct.sn = new ServerName();
+          struct.sn.read(iprot);
+          struct.setSnIsSet(true);
+        }
+      }
+    }
+
+  }
+
+  public static class addServerNameToSyncList_result implements org.apache.thrift.TBase<addServerNameToSyncList_result, addServerNameToSyncList_result._Fields>, java.io.Serializable, Cloneable   {
+    private static final org.apache.thrift.protocol.TStruct STRUCT_DESC = new org.apache.thrift.protocol.TStruct("addServerNameToSyncList_result");
+
+
+    private static final Map<Class<? extends IScheme>, SchemeFactory> schemes = new HashMap<Class<? extends IScheme>, SchemeFactory>();
+    static {
+      schemes.put(StandardScheme.class, new addServerNameToSyncList_resultStandardSchemeFactory());
+      schemes.put(TupleScheme.class, new addServerNameToSyncList_resultTupleSchemeFactory());
+    }
+
+
+    /** The set of fields this struct contains, along with convenience methods for finding and manipulating them. */
+    public enum _Fields implements org.apache.thrift.TFieldIdEnum {
+;
+
+      private static final Map<String, _Fields> byName = new HashMap<String, _Fields>();
+
+      static {
+        for (_Fields field : EnumSet.allOf(_Fields.class)) {
+          byName.put(field.getFieldName(), field);
+        }
+      }
+
+      /**
+       * Find the _Fields constant that matches fieldId, or null if its not found.
+       */
+      public static _Fields findByThriftId(int fieldId) {
+        switch(fieldId) {
+          default:
+            return null;
+        }
+      }
+
+      /**
+       * Find the _Fields constant that matches fieldId, throwing an exception
+       * if it is not found.
+       */
+      public static _Fields findByThriftIdOrThrow(int fieldId) {
+        _Fields fields = findByThriftId(fieldId);
+        if (fields == null) throw new IllegalArgumentException("Field " + fieldId + " doesn't exist!");
+        return fields;
+      }
+
+      /**
+       * Find the _Fields constant that matches name, or null if its not found.
+       */
+      public static _Fields findByName(String name) {
+        return byName.get(name);
+      }
+
+      private final short _thriftId;
+      private final String _fieldName;
+
+      _Fields(short thriftId, String fieldName) {
+        _thriftId = thriftId;
+        _fieldName = fieldName;
+      }
+
+      public short getThriftFieldId() {
+        return _thriftId;
+      }
+
+      public String getFieldName() {
+        return _fieldName;
+      }
+    }
+    public static final Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> metaDataMap;
+    static {
+      Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> tmpMap = new EnumMap<_Fields, org.apache.thrift.meta_data.FieldMetaData>(_Fields.class);
+      metaDataMap = Collections.unmodifiableMap(tmpMap);
+      org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(addServerNameToSyncList_result.class, metaDataMap);
+    }
+
+    public addServerNameToSyncList_result() {
+    }
+
+    /**
+     * Performs a deep copy on <i>other</i>.
+     */
+    public addServerNameToSyncList_result(addServerNameToSyncList_result other) {
+    }
+
+    public addServerNameToSyncList_result deepCopy() {
+      return new addServerNameToSyncList_result(this);
+    }
+
+    @Override
+    public void clear() {
+    }
+
+    public void setFieldValue(_Fields field, Object value) {
+      switch (field) {
+      }
+    }
+
+    public Object getFieldValue(_Fields field) {
+      switch (field) {
+      }
+      throw new IllegalStateException();
+    }
+
+    /** Returns true if field corresponding to fieldID is set (has been assigned a value) and false otherwise */
+    public boolean isSet(_Fields field) {
+      if (field == null) {
+        throw new IllegalArgumentException();
+      }
+
+      switch (field) {
+      }
+      throw new IllegalStateException();
+    }
+
+    @Override
+    public boolean equals(Object that) {
+      if (that == null)
+        return false;
+      if (that instanceof addServerNameToSyncList_result)
+        return this.equals((addServerNameToSyncList_result)that);
+      return false;
+    }
+
+    public boolean equals(addServerNameToSyncList_result that) {
+      if (that == null)
+        return false;
+
+      return true;
+    }
+
+    @Override
+    public int hashCode() {
+      return 0;
+    }
+
+    public int compareTo(addServerNameToSyncList_result other) {
+      if (!getClass().equals(other.getClass())) {
+        return getClass().getName().compareTo(other.getClass().getName());
+      }
+
+      int lastComparison = 0;
+      addServerNameToSyncList_result typedOther = (addServerNameToSyncList_result)other;
+
+      return 0;
+    }
+
+    public _Fields fieldForId(int fieldId) {
+      return _Fields.findByThriftId(fieldId);
+    }
+
+    public void read(org.apache.thrift.protocol.TProtocol iprot) throws org.apache.thrift.TException {
+      schemes.get(iprot.getScheme()).getScheme().read(iprot, this);
+    }
+
+    public void write(org.apache.thrift.protocol.TProtocol oprot) throws org.apache.thrift.TException {
+      schemes.get(oprot.getScheme()).getScheme().write(oprot, this);
+      }
+
+    @Override
+    public String toString() {
+      StringBuilder sb = new StringBuilder("addServerNameToSyncList_result(");
+      boolean first = true;
+
+      sb.append(")");
+      return sb.toString();
+    }
+
+    public void validate() throws org.apache.thrift.TException {
+      // check for required fields
+    }
+
+    private void writeObject(java.io.ObjectOutputStream out) throws java.io.IOException {
+      try {
+        write(new org.apache.thrift.protocol.TCompactProtocol(new org.apache.thrift.transport.TIOStreamTransport(out)));
+      } catch (org.apache.thrift.TException te) {
+        throw new java.io.IOException(te);
+      }
+    }
+
+    private void readObject(java.io.ObjectInputStream in) throws java.io.IOException, ClassNotFoundException {
+      try {
+        read(new org.apache.thrift.protocol.TCompactProtocol(new org.apache.thrift.transport.TIOStreamTransport(in)));
+      } catch (org.apache.thrift.TException te) {
+        throw new java.io.IOException(te);
+      }
+    }
+
+    private static class addServerNameToSyncList_resultStandardSchemeFactory implements SchemeFactory {
+      public addServerNameToSyncList_resultStandardScheme getScheme() {
+        return new addServerNameToSyncList_resultStandardScheme();
+      }
+    }
+
+    private static class addServerNameToSyncList_resultStandardScheme extends StandardScheme<addServerNameToSyncList_result> {
+
+      public void read(org.apache.thrift.protocol.TProtocol iprot, addServerNameToSyncList_result struct) throws org.apache.thrift.TException {
+        org.apache.thrift.protocol.TField schemeField;
+        iprot.readStructBegin();
+        while (true)
+        {
+          schemeField = iprot.readFieldBegin();
+          if (schemeField.type == org.apache.thrift.protocol.TType.STOP) { 
+            break;
+          }
+          switch (schemeField.id) {
+            default:
+              org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
+          }
+          iprot.readFieldEnd();
+        }
+        iprot.readStructEnd();
+
+        // check for required fields of primitive type, which can't be checked in the validate method
+        struct.validate();
+      }
+
+      public void write(org.apache.thrift.protocol.TProtocol oprot, addServerNameToSyncList_result struct) throws org.apache.thrift.TException {
+        struct.validate();
+
+        oprot.writeStructBegin(STRUCT_DESC);
+        oprot.writeFieldStop();
+        oprot.writeStructEnd();
+      }
+
+    }
+
+    private static class addServerNameToSyncList_resultTupleSchemeFactory implements SchemeFactory {
+      public addServerNameToSyncList_resultTupleScheme getScheme() {
+        return new addServerNameToSyncList_resultTupleScheme();
+      }
+    }
+
+    private static class addServerNameToSyncList_resultTupleScheme extends TupleScheme<addServerNameToSyncList_result> {
+
+      @Override
+      public void write(org.apache.thrift.protocol.TProtocol prot, addServerNameToSyncList_result struct) throws org.apache.thrift.TException {
+        TTupleProtocol oprot = (TTupleProtocol) prot;
+      }
+
+      @Override
+      public void read(org.apache.thrift.protocol.TProtocol prot, addServerNameToSyncList_result struct) throws org.apache.thrift.TException {
+        TTupleProtocol iprot = (TTupleProtocol) prot;
+      }
+    }
+
+  }
+
+  public static class removeServerNameFromSyncList_args implements org.apache.thrift.TBase<removeServerNameFromSyncList_args, removeServerNameFromSyncList_args._Fields>, java.io.Serializable, Cloneable   {
+    private static final org.apache.thrift.protocol.TStruct STRUCT_DESC = new org.apache.thrift.protocol.TStruct("removeServerNameFromSyncList_args");
+
+    private static final org.apache.thrift.protocol.TField SN_FIELD_DESC = new org.apache.thrift.protocol.TField("sn", org.apache.thrift.protocol.TType.STRUCT, (short)1);
+
+    private static final Map<Class<? extends IScheme>, SchemeFactory> schemes = new HashMap<Class<? extends IScheme>, SchemeFactory>();
+    static {
+      schemes.put(StandardScheme.class, new removeServerNameFromSyncList_argsStandardSchemeFactory());
+      schemes.put(TupleScheme.class, new removeServerNameFromSyncList_argsTupleSchemeFactory());
+    }
+
+    public ServerName sn; // required
+
+    /** The set of fields this struct contains, along with convenience methods for finding and manipulating them. */
+    public enum _Fields implements org.apache.thrift.TFieldIdEnum {
+      SN((short)1, "sn");
+
+      private static final Map<String, _Fields> byName = new HashMap<String, _Fields>();
+
+      static {
+        for (_Fields field : EnumSet.allOf(_Fields.class)) {
+          byName.put(field.getFieldName(), field);
+        }
+      }
+
+      /**
+       * Find the _Fields constant that matches fieldId, or null if its not found.
+       */
+      public static _Fields findByThriftId(int fieldId) {
+        switch(fieldId) {
+          case 1: // SN
+            return SN;
+          default:
+            return null;
+        }
+      }
+
+      /**
+       * Find the _Fields constant that matches fieldId, throwing an exception
+       * if it is not found.
+       */
+      public static _Fields findByThriftIdOrThrow(int fieldId) {
+        _Fields fields = findByThriftId(fieldId);
+        if (fields == null) throw new IllegalArgumentException("Field " + fieldId + " doesn't exist!");
+        return fields;
+      }
+
+      /**
+       * Find the _Fields constant that matches name, or null if its not found.
+       */
+      public static _Fields findByName(String name) {
+        return byName.get(name);
+      }
+
+      private final short _thriftId;
+      private final String _fieldName;
+
+      _Fields(short thriftId, String fieldName) {
+        _thriftId = thriftId;
+        _fieldName = fieldName;
+      }
+
+      public short getThriftFieldId() {
+        return _thriftId;
+      }
+
+      public String getFieldName() {
+        return _fieldName;
+      }
+    }
+
+    // isset id assignments
+    public static final Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> metaDataMap;
+    static {
+      Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> tmpMap = new EnumMap<_Fields, org.apache.thrift.meta_data.FieldMetaData>(_Fields.class);
+      tmpMap.put(_Fields.SN, new org.apache.thrift.meta_data.FieldMetaData("sn", org.apache.thrift.TFieldRequirementType.DEFAULT, 
+          new org.apache.thrift.meta_data.StructMetaData(org.apache.thrift.protocol.TType.STRUCT, ServerName.class)));
+      metaDataMap = Collections.unmodifiableMap(tmpMap);
+      org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(removeServerNameFromSyncList_args.class, metaDataMap);
+    }
+
+    public removeServerNameFromSyncList_args() {
+    }
+
+    public removeServerNameFromSyncList_args(
+      ServerName sn)
+    {
+      this();
+      this.sn = sn;
+    }
+
+    /**
+     * Performs a deep copy on <i>other</i>.
+     */
+    public removeServerNameFromSyncList_args(removeServerNameFromSyncList_args other) {
+      if (other.isSetSn()) {
+        this.sn = new ServerName(other.sn);
+      }
+    }
+
+    public removeServerNameFromSyncList_args deepCopy() {
+      return new removeServerNameFromSyncList_args(this);
+    }
+
+    @Override
+    public void clear() {
+      this.sn = null;
+    }
+
+    public ServerName getSn() {
+      return this.sn;
+    }
+
+    public removeServerNameFromSyncList_args setSn(ServerName sn) {
+      this.sn = sn;
+      return this;
+    }
+
+    public void unsetSn() {
+      this.sn = null;
+    }
+
+    /** Returns true if field sn is set (has been assigned a value) and false otherwise */
+    public boolean isSetSn() {
+      return this.sn != null;
+    }
+
+    public void setSnIsSet(boolean value) {
+      if (!value) {
+        this.sn = null;
+      }
+    }
+
+    public void setFieldValue(_Fields field, Object value) {
+      switch (field) {
+      case SN:
+        if (value == null) {
+          unsetSn();
+        } else {
+          setSn((ServerName)value);
+        }
+        break;
+
+      }
+    }
+
+    public Object getFieldValue(_Fields field) {
+      switch (field) {
+      case SN:
+        return getSn();
+
+      }
+      throw new IllegalStateException();
+    }
+
+    /** Returns true if field corresponding to fieldID is set (has been assigned a value) and false otherwise */
+    public boolean isSet(_Fields field) {
+      if (field == null) {
+        throw new IllegalArgumentException();
+      }
+
+      switch (field) {
+      case SN:
+        return isSetSn();
+      }
+      throw new IllegalStateException();
+    }
+
+    @Override
+    public boolean equals(Object that) {
+      if (that == null)
+        return false;
+      if (that instanceof removeServerNameFromSyncList_args)
+        return this.equals((removeServerNameFromSyncList_args)that);
+      return false;
+    }
+
+    public boolean equals(removeServerNameFromSyncList_args that) {
+      if (that == null)
+        return false;
+
+      boolean this_present_sn = true && this.isSetSn();
+      boolean that_present_sn = true && that.isSetSn();
+      if (this_present_sn || that_present_sn) {
+        if (!(this_present_sn && that_present_sn))
+          return false;
+        if (!this.sn.equals(that.sn))
+          return false;
+      }
+
+      return true;
+    }
+
+    @Override
+    public int hashCode() {
+      return 0;
+    }
+
+    public int compareTo(removeServerNameFromSyncList_args other) {
+      if (!getClass().equals(other.getClass())) {
+        return getClass().getName().compareTo(other.getClass().getName());
+      }
+
+      int lastComparison = 0;
+      removeServerNameFromSyncList_args typedOther = (removeServerNameFromSyncList_args)other;
+
+      lastComparison = Boolean.valueOf(isSetSn()).compareTo(typedOther.isSetSn());
+      if (lastComparison != 0) {
+        return lastComparison;
+      }
+      if (isSetSn()) {
+        lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.sn, typedOther.sn);
+        if (lastComparison != 0) {
+          return lastComparison;
+        }
+      }
+      return 0;
+    }
+
+    public _Fields fieldForId(int fieldId) {
+      return _Fields.findByThriftId(fieldId);
+    }
+
+    public void read(org.apache.thrift.protocol.TProtocol iprot) throws org.apache.thrift.TException {
+      schemes.get(iprot.getScheme()).getScheme().read(iprot, this);
+    }
+
+    public void write(org.apache.thrift.protocol.TProtocol oprot) throws org.apache.thrift.TException {
+      schemes.get(oprot.getScheme()).getScheme().write(oprot, this);
+    }
+
+    @Override
+    public String toString() {
+      StringBuilder sb = new StringBuilder("removeServerNameFromSyncList_args(");
+      boolean first = true;
+
+      sb.append("sn:");
+      if (this.sn == null) {
+        sb.append("null");
+      } else {
+        sb.append(this.sn);
+      }
+      first = false;
+      sb.append(")");
+      return sb.toString();
+    }
+
+    public void validate() throws org.apache.thrift.TException {
+      // check for required fields
+    }
+
+    private void writeObject(java.io.ObjectOutputStream out) throws java.io.IOException {
+      try {
+        write(new org.apache.thrift.protocol.TCompactProtocol(new org.apache.thrift.transport.TIOStreamTransport(out)));
+      } catch (org.apache.thrift.TException te) {
+        throw new java.io.IOException(te);
+      }
+    }
+
+    private void readObject(java.io.ObjectInputStream in) throws java.io.IOException, ClassNotFoundException {
+      try {
+        read(new org.apache.thrift.protocol.TCompactProtocol(new org.apache.thrift.transport.TIOStreamTransport(in)));
+      } catch (org.apache.thrift.TException te) {
+        throw new java.io.IOException(te);
+      }
+    }
+
+    private static class removeServerNameFromSyncList_argsStandardSchemeFactory implements SchemeFactory {
+      public removeServerNameFromSyncList_argsStandardScheme getScheme() {
+        return new removeServerNameFromSyncList_argsStandardScheme();
+      }
+    }
+
+    private static class removeServerNameFromSyncList_argsStandardScheme extends StandardScheme<removeServerNameFromSyncList_args> {
+
+      public void read(org.apache.thrift.protocol.TProtocol iprot, removeServerNameFromSyncList_args struct) throws org.apache.thrift.TException {
+        org.apache.thrift.protocol.TField schemeField;
+        iprot.readStructBegin();
+        while (true)
+        {
+          schemeField = iprot.readFieldBegin();
+          if (schemeField.type == org.apache.thrift.protocol.TType.STOP) { 
+            break;
+          }
+          switch (schemeField.id) {
+            case 1: // SN
+              if (schemeField.type == org.apache.thrift.protocol.TType.STRUCT) {
+                struct.sn = new ServerName();
+                struct.sn.read(iprot);
+                struct.setSnIsSet(true);
+              } else { 
+                org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
+              }
+              break;
+            default:
+              org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
+          }
+          iprot.readFieldEnd();
+        }
+        iprot.readStructEnd();
+
+        // check for required fields of primitive type, which can't be checked in the validate method
+        struct.validate();
+      }
+
+      public void write(org.apache.thrift.protocol.TProtocol oprot, removeServerNameFromSyncList_args struct) throws org.apache.thrift.TException {
+        struct.validate();
+
+        oprot.writeStructBegin(STRUCT_DESC);
+        if (struct.sn != null) {
+          oprot.writeFieldBegin(SN_FIELD_DESC);
+          struct.sn.write(oprot);
+          oprot.writeFieldEnd();
+        }
+        oprot.writeFieldStop();
+        oprot.writeStructEnd();
+      }
+
+    }
+
+    private static class removeServerNameFromSyncList_argsTupleSchemeFactory implements SchemeFactory {
+      public removeServerNameFromSyncList_argsTupleScheme getScheme() {
+        return new removeServerNameFromSyncList_argsTupleScheme();
+      }
+    }
+
+    private static class removeServerNameFromSyncList_argsTupleScheme extends TupleScheme<removeServerNameFromSyncList_args> {
+
+      @Override
+      public void write(org.apache.thrift.protocol.TProtocol prot, removeServerNameFromSyncList_args struct) throws org.apache.thrift.TException {
+        TTupleProtocol oprot = (TTupleProtocol) prot;
+        BitSet optionals = new BitSet();
+        if (struct.isSetSn()) {
+          optionals.set(0);
+        }
+        oprot.writeBitSet(optionals, 1);
+        if (struct.isSetSn()) {
+          struct.sn.write(oprot);
+        }
+      }
+
+      @Override
+      public void read(org.apache.thrift.protocol.TProtocol prot, removeServerNameFromSyncList_args struct) throws org.apache.thrift.TException {
+        TTupleProtocol iprot = (TTupleProtocol) prot;
+        BitSet incoming = iprot.readBitSet(1);
+        if (incoming.get(0)) {
+          struct.sn = new ServerName();
+          struct.sn.read(iprot);
+          struct.setSnIsSet(true);
+        }
+      }
+    }
+
+  }
+
+  public static class removeServerNameFromSyncList_result implements org.apache.thrift.TBase<removeServerNameFromSyncList_result, removeServerNameFromSyncList_result._Fields>, java.io.Serializable, Cloneable   {
+    private static final org.apache.thrift.protocol.TStruct STRUCT_DESC = new org.apache.thrift.protocol.TStruct("removeServerNameFromSyncList_result");
+
+
+    private static final Map<Class<? extends IScheme>, SchemeFactory> schemes = new HashMap<Class<? extends IScheme>, SchemeFactory>();
+    static {
+      schemes.put(StandardScheme.class, new removeServerNameFromSyncList_resultStandardSchemeFactory());
+      schemes.put(TupleScheme.class, new removeServerNameFromSyncList_resultTupleSchemeFactory());
+    }
+
+
+    /** The set of fields this struct contains, along with convenience methods for finding and manipulating them. */
+    public enum _Fields implements org.apache.thrift.TFieldIdEnum {
+;
+
+      private static final Map<String, _Fields> byName = new HashMap<String, _Fields>();
+
+      static {
+        for (_Fields field : EnumSet.allOf(_Fields.class)) {
+          byName.put(field.getFieldName(), field);
+        }
+      }
+
+      /**
+       * Find the _Fields constant that matches fieldId, or null if its not found.
+       */
+      public static _Fields findByThriftId(int fieldId) {
+        switch(fieldId) {
+          default:
+            return null;
+        }
+      }
+
+      /**
+       * Find the _Fields constant that matches fieldId, throwing an exception
+       * if it is not found.
+       */
+      public static _Fields findByThriftIdOrThrow(int fieldId) {
+        _Fields fields = findByThriftId(fieldId);
+        if (fields == null) throw new IllegalArgumentException("Field " + fieldId + " doesn't exist!");
+        return fields;
+      }
+
+      /**
+       * Find the _Fields constant that matches name, or null if its not found.
+       */
+      public static _Fields findByName(String name) {
+        return byName.get(name);
+      }
+
+      private final short _thriftId;
+      private final String _fieldName;
+
+      _Fields(short thriftId, String fieldName) {
+        _thriftId = thriftId;
+        _fieldName = fieldName;
+      }
+
+      public short getThriftFieldId() {
+        return _thriftId;
+      }
+
+      public String getFieldName() {
+        return _fieldName;
+      }
+    }
+    public static final Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> metaDataMap;
+    static {
+      Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> tmpMap = new EnumMap<_Fields, org.apache.thrift.meta_data.FieldMetaData>(_Fields.class);
+      metaDataMap = Collections.unmodifiableMap(tmpMap);
+      org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(removeServerNameFromSyncList_result.class, metaDataMap);
+    }
+
+    public removeServerNameFromSyncList_result() {
+    }
+
+    /**
+     * Performs a deep copy on <i>other</i>.
+     */
+    public removeServerNameFromSyncList_result(removeServerNameFromSyncList_result other) {
+    }
+
+    public removeServerNameFromSyncList_result deepCopy() {
+      return new removeServerNameFromSyncList_result(this);
+    }
+
+    @Override
+    public void clear() {
+    }
+
+    public void setFieldValue(_Fields field, Object value) {
+      switch (field) {
+      }
+    }
+
+    public Object getFieldValue(_Fields field) {
+      switch (field) {
+      }
+      throw new IllegalStateException();
+    }
+
+    /** Returns true if field corresponding to fieldID is set (has been assigned a value) and false otherwise */
+    public boolean isSet(_Fields field) {
+      if (field == null) {
+        throw new IllegalArgumentException();
+      }
+
+      switch (field) {
+      }
+      throw new IllegalStateException();
+    }
+
+    @Override
+    public boolean equals(Object that) {
+      if (that == null)
+        return false;
+      if (that instanceof removeServerNameFromSyncList_result)
+        return this.equals((removeServerNameFromSyncList_result)that);
+      return false;
+    }
+
+    public boolean equals(removeServerNameFromSyncList_result that) {
+      if (that == null)
+        return false;
+
+      return true;
+    }
+
+    @Override
+    public int hashCode() {
+      return 0;
+    }
+
+    public int compareTo(removeServerNameFromSyncList_result other) {
+      if (!getClass().equals(other.getClass())) {
+        return getClass().getName().compareTo(other.getClass().getName());
+      }
+
+      int lastComparison = 0;
+      removeServerNameFromSyncList_result typedOther = (removeServerNameFromSyncList_result)other;
+
+      return 0;
+    }
+
+    public _Fields fieldForId(int fieldId) {
+      return _Fields.findByThriftId(fieldId);
+    }
+
+    public void read(org.apache.thrift.protocol.TProtocol iprot) throws org.apache.thrift.TException {
+      schemes.get(iprot.getScheme()).getScheme().read(iprot, this);
+    }
+
+    public void write(org.apache.thrift.protocol.TProtocol oprot) throws org.apache.thrift.TException {
+      schemes.get(oprot.getScheme()).getScheme().write(oprot, this);
+      }
+
+    @Override
+    public String toString() {
+      StringBuilder sb = new StringBuilder("removeServerNameFromSyncList_result(");
+      boolean first = true;
+
+      sb.append(")");
+      return sb.toString();
+    }
+
+    public void validate() throws org.apache.thrift.TException {
+      // check for required fields
+    }
+
+    private void writeObject(java.io.ObjectOutputStream out) throws java.io.IOException {
+      try {
+        write(new org.apache.thrift.protocol.TCompactProtocol(new org.apache.thrift.transport.TIOStreamTransport(out)));
+      } catch (org.apache.thrift.TException te) {
+        throw new java.io.IOException(te);
+      }
+    }
+
+    private void readObject(java.io.ObjectInputStream in) throws java.io.IOException, ClassNotFoundException {
+      try {
+        read(new org.apache.thrift.protocol.TCompactProtocol(new org.apache.thrift.transport.TIOStreamTransport(in)));
+      } catch (org.apache.thrift.TException te) {
+        throw new java.io.IOException(te);
+      }
+    }
+
+    private static class removeServerNameFromSyncList_resultStandardSchemeFactory implements SchemeFactory {
+      public removeServerNameFromSyncList_resultStandardScheme getScheme() {
+        return new removeServerNameFromSyncList_resultStandardScheme();
+      }
+    }
+
+    private static class removeServerNameFromSyncList_resultStandardScheme extends StandardScheme<removeServerNameFromSyncList_result> {
+
+      public void read(org.apache.thrift.protocol.TProtocol iprot, removeServerNameFromSyncList_result struct) throws org.apache.thrift.TException {
+        org.apache.thrift.protocol.TField schemeField;
+        iprot.readStructBegin();
+        while (true)
+        {
+          schemeField = iprot.readFieldBegin();
+          if (schemeField.type == org.apache.thrift.protocol.TType.STOP) { 
+            break;
+          }
+          switch (schemeField.id) {
+            default:
+              org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
+          }
+          iprot.readFieldEnd();
+        }
+        iprot.readStructEnd();
+
+        // check for required fields of primitive type, which can't be checked in the validate method
+        struct.validate();
+      }
+
+      public void write(org.apache.thrift.protocol.TProtocol oprot, removeServerNameFromSyncList_result struct) throws org.apache.thrift.TException {
+        struct.validate();
+
+        oprot.writeStructBegin(STRUCT_DESC);
+        oprot.writeFieldStop();
+        oprot.writeStructEnd();
+      }
+
+    }
+
+    private static class removeServerNameFromSyncList_resultTupleSchemeFactory implements SchemeFactory {
+      public removeServerNameFromSyncList_resultTupleScheme getScheme() {
+        return new removeServerNameFromSyncList_resultTupleScheme();
+      }
+    }
+
+    private static class removeServerNameFromSyncList_resultTupleScheme extends TupleScheme<removeServerNameFromSyncList_result> {
+
+      @Override
+      public void write(org.apache.thrift.protocol.TProtocol prot, removeServerNameFromSyncList_result struct) throws org.apache.thrift.TException {
+        TTupleProtocol oprot = (TTupleProtocol) prot;
+      }
+
+      @Override
+      public void read(org.apache.thrift.protocol.TProtocol prot, removeServerNameFromSyncList_result struct) throws org.apache.thrift.TException {
+        TTupleProtocol iprot = (TTupleProtocol) prot;
+      }
+    }
+
+  }
+
+  public static class getServerNameList_args implements org.apache.thrift.TBase<getServerNameList_args, getServerNameList_args._Fields>, java.io.Serializable, Cloneable   {
+    private static final org.apache.thrift.protocol.TStruct STRUCT_DESC = new org.apache.thrift.protocol.TStruct("getServerNameList_args");
+
+
+    private static final Map<Class<? extends IScheme>, SchemeFactory> schemes = new HashMap<Class<? extends IScheme>, SchemeFactory>();
+    static {
+      schemes.put(StandardScheme.class, new getServerNameList_argsStandardSchemeFactory());
+      schemes.put(TupleScheme.class, new getServerNameList_argsTupleSchemeFactory());
+    }
+
+
+    /** The set of fields this struct contains, along with convenience methods for finding and manipulating them. */
+    public enum _Fields implements org.apache.thrift.TFieldIdEnum {
+;
+
+      private static final Map<String, _Fields> byName = new HashMap<String, _Fields>();
+
+      static {
+        for (_Fields field : EnumSet.allOf(_Fields.class)) {
+          byName.put(field.getFieldName(), field);
+        }
+      }
+
+      /**
+       * Find the _Fields constant that matches fieldId, or null if its not found.
+       */
+      public static _Fields findByThriftId(int fieldId) {
+        switch(fieldId) {
+          default:
+            return null;
+        }
+      }
+
+      /**
+       * Find the _Fields constant that matches fieldId, throwing an exception
+       * if it is not found.
+       */
+      public static _Fields findByThriftIdOrThrow(int fieldId) {
+        _Fields fields = findByThriftId(fieldId);
+        if (fields == null) throw new IllegalArgumentException("Field " + fieldId + " doesn't exist!");
+        return fields;
+      }
+
+      /**
+       * Find the _Fields constant that matches name, or null if its not found.
+       */
+      public static _Fields findByName(String name) {
+        return byName.get(name);
+      }
+
+      private final short _thriftId;
+      private final String _fieldName;
+
+      _Fields(short thriftId, String fieldName) {
+        _thriftId = thriftId;
+        _fieldName = fieldName;
+      }
+
+      public short getThriftFieldId() {
+        return _thriftId;
+      }
+
+      public String getFieldName() {
+        return _fieldName;
+      }
+    }
+    public static final Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> metaDataMap;
+    static {
+      Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> tmpMap = new EnumMap<_Fields, org.apache.thrift.meta_data.FieldMetaData>(_Fields.class);
+      metaDataMap = Collections.unmodifiableMap(tmpMap);
+      org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(getServerNameList_args.class, metaDataMap);
+    }
+
+    public getServerNameList_args() {
+    }
+
+    /**
+     * Performs a deep copy on <i>other</i>.
+     */
+    public getServerNameList_args(getServerNameList_args other) {
+    }
+
+    public getServerNameList_args deepCopy() {
+      return new getServerNameList_args(this);
+    }
+
+    @Override
+    public void clear() {
+    }
+
+    public void setFieldValue(_Fields field, Object value) {
+      switch (field) {
+      }
+    }
+
+    public Object getFieldValue(_Fields field) {
+      switch (field) {
+      }
+      throw new IllegalStateException();
+    }
+
+    /** Returns true if field corresponding to fieldID is set (has been assigned a value) and false otherwise */
+    public boolean isSet(_Fields field) {
+      if (field == null) {
+        throw new IllegalArgumentException();
+      }
+
+      switch (field) {
+      }
+      throw new IllegalStateException();
+    }
+
+    @Override
+    public boolean equals(Object that) {
+      if (that == null)
+        return false;
+      if (that instanceof getServerNameList_args)
+        return this.equals((getServerNameList_args)that);
+      return false;
+    }
+
+    public boolean equals(getServerNameList_args that) {
+      if (that == null)
+        return false;
+
+      return true;
+    }
+
+    @Override
+    public int hashCode() {
+      return 0;
+    }
+
+    public int compareTo(getServerNameList_args other) {
+      if (!getClass().equals(other.getClass())) {
+        return getClass().getName().compareTo(other.getClass().getName());
+      }
+
+      int lastComparison = 0;
+      getServerNameList_args typedOther = (getServerNameList_args)other;
+
+      return 0;
+    }
+
+    public _Fields fieldForId(int fieldId) {
+      return _Fields.findByThriftId(fieldId);
+    }
+
+    public void read(org.apache.thrift.protocol.TProtocol iprot) throws org.apache.thrift.TException {
+      schemes.get(iprot.getScheme()).getScheme().read(iprot, this);
+    }
+
+    public void write(org.apache.thrift.protocol.TProtocol oprot) throws org.apache.thrift.TException {
+      schemes.get(oprot.getScheme()).getScheme().write(oprot, this);
+    }
+
+    @Override
+    public String toString() {
+      StringBuilder sb = new StringBuilder("getServerNameList_args(");
+      boolean first = true;
+
+      sb.append(")");
+      return sb.toString();
+    }
+
+    public void validate() throws org.apache.thrift.TException {
+      // check for required fields
+    }
+
+    private void writeObject(java.io.ObjectOutputStream out) throws java.io.IOException {
+      try {
+        write(new org.apache.thrift.protocol.TCompactProtocol(new org.apache.thrift.transport.TIOStreamTransport(out)));
+      } catch (org.apache.thrift.TException te) {
+        throw new java.io.IOException(te);
+      }
+    }
+
+    private void readObject(java.io.ObjectInputStream in) throws java.io.IOException, ClassNotFoundException {
+      try {
+        read(new org.apache.thrift.protocol.TCompactProtocol(new org.apache.thrift.transport.TIOStreamTransport(in)));
+      } catch (org.apache.thrift.TException te) {
+        throw new java.io.IOException(te);
+      }
+    }
+
+    private static class getServerNameList_argsStandardSchemeFactory implements SchemeFactory {
+      public getServerNameList_argsStandardScheme getScheme() {
+        return new getServerNameList_argsStandardScheme();
+      }
+    }
+
+    private static class getServerNameList_argsStandardScheme extends StandardScheme<getServerNameList_args> {
+
+      public void read(org.apache.thrift.protocol.TProtocol iprot, getServerNameList_args struct) throws org.apache.thrift.TException {
+        org.apache.thrift.protocol.TField schemeField;
+        iprot.readStructBegin();
+        while (true)
+        {
+          schemeField = iprot.readFieldBegin();
+          if (schemeField.type == org.apache.thrift.protocol.TType.STOP) { 
+            break;
+          }
+          switch (schemeField.id) {
+            default:
+              org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
+          }
+          iprot.readFieldEnd();
+        }
+        iprot.readStructEnd();
+
+        // check for required fields of primitive type, which can't be checked in the validate method
+        struct.validate();
+      }
+
+      public void write(org.apache.thrift.protocol.TProtocol oprot, getServerNameList_args struct) throws org.apache.thrift.TException {
+        struct.validate();
+
+        oprot.writeStructBegin(STRUCT_DESC);
+        oprot.writeFieldStop();
+        oprot.writeStructEnd();
+      }
+
+    }
+
+    private static class getServerNameList_argsTupleSchemeFactory implements SchemeFactory {
+      public getServerNameList_argsTupleScheme getScheme() {
+        return new getServerNameList_argsTupleScheme();
+      }
+    }
+
+    private static class getServerNameList_argsTupleScheme extends TupleScheme<getServerNameList_args> {
+
+      @Override
+      public void write(org.apache.thrift.protocol.TProtocol prot, getServerNameList_args struct) throws org.apache.thrift.TException {
+        TTupleProtocol oprot = (TTupleProtocol) prot;
+      }
+
+      @Override
+      public void read(org.apache.thrift.protocol.TProtocol prot, getServerNameList_args struct) throws org.apache.thrift.TException {
+        TTupleProtocol iprot = (TTupleProtocol) prot;
+      }
+    }
+
+  }
+
+  public static class getServerNameList_result implements org.apache.thrift.TBase<getServerNameList_result, getServerNameList_result._Fields>, java.io.Serializable, Cloneable   {
+    private static final org.apache.thrift.protocol.TStruct STRUCT_DESC = new org.apache.thrift.protocol.TStruct("getServerNameList_result");
+
+    private static final org.apache.thrift.protocol.TField SUCCESS_FIELD_DESC = new org.apache.thrift.protocol.TField("success", org.apache.thrift.protocol.TType.LIST, (short)0);
+
+    private static final Map<Class<? extends IScheme>, SchemeFactory> schemes = new HashMap<Class<? extends IScheme>, SchemeFactory>();
+    static {
+      schemes.put(StandardScheme.class, new getServerNameList_resultStandardSchemeFactory());
+      schemes.put(TupleScheme.class, new getServerNameList_resultTupleSchemeFactory());
+    }
+
+    public List<ServerName> success; // required
+
+    /** The set of fields this struct contains, along with convenience methods for finding and manipulating them. */
+    public enum _Fields implements org.apache.thrift.TFieldIdEnum {
+      SUCCESS((short)0, "success");
+
+      private static final Map<String, _Fields> byName = new HashMap<String, _Fields>();
+
+      static {
+        for (_Fields field : EnumSet.allOf(_Fields.class)) {
+          byName.put(field.getFieldName(), field);
+        }
+      }
+
+      /**
+       * Find the _Fields constant that matches fieldId, or null if its not found.
+       */
+      public static _Fields findByThriftId(int fieldId) {
+        switch(fieldId) {
+          case 0: // SUCCESS
+            return SUCCESS;
+          default:
+            return null;
+        }
+      }
+
+      /**
+       * Find the _Fields constant that matches fieldId, throwing an exception
+       * if it is not found.
+       */
+      public static _Fields findByThriftIdOrThrow(int fieldId) {
+        _Fields fields = findByThriftId(fieldId);
+        if (fields == null) throw new IllegalArgumentException("Field " + fieldId + " doesn't exist!");
+        return fields;
+      }
+
+      /**
+       * Find the _Fields constant that matches name, or null if its not found.
+       */
+      public static _Fields findByName(String name) {
+        return byName.get(name);
+      }
+
+      private final short _thriftId;
+      private final String _fieldName;
+
+      _Fields(short thriftId, String fieldName) {
+        _thriftId = thriftId;
+        _fieldName = fieldName;
+      }
+
+      public short getThriftFieldId() {
+        return _thriftId;
+      }
+
+      public String getFieldName() {
+        return _fieldName;
+      }
+    }
+
+    // isset id assignments
+    public static final Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> metaDataMap;
+    static {
+      Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> tmpMap = new EnumMap<_Fields, org.apache.thrift.meta_data.FieldMetaData>(_Fields.class);
+      tmpMap.put(_Fields.SUCCESS, new org.apache.thrift.meta_data.FieldMetaData("success", org.apache.thrift.TFieldRequirementType.DEFAULT, 
+          new org.apache.thrift.meta_data.ListMetaData(org.apache.thrift.protocol.TType.LIST, 
+              new org.apache.thrift.meta_data.StructMetaData(org.apache.thrift.protocol.TType.STRUCT, ServerName.class))));
+      metaDataMap = Collections.unmodifiableMap(tmpMap);
+      org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(getServerNameList_result.class, metaDataMap);
+    }
+
+    public getServerNameList_result() {
+    }
+
+    public getServerNameList_result(
+      List<ServerName> success)
+    {
+      this();
+      this.success = success;
+    }
+
+    /**
+     * Performs a deep copy on <i>other</i>.
+     */
+    public getServerNameList_result(getServerNameList_result other) {
+      if (other.isSetSuccess()) {
+        List<ServerName> __this__success = new ArrayList<ServerName>();
+        for (ServerName other_element : other.success) {
+          __this__success.add(new ServerName(other_element));
+        }
+        this.success = __this__success;
+      }
+    }
+
+    public getServerNameList_result deepCopy() {
+      return new getServerNameList_result(this);
+    }
+
+    @Override
+    public void clear() {
+      this.success = null;
+    }
+
+    public int getSuccessSize() {
+      return (this.success == null) ? 0 : this.success.size();
+    }
+
+    public java.util.Iterator<ServerName> getSuccessIterator() {
+      return (this.success == null) ? null : this.success.iterator();
+    }
+
+    public void addToSuccess(ServerName elem) {
+      if (this.success == null) {
+        this.success = new ArrayList<ServerName>();
+      }
+      this.success.add(elem);
+    }
+
+    public List<ServerName> getSuccess() {
+      return this.success;
+    }
+
+    public getServerNameList_result setSuccess(List<ServerName> success) {
+      this.success = success;
+      return this;
+    }
+
+    public void unsetSuccess() {
+      this.success = null;
+    }
+
+    /** Returns true if field success is set (has been assigned a value) and false otherwise */
+    public boolean isSetSuccess() {
+      return this.success != null;
+    }
+
+    public void setSuccessIsSet(boolean value) {
+      if (!value) {
+        this.success = null;
+      }
+    }
+
+    public void setFieldValue(_Fields field, Object value) {
+      switch (field) {
+      case SUCCESS:
+        if (value == null) {
+          unsetSuccess();
+        } else {
+          setSuccess((List<ServerName>)value);
+        }
+        break;
+
+      }
+    }
+
+    public Object getFieldValue(_Fields field) {
+      switch (field) {
+      case SUCCESS:
+        return getSuccess();
+
+      }
+      throw new IllegalStateException();
+    }
+
+    /** Returns true if field corresponding to fieldID is set (has been assigned a value) and false otherwise */
+    public boolean isSet(_Fields field) {
+      if (field == null) {
+        throw new IllegalArgumentException();
+      }
+
+      switch (field) {
+      case SUCCESS:
+        return isSetSuccess();
+      }
+      throw new IllegalStateException();
+    }
+
+    @Override
+    public boolean equals(Object that) {
+      if (that == null)
+        return false;
+      if (that instanceof getServerNameList_result)
+        return this.equals((getServerNameList_result)that);
+      return false;
+    }
+
+    public boolean equals(getServerNameList_result that) {
+      if (that == null)
+        return false;
+
+      boolean this_present_success = true && this.isSetSuccess();
+      boolean that_present_success = true && that.isSetSuccess();
+      if (this_present_success || that_present_success) {
+        if (!(this_present_success && that_present_success))
+          return false;
+        if (!this.success.equals(that.success))
+          return false;
+      }
+
+      return true;
+    }
+
+    @Override
+    public int hashCode() {
+      return 0;
+    }
+
+    public int compareTo(getServerNameList_result other) {
+      if (!getClass().equals(other.getClass())) {
+        return getClass().getName().compareTo(other.getClass().getName());
+      }
+
+      int lastComparison = 0;
+      getServerNameList_result typedOther = (getServerNameList_result)other;
+
+      lastComparison = Boolean.valueOf(isSetSuccess()).compareTo(typedOther.isSetSuccess());
+      if (lastComparison != 0) {
+        return lastComparison;
+      }
+      if (isSetSuccess()) {
+        lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.success, typedOther.success);
+        if (lastComparison != 0) {
+          return lastComparison;
+        }
+      }
+      return 0;
+    }
+
+    public _Fields fieldForId(int fieldId) {
+      return _Fields.findByThriftId(fieldId);
+    }
+
+    public void read(org.apache.thrift.protocol.TProtocol iprot) throws org.apache.thrift.TException {
+      schemes.get(iprot.getScheme()).getScheme().read(iprot, this);
+    }
+
+    public void write(org.apache.thrift.protocol.TProtocol oprot) throws org.apache.thrift.TException {
+      schemes.get(oprot.getScheme()).getScheme().write(oprot, this);
+      }
+
+    @Override
+    public String toString() {
+      StringBuilder sb = new StringBuilder("getServerNameList_result(");
+      boolean first = true;
+
+      sb.append("success:");
+      if (this.success == null) {
+        sb.append("null");
+      } else {
+        sb.append(this.success);
+      }
+      first = false;
+      sb.append(")");
+      return sb.toString();
+    }
+
+    public void validate() throws org.apache.thrift.TException {
+      // check for required fields
+    }
+
+    private void writeObject(java.io.ObjectOutputStream out) throws java.io.IOException {
+      try {
+        write(new org.apache.thrift.protocol.TCompactProtocol(new org.apache.thrift.transport.TIOStreamTransport(out)));
+      } catch (org.apache.thrift.TException te) {
+        throw new java.io.IOException(te);
+      }
+    }
+
+    private void readObject(java.io.ObjectInputStream in) throws java.io.IOException, ClassNotFoundException {
+      try {
+        read(new org.apache.thrift.protocol.TCompactProtocol(new org.apache.thrift.transport.TIOStreamTransport(in)));
+      } catch (org.apache.thrift.TException te) {
+        throw new java.io.IOException(te);
+      }
+    }
+
+    private static class getServerNameList_resultStandardSchemeFactory implements SchemeFactory {
+      public getServerNameList_resultStandardScheme getScheme() {
+        return new getServerNameList_resultStandardScheme();
+      }
+    }
+
+    private static class getServerNameList_resultStandardScheme extends StandardScheme<getServerNameList_result> {
+
+      public void read(org.apache.thrift.protocol.TProtocol iprot, getServerNameList_result struct) throws org.apache.thrift.TException {
+        org.apache.thrift.protocol.TField schemeField;
+        iprot.readStructBegin();
+        while (true)
+        {
+          schemeField = iprot.readFieldBegin();
+          if (schemeField.type == org.apache.thrift.protocol.TType.STOP) { 
+            break;
+          }
+          switch (schemeField.id) {
+            case 0: // SUCCESS
+              if (schemeField.type == org.apache.thrift.protocol.TType.LIST) {
+                {
+                  org.apache.thrift.protocol.TList _list58 = iprot.readListBegin();
+                  struct.success = new ArrayList<ServerName>(_list58.size);
+                  for (int _i59 = 0; _i59 < _list58.size; ++_i59)
+                  {
+                    ServerName _elem60; // required
+                    _elem60 = new ServerName();
+                    _elem60.read(iprot);
+                    struct.success.add(_elem60);
+                  }
+                  iprot.readListEnd();
+                }
+                struct.setSuccessIsSet(true);
+              } else { 
+                org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
+              }
+              break;
+            default:
+              org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
+          }
+          iprot.readFieldEnd();
+        }
+        iprot.readStructEnd();
+
+        // check for required fields of primitive type, which can't be checked in the validate method
+        struct.validate();
+      }
+
+      public void write(org.apache.thrift.protocol.TProtocol oprot, getServerNameList_result struct) throws org.apache.thrift.TException {
+        struct.validate();
+
+        oprot.writeStructBegin(STRUCT_DESC);
+        if (struct.success != null) {
+          oprot.writeFieldBegin(SUCCESS_FIELD_DESC);
+          {
+            oprot.writeListBegin(new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRUCT, struct.success.size()));
+            for (ServerName _iter61 : struct.success)
+            {
+              _iter61.write(oprot);
+            }
+            oprot.writeListEnd();
+          }
+          oprot.writeFieldEnd();
+        }
+        oprot.writeFieldStop();
+        oprot.writeStructEnd();
+      }
+
+    }
+
+    private static class getServerNameList_resultTupleSchemeFactory implements SchemeFactory {
+      public getServerNameList_resultTupleScheme getScheme() {
+        return new getServerNameList_resultTupleScheme();
+      }
+    }
+
+    private static class getServerNameList_resultTupleScheme extends TupleScheme<getServerNameList_result> {
+
+      @Override
+      public void write(org.apache.thrift.protocol.TProtocol prot, getServerNameList_result struct) throws org.apache.thrift.TException {
+        TTupleProtocol oprot = (TTupleProtocol) prot;
+        BitSet optionals = new BitSet();
+        if (struct.isSetSuccess()) {
+          optionals.set(0);
+        }
+        oprot.writeBitSet(optionals, 1);
+        if (struct.isSetSuccess()) {
+          {
+            oprot.writeI32(struct.success.size());
+            for (ServerName _iter62 : struct.success)
+            {
+              _iter62.write(oprot);
+            }
+          }
+        }
+      }
+
+      @Override
+      public void read(org.apache.thrift.protocol.TProtocol prot, getServerNameList_result struct) throws org.apache.thrift.TException {
+        TTupleProtocol iprot = (TTupleProtocol) prot;
+        BitSet incoming = iprot.readBitSet(1);
+        if (incoming.get(0)) {
+          {
+            org.apache.thrift.protocol.TList _list63 = new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRUCT, iprot.readI32());
+            struct.success = new ArrayList<ServerName>(_list63.size);
+            for (int _i64 = 0; _i64 < _list63.size; ++_i64)
+            {
+              ServerName _elem65; // required
+              _elem65 = new ServerName();
+              _elem65.read(iprot);
+              struct.success.add(_elem65);
             }
           }
           struct.setSuccessIsSet(true);

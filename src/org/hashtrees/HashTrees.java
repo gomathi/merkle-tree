@@ -6,6 +6,8 @@ import java.util.Map;
 
 import org.hashtrees.thrift.generated.SegmentData;
 import org.hashtrees.thrift.generated.SegmentHash;
+import org.hashtrees.util.NonBlockingQueuingTask.QueueReachedMaxCapacityException;
+import org.hashtrees.util.NonBlockingQueuingTask.QueuingTaskIsStoppedException;
 
 /**
  * Defines Hash tree methods. Hash tree provides a way for nodes to synch up
@@ -97,15 +99,23 @@ public interface HashTrees {
 	 * 
 	 * @param key
 	 * @param value
+	 * @throws Exception
+	 * @throws QueueReachedMaxCapacityException
+	 * @throws QueuingTaskIsStoppedException
 	 */
-	void hPut(ByteBuffer key, ByteBuffer value) throws Exception;
+	void hPut(ByteBuffer key, ByteBuffer value) throws Exception,
+			QueueReachedMaxCapacityException, QueuingTaskIsStoppedException;
 
 	/**
 	 * Deletes the key from the hash tree.
 	 * 
 	 * @param key
+	 * @throws Exception
+	 * @throws QueueReachedMaxCapacityException
+	 * @throws QueuingTaskIsStoppedException
 	 */
-	void hRemove(ByteBuffer key) throws Exception;
+	void hRemove(ByteBuffer key) throws Exception,
+			QueueReachedMaxCapacityException, QueuingTaskIsStoppedException;
 
 	/**
 	 * Updates the other HTree based on the differences with local objects.

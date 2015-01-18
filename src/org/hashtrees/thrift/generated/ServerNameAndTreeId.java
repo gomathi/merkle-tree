@@ -27,16 +27,16 @@ import java.util.Arrays;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class RemoteTreeInfo implements org.apache.thrift.TBase<RemoteTreeInfo, RemoteTreeInfo._Fields>, java.io.Serializable, Cloneable {
-  private static final org.apache.thrift.protocol.TStruct STRUCT_DESC = new org.apache.thrift.protocol.TStruct("RemoteTreeInfo");
+public class ServerNameAndTreeId implements org.apache.thrift.TBase<ServerNameAndTreeId, ServerNameAndTreeId._Fields>, java.io.Serializable, Cloneable {
+  private static final org.apache.thrift.protocol.TStruct STRUCT_DESC = new org.apache.thrift.protocol.TStruct("ServerNameAndTreeId");
 
   private static final org.apache.thrift.protocol.TField SN_FIELD_DESC = new org.apache.thrift.protocol.TField("sn", org.apache.thrift.protocol.TType.STRUCT, (short)1);
   private static final org.apache.thrift.protocol.TField TREE_ID_FIELD_DESC = new org.apache.thrift.protocol.TField("treeId", org.apache.thrift.protocol.TType.I64, (short)2);
 
   private static final Map<Class<? extends IScheme>, SchemeFactory> schemes = new HashMap<Class<? extends IScheme>, SchemeFactory>();
   static {
-    schemes.put(StandardScheme.class, new RemoteTreeInfoStandardSchemeFactory());
-    schemes.put(TupleScheme.class, new RemoteTreeInfoTupleSchemeFactory());
+    schemes.put(StandardScheme.class, new ServerNameAndTreeIdStandardSchemeFactory());
+    schemes.put(TupleScheme.class, new ServerNameAndTreeIdTupleSchemeFactory());
   }
 
   public ServerName sn; // required
@@ -114,13 +114,13 @@ public class RemoteTreeInfo implements org.apache.thrift.TBase<RemoteTreeInfo, R
     tmpMap.put(_Fields.TREE_ID, new org.apache.thrift.meta_data.FieldMetaData("treeId", org.apache.thrift.TFieldRequirementType.REQUIRED, 
         new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.I64)));
     metaDataMap = Collections.unmodifiableMap(tmpMap);
-    org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(RemoteTreeInfo.class, metaDataMap);
+    org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(ServerNameAndTreeId.class, metaDataMap);
   }
 
-  public RemoteTreeInfo() {
+  public ServerNameAndTreeId() {
   }
 
-  public RemoteTreeInfo(
+  public ServerNameAndTreeId(
     ServerName sn,
     long treeId)
   {
@@ -133,7 +133,7 @@ public class RemoteTreeInfo implements org.apache.thrift.TBase<RemoteTreeInfo, R
   /**
    * Performs a deep copy on <i>other</i>.
    */
-  public RemoteTreeInfo(RemoteTreeInfo other) {
+  public ServerNameAndTreeId(ServerNameAndTreeId other) {
     __isset_bit_vector.clear();
     __isset_bit_vector.or(other.__isset_bit_vector);
     if (other.isSetSn()) {
@@ -142,8 +142,8 @@ public class RemoteTreeInfo implements org.apache.thrift.TBase<RemoteTreeInfo, R
     this.treeId = other.treeId;
   }
 
-  public RemoteTreeInfo deepCopy() {
-    return new RemoteTreeInfo(this);
+  public ServerNameAndTreeId deepCopy() {
+    return new ServerNameAndTreeId(this);
   }
 
   @Override
@@ -157,7 +157,7 @@ public class RemoteTreeInfo implements org.apache.thrift.TBase<RemoteTreeInfo, R
     return this.sn;
   }
 
-  public RemoteTreeInfo setSn(ServerName sn) {
+  public ServerNameAndTreeId setSn(ServerName sn) {
     this.sn = sn;
     return this;
   }
@@ -181,7 +181,7 @@ public class RemoteTreeInfo implements org.apache.thrift.TBase<RemoteTreeInfo, R
     return this.treeId;
   }
 
-  public RemoteTreeInfo setTreeId(long treeId) {
+  public ServerNameAndTreeId setTreeId(long treeId) {
     this.treeId = treeId;
     setTreeIdIsSet(true);
     return this;
@@ -252,12 +252,12 @@ public class RemoteTreeInfo implements org.apache.thrift.TBase<RemoteTreeInfo, R
   public boolean equals(Object that) {
     if (that == null)
       return false;
-    if (that instanceof RemoteTreeInfo)
-      return this.equals((RemoteTreeInfo)that);
+    if (that instanceof ServerNameAndTreeId)
+      return this.equals((ServerNameAndTreeId)that);
     return false;
   }
 
-  public boolean equals(RemoteTreeInfo that) {
+  public boolean equals(ServerNameAndTreeId that) {
     if (that == null)
       return false;
 
@@ -287,13 +287,13 @@ public class RemoteTreeInfo implements org.apache.thrift.TBase<RemoteTreeInfo, R
     return 0;
   }
 
-  public int compareTo(RemoteTreeInfo other) {
+  public int compareTo(ServerNameAndTreeId other) {
     if (!getClass().equals(other.getClass())) {
       return getClass().getName().compareTo(other.getClass().getName());
     }
 
     int lastComparison = 0;
-    RemoteTreeInfo typedOther = (RemoteTreeInfo)other;
+    ServerNameAndTreeId typedOther = (ServerNameAndTreeId)other;
 
     lastComparison = Boolean.valueOf(isSetSn()).compareTo(typedOther.isSetSn());
     if (lastComparison != 0) {
@@ -332,7 +332,7 @@ public class RemoteTreeInfo implements org.apache.thrift.TBase<RemoteTreeInfo, R
 
   @Override
   public String toString() {
-    StringBuilder sb = new StringBuilder("RemoteTreeInfo(");
+    StringBuilder sb = new StringBuilder("ServerNameAndTreeId(");
     boolean first = true;
 
     sb.append("sn:");
@@ -376,15 +376,15 @@ public class RemoteTreeInfo implements org.apache.thrift.TBase<RemoteTreeInfo, R
     }
   }
 
-  private static class RemoteTreeInfoStandardSchemeFactory implements SchemeFactory {
-    public RemoteTreeInfoStandardScheme getScheme() {
-      return new RemoteTreeInfoStandardScheme();
+  private static class ServerNameAndTreeIdStandardSchemeFactory implements SchemeFactory {
+    public ServerNameAndTreeIdStandardScheme getScheme() {
+      return new ServerNameAndTreeIdStandardScheme();
     }
   }
 
-  private static class RemoteTreeInfoStandardScheme extends StandardScheme<RemoteTreeInfo> {
+  private static class ServerNameAndTreeIdStandardScheme extends StandardScheme<ServerNameAndTreeId> {
 
-    public void read(org.apache.thrift.protocol.TProtocol iprot, RemoteTreeInfo struct) throws org.apache.thrift.TException {
+    public void read(org.apache.thrift.protocol.TProtocol iprot, ServerNameAndTreeId struct) throws org.apache.thrift.TException {
       org.apache.thrift.protocol.TField schemeField;
       iprot.readStructBegin();
       while (true)
@@ -425,7 +425,7 @@ public class RemoteTreeInfo implements org.apache.thrift.TBase<RemoteTreeInfo, R
       struct.validate();
     }
 
-    public void write(org.apache.thrift.protocol.TProtocol oprot, RemoteTreeInfo struct) throws org.apache.thrift.TException {
+    public void write(org.apache.thrift.protocol.TProtocol oprot, ServerNameAndTreeId struct) throws org.apache.thrift.TException {
       struct.validate();
 
       oprot.writeStructBegin(STRUCT_DESC);
@@ -443,23 +443,23 @@ public class RemoteTreeInfo implements org.apache.thrift.TBase<RemoteTreeInfo, R
 
   }
 
-  private static class RemoteTreeInfoTupleSchemeFactory implements SchemeFactory {
-    public RemoteTreeInfoTupleScheme getScheme() {
-      return new RemoteTreeInfoTupleScheme();
+  private static class ServerNameAndTreeIdTupleSchemeFactory implements SchemeFactory {
+    public ServerNameAndTreeIdTupleScheme getScheme() {
+      return new ServerNameAndTreeIdTupleScheme();
     }
   }
 
-  private static class RemoteTreeInfoTupleScheme extends TupleScheme<RemoteTreeInfo> {
+  private static class ServerNameAndTreeIdTupleScheme extends TupleScheme<ServerNameAndTreeId> {
 
     @Override
-    public void write(org.apache.thrift.protocol.TProtocol prot, RemoteTreeInfo struct) throws org.apache.thrift.TException {
+    public void write(org.apache.thrift.protocol.TProtocol prot, ServerNameAndTreeId struct) throws org.apache.thrift.TException {
       TTupleProtocol oprot = (TTupleProtocol) prot;
       struct.sn.write(oprot);
       oprot.writeI64(struct.treeId);
     }
 
     @Override
-    public void read(org.apache.thrift.protocol.TProtocol prot, RemoteTreeInfo struct) throws org.apache.thrift.TException {
+    public void read(org.apache.thrift.protocol.TProtocol prot, ServerNameAndTreeId struct) throws org.apache.thrift.TException {
       TTupleProtocol iprot = (TTupleProtocol) prot;
       struct.sn = new ServerName();
       struct.sn.read(iprot);

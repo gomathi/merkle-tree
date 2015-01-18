@@ -12,8 +12,8 @@ import org.hashtrees.synch.HashTreesManager;
  * 
  * Also some nodes may act as replica nodes for some of the hash trees. In that
  * case replica nodes should not synch primary nodes of those hash trees. To
- * avoid this problem, {@link HashTreesManager} should know which hash trees
- * are managed by the local node. {@link #getAllPrimaryTreeIds()} serves this
+ * avoid this problem, {@link HashTreesManager} should know which hash trees are
+ * managed by the local node. {@link #getAllPrimaryTreeIds()} serves this
  * purpose.
  * 
  * This interface defines methods which will be used by {@link HashTrees} class.
@@ -22,12 +22,6 @@ import org.hashtrees.synch.HashTreesManager;
  */
 public interface HashTreesIdProvider {
 
-	/**
-	 * Returned treeId should be >= 0.
-	 * 
-	 * @param key
-	 * @return
-	 */
 	long getTreeId(ByteBuffer key);
 
 	/**

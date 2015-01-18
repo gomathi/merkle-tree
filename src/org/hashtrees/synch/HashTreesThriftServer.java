@@ -9,9 +9,9 @@ import org.hashtrees.HashTrees;
 import org.hashtrees.thrift.generated.HashTreesSyncInterface;
 import org.hashtrees.thrift.generated.RebuildHashTreeRequest;
 import org.hashtrees.thrift.generated.RebuildHashTreeResponse;
-import org.hashtrees.thrift.generated.RemoteTreeInfo;
 import org.hashtrees.thrift.generated.SegmentData;
 import org.hashtrees.thrift.generated.SegmentHash;
+import org.hashtrees.thrift.generated.ServerName;
 
 /**
  * Just wraps up {@link HashTrees} and provides a view as
@@ -20,12 +20,12 @@ import org.hashtrees.thrift.generated.SegmentHash;
  */
 public class HashTreesThriftServer implements HashTreesSyncInterface.Iface {
 
-	private final HashTrees hashTree;
+	private final HashTrees hashTrees;
 	private final HashTreesSyncCallsObserver syncCallsObserver;
 
 	public HashTreesThriftServer(final HashTrees hashTree,
 			final HashTreesSyncCallsObserver syncCallsObserver) {
-		this.hashTree = hashTree;
+		this.hashTrees = hashTree;
 		this.syncCallsObserver = syncCallsObserver;
 	}
 
@@ -33,7 +33,7 @@ public class HashTreesThriftServer implements HashTreesSyncInterface.Iface {
 	public void sPut(Map<ByteBuffer, ByteBuffer> keyValuePairs)
 			throws TException {
 		try {
-			hashTree.sPut(keyValuePairs);
+			hashTrees.sPut(keyValuePairs);
 		} catch (Exception e) {
 			throw new TException(e);
 		}
@@ -42,7 +42,7 @@ public class HashTreesThriftServer implements HashTreesSyncInterface.Iface {
 	@Override
 	public void sRemove(List<ByteBuffer> keys) throws TException {
 		try {
-			hashTree.sRemove(keys);
+			hashTrees.sRemove(keys);
 		} catch (Exception e) {
 			throw new TException(e);
 		}
@@ -52,7 +52,7 @@ public class HashTreesThriftServer implements HashTreesSyncInterface.Iface {
 	public List<SegmentHash> getSegmentHashes(long treeId, List<Integer> nodeIds)
 			throws TException {
 		try {
-			return hashTree.getSegmentHashes(treeId, nodeIds);
+			return hashTrees.getSegmentHashes(treeId, nodeIds);
 		} catch (Exception e) {
 			throw new TException(e);
 		}
@@ -62,7 +62,7 @@ public class HashTreesThriftServer implements HashTreesSyncInterface.Iface {
 	public SegmentHash getSegmentHash(long treeId, int nodeId)
 			throws TException {
 		try {
-			return hashTree.getSegmentHash(treeId, nodeId);
+			return hashTrees.getSegmentHash(treeId, nodeId);
 		} catch (Exception e) {
 			throw new TException(e);
 		}
@@ -72,7 +72,7 @@ public class HashTreesThriftServer implements HashTreesSyncInterface.Iface {
 	public List<SegmentData> getSegment(long treeId, int segId)
 			throws TException {
 		try {
-			return hashTree.getSegment(treeId, segId);
+			return hashTrees.getSegment(treeId, segId);
 		} catch (Exception e) {
 			throw new TException(e);
 		}
@@ -82,7 +82,7 @@ public class HashTreesThriftServer implements HashTreesSyncInterface.Iface {
 	public SegmentData getSegmentData(long treeId, int segId, ByteBuffer key)
 			throws TException {
 		try {
-			return hashTree.getSegmentData(treeId, segId, key);
+			return hashTrees.getSegmentData(treeId, segId, key);
 		} catch (Exception e) {
 			throw new TException(e);
 		}
@@ -92,7 +92,7 @@ public class HashTreesThriftServer implements HashTreesSyncInterface.Iface {
 	public void deleteTreeNodes(long treeId, List<Integer> nodeIds)
 			throws TException {
 		try {
-			hashTree.deleteTreeNodes(treeId, nodeIds);
+			hashTrees.deleteTreeNodes(treeId, nodeIds);
 		} catch (Exception e) {
 			throw new TException(e);
 		}
@@ -119,17 +119,34 @@ public class HashTreesThriftServer implements HashTreesSyncInterface.Iface {
 	}
 
 	@Override
-	public void addToSyncList(RemoteTreeInfo rTree) throws TException {
-		syncCallsObserver.addToSyncList(rTree);
+	public void addServerNameAndTreeIdToSyncList(ServerName sn, long treeId)
+			throws TException {
+		syncCallsObserver.addServerNameAndTreeIdToSyncList(sn, treeId);
 	}
 
 	@Override
-	public void removeFromSyncList(RemoteTreeInfo rTree) throws TException {
-		syncCallsObserver.removeFromSyncList(rTree);
+	public void removeServerNameAndTreeIdFromSyncList(ServerName sn, long treeId)
+			throws TException {
+		syncCallsObserver.removeServerNameAndTreeIdFromSyncList(sn, treeId);
 	}
 
 	@Override
-	public List<RemoteTreeInfo> getSyncList(long treeId) throws TException {
-		return syncCallsObserver.getSyncList(treeId);
+	public List<ServerName> getServerNameListFor(long treeId) throws TException {
+		return syncCallsObserver.getServerNameListFor(treeId);
+	}
+
+	@Override
+	public void addServerNameToSyncList(ServerName sn) throws TException {
+		syncCallsObserver.addServerNameToSyncList(sn);
+	}
+
+	@Override
+	public void removeServerNameFromSyncList(ServerName sn) throws TException {
+		syncCallsObserver.removeServerNameFromSyncList(sn);
+	}
+
+	@Override
+	public List<ServerName> getServerNameList() throws TException {
+		return syncCallsObserver.getServerNameList();
 	}
 }

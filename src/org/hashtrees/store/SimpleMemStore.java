@@ -57,9 +57,7 @@ public class SimpleMemStore extends BaseStore {
 
 	@Override
 	public boolean equals(Object other) {
-		if (other == null)
-			return false;
-		if (!(other instanceof SimpleMemStore))
+		if (other == null || !(other instanceof SimpleMemStore))
 			return false;
 		SimpleMemStore that = (SimpleMemStore) other;
 		return this.kvMap.equals(that.kvMap);

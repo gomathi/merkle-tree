@@ -73,11 +73,11 @@ public class TaskQueue<T> implements Iterator<Future<T>>, Stoppable {
 		}
 	}
 
-	public int getPassedJobsCount() {
+	public int getPasseTasksCount() {
 		return sucCount;
 	}
 
-	public int getFailedJobsCount() {
+	public int getFailedTasksCount() {
 		return failCount;
 	}
 

@@ -35,7 +35,6 @@ public class HashTreesSyncInterface {
      * Adds the (key,value) pair to the store. Intended to be used
      * while synch operation.
      * 
-     * @param keyValuePairs
      * 
      * @param keyValuePairs
      */
@@ -44,7 +43,6 @@ public class HashTreesSyncInterface {
     /**
      * Deletes the keys from the store. While synching this function is used.
      * 
-     * @param keys
      * 
      * @param keys
      */
@@ -55,9 +53,6 @@ public class HashTreesSyncInterface {
      * set of internal node ids, this returns the hashes that are stored on the
      * internal node.
      * 
-     * @param treeId
-     * @param nodeIds, internal tree node ids.
-     * @return
      * 
      * @param treeId
      * @param nodeIds
@@ -67,9 +62,6 @@ public class HashTreesSyncInterface {
     /**
      * Returns the segment hash that is stored on the tree.
      * 
-     * @param treeId, hash tree id.
-     * @param nodeId, node id
-     * @return
      * 
      * @param treeId
      * @param nodeId
@@ -80,9 +72,6 @@ public class HashTreesSyncInterface {
      * Hash tree data is stored on the leaf blocks. Given a segment id this
      * method is supposed to return (key,hash) pairs.
      * 
-     * @param treeId
-     * @param segId, id of the segment block.
-     * @return
      * 
      * @param treeId
      * @param segId
@@ -3896,6 +3885,8 @@ public class HashTreesSyncInterface {
 
     private void readObject(java.io.ObjectInputStream in) throws java.io.IOException, ClassNotFoundException {
       try {
+        // it doesn't seem like you should have to do this, but java serialization is wacky, and doesn't call the default constructor.
+        __isset_bit_vector = new BitSet(1);
         read(new org.apache.thrift.protocol.TCompactProtocol(new org.apache.thrift.transport.TIOStreamTransport(in)));
       } catch (org.apache.thrift.TException te) {
         throw new java.io.IOException(te);

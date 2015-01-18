@@ -81,6 +81,7 @@ public class HashTreesManager extends StoppableTask implements
 	private final HashTrees hashTrees;
 	private final HashTreesIdProvider treeIdProvider;
 	private final HashTreesManagerStore syncManagerStore;
+	private final HashTreesSynchAuthenticator authenticator;
 
 	private final ConcurrentSkipListMap<ServerName, HashTreesSyncInterface.Iface> servers = new ConcurrentSkipListMap<>();
 	private final ConcurrentSkipListSet<ServerName> serversToSync = new ConcurrentSkipListSet<>();
@@ -98,7 +99,8 @@ public class HashTreesManager extends StoppableTask implements
 			long fullRebuildPeriod, boolean rebuildEnabled,
 			boolean synchEnabled, ServerName localServer, HashTrees hashTrees,
 			HashTreesIdProvider treeIdProvider,
-			HashTreesManagerStore syncMgrStore) {
+			HashTreesManagerStore syncMgrStore,
+			HashTreesSynchAuthenticator authenticator) {
 		this.noOfThreads = noOfThreads;
 		this.period = period;
 		this.fullRebuildPeriod = fullRebuildPeriod;
@@ -108,7 +110,7 @@ public class HashTreesManager extends StoppableTask implements
 		this.syncManagerStore = syncMgrStore;
 		this.hashTrees = hashTrees;
 		this.treeIdProvider = treeIdProvider;
-		initServersToSyncList();
+		this.authenticator = authenticator;
 	}
 
 	private void initServersToSyncList() {
@@ -195,8 +197,8 @@ public class HashTreesManager extends StoppableTask implements
 			}
 		}
 		LOG.info("No of successful/failed rebuild tasks : "
-				+ taskQueue.getPassedJobsCount() + "/"
-				+ taskQueue.getFailedJobsCount());
+				+ taskQueue.getPasseTasksCount() + "/"
+				+ taskQueue.getFailedTasksCount());
 		LOG.info("Building locally managed trees - Done");
 	}
 
@@ -301,23 +303,27 @@ public class HashTreesManager extends StoppableTask implements
 			}
 		}
 		LOG.info("No of successful/failed synch tasks : "
-				+ taskQueue.getPassedJobsCount() + "/"
-				+ taskQueue.getFailedJobsCount());
+				+ taskQueue.getPasseTasksCount() + "/"
+				+ taskQueue.getFailedTasksCount());
 		LOG.info("Synching remote hash trees. - Done");
 	}
 
-	private void synch(ServerName sn, long treeId) throws Exception {
+	public void synch(ServerName sn, long treeId) throws Exception {
+		boolean synchAllowed = authenticator.canSynch(localServer, sn);
 		Pair<ServerName, Long> hostNameAndTreeId = Pair.create(sn, treeId);
-		try {
-			LOG.info("Syncing " + hostNameAndTreeId);
-			HashTreesSyncInterface.Iface remoteSyncClient = getHashTreeSyncClient(sn);
-			hashTrees
-					.synch(treeId, new HashTreesRemoteClient(remoteSyncClient));
-			LOG.info("Syncing " + hostNameAndTreeId + " complete.");
-		} catch (TException e) {
-			LOG.error("Unable to synch remote hash tree server : "
-					+ hostNameAndTreeId, e);
-		}
+		if (synchAllowed) {
+			try {
+				LOG.info("Syncing " + hostNameAndTreeId);
+				HashTreesSyncInterface.Iface remoteSyncClient = getHashTreeSyncClient(sn);
+				hashTrees.synch(treeId, new HashTreesRemoteClient(
+						remoteSyncClient));
+				LOG.info("Syncing " + hostNameAndTreeId + " complete.");
+			} catch (TException e) {
+				LOG.error("Unable to synch remote hash tree server : "
+						+ hostNameAndTreeId, e);
+			}
+		} else
+			throw new SynchNotAllowedException(localServer, sn);
 	}
 
 	private HashTreesSyncInterface.Iface getHashTreeSyncClient(ServerName sn)
@@ -333,7 +339,7 @@ public class HashTreesManager extends StoppableTask implements
 
 	public void init() {
 		if (initialized.compareAndSet(false, true)) {
-
+			initServersToSyncList();
 			String hostNameAndPortNo = localServer.toString();
 			String threadPoolName = HT_MGR_TPOOL + "," + hostNameAndPortNo;
 			String executorThreadName = HT_MGR_SCHED_THREAD + ","
@@ -447,6 +453,7 @@ public class HashTreesManager extends StoppableTask implements
 		private long period = DEF_SCHEDULE_PERIOD, fullRebuildPeriod = -1;
 		private int noOfThreads = DEF_NO_OF_THREADS;
 		private boolean rebuildEnabled = true, syncEnabled = true;
+		private HashTreesSynchAuthenticator authenticator;
 
 		public Builder(String serverName, int portNo, HashTrees hashTrees,
 				HashTreesIdProvider treeIdProvider,
@@ -521,9 +528,11 @@ public class HashTreesManager extends StoppableTask implements
 		}
 
 		public HashTreesManager build() {
+			if (authenticator == null)
+				authenticator = new DefaultSynchAuthenticator();
 			return new HashTreesManager(noOfThreads, period, fullRebuildPeriod,
 					rebuildEnabled, syncEnabled, localServer, hashTrees,
-					treeIdProvider, syncMgrStore);
+					treeIdProvider, syncMgrStore, authenticator);
 		}
 	}
 }

@@ -16,6 +16,8 @@ import org.hashtrees.store.HashTreesMemStore;
 import org.hashtrees.store.HashTreesStore;
 import org.hashtrees.store.SimpleMemStore;
 import org.hashtrees.synch.HashTreesManager;
+import org.hashtrees.synch.HashTreesSynchAuthenticator;
+import org.hashtrees.synch.SynchNotAllowedException;
 import org.hashtrees.test.utils.HashTreesImplTestObj;
 import org.hashtrees.test.utils.HashTreesImplTestObj.HTSynchEvent;
 import org.hashtrees.test.utils.HashTreesImplTestUtils;
@@ -132,5 +134,18 @@ public class HashTreesManagerTest {
 		waitForTheEvent(remoteEvents, HTSynchEvent.SYNCH_INITIATED, 10000);
 		localSyncManager.shutdown();
 		remoteSyncManager.shutdown();
+	}
+
+	@Test(expected = SynchNotAllowedException.class)
+	public void testSynchAuthentication() throws Exception {
+		HashTreesManager manager = new HashTreesManager(10, 0, 0, true, true,
+				null, null, null, null, new HashTreesSynchAuthenticator() {
+
+					@Override
+					public boolean canSynch(ServerName source, ServerName dest) {
+						return false;
+					}
+				});
+		manager.synch(null, 1);
 	}
 }

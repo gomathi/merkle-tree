@@ -7,8 +7,8 @@ import org.hashtrees.synch.HashTreesManager;
 
 /**
  * There can be multiple hash trees. Given a key we need to know which hash tree
- * that the key belongs to. This interface defines that signature
- * {@link #getTreeId(ByteBuffer)}.
+ * that the key belongs to. This interface defines that method
+ * {@link #getTreeId(ByteBuffer)} to get the corresponding information.
  * 
  * Also some nodes may act as replica nodes for some of the hash trees. In that
  * case replica nodes should not synch primary nodes of those hash trees. To

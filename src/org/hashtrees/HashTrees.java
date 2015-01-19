@@ -6,8 +6,6 @@ import java.util.Map;
 
 import org.hashtrees.thrift.generated.SegmentData;
 import org.hashtrees.thrift.generated.SegmentHash;
-import org.hashtrees.util.NonBlockingQueuingTask.QueueReachedMaxCapacityException;
-import org.hashtrees.util.NonBlockingQueuingTask.QueuingTaskIsStoppedException;
 
 /**
  * Defines Hash tree methods. Hash tree provides a way for nodes to synch up
@@ -100,34 +98,39 @@ public interface HashTrees {
 	 * @param key
 	 * @param value
 	 * @throws Exception
-	 * @throws QueueReachedMaxCapacityException
-	 * @throws QueuingTaskIsStoppedException
 	 */
-	void hPut(ByteBuffer key, ByteBuffer value) throws Exception,
-			QueueReachedMaxCapacityException, QueuingTaskIsStoppedException;
+	void hPut(ByteBuffer key, ByteBuffer value) throws Exception;
 
 	/**
 	 * Deletes the key from the hash tree.
 	 * 
 	 * @param key
 	 * @throws Exception
-	 * @throws QueueReachedMaxCapacityException
-	 * @throws QueuingTaskIsStoppedException
 	 */
-	void hRemove(ByteBuffer key) throws Exception,
-			QueueReachedMaxCapacityException, QueuingTaskIsStoppedException;
+	void hRemove(ByteBuffer key) throws Exception;
 
 	/**
-	 * Updates the other HTree based on the differences with local objects.
-	 * 
-	 * This function should be running on primary to synch with other replicas,
-	 * and not the other way.
+	 * Updates the other HTree based on the differences with local objects. This
+	 * function should be running on primary to synch with other replicas, and
+	 * not the other way.
 	 * 
 	 * @param remoteTree
-	 * @return, true indicates some modifications made to the remote tree, false
-	 *          means two trees were already in synch status.
+	 * @param syncType
+	 * @return, gives stats about total number of differences between local node
+	 *          and remote node.
 	 */
-	boolean synch(long treeId, HashTrees remoteTree) throws Exception;
+	SyncDiffResult synch(long treeId, HashTrees remoteTree, SyncType syncType)
+			throws Exception;
+
+	/**
+	 * Same as {@link #synch(long, HashTrees, SyncType)} except that, syncType
+	 * is passed as SyncType.UPDATE.
+	 * 
+	 * @param treeId
+	 * @param remoteTree
+	 * @return
+	 */
+	SyncDiffResult synch(long treeId, HashTrees remoteTree) throws Exception;
 
 	/**
 	 * Similar {@link #rebuildHashTree(long, long)}, except that allows to

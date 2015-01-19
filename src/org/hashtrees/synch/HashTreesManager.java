@@ -22,6 +22,7 @@ import org.apache.thrift.TException;
 import org.apache.thrift.transport.TTransportException;
 import org.hashtrees.HashTrees;
 import org.hashtrees.HashTreesIdProvider;
+import org.hashtrees.SyncType;
 import org.hashtrees.thrift.generated.HashTreesSyncInterface;
 import org.hashtrees.thrift.generated.RebuildHashTreeRequest;
 import org.hashtrees.thrift.generated.RebuildHashTreeResponse;
@@ -79,6 +80,7 @@ public class HashTreesManager extends StoppableTask implements
 	private final HashTreesIdProvider treeIdProvider;
 	private final HashTreesSynchListProvider syncListProvider;
 	private final HashTreesSynchAuthenticator authenticator;
+	private final SyncType syncType;
 
 	private final ConcurrentSkipListMap<ServerName, HashTreesSyncInterface.Iface> servers = new ConcurrentSkipListMap<>();
 	private final ConcurrentMap<Pair<ServerName, Long>, Pair<Long, Boolean>> remoteTreeAndLastBuildReqTS = new ConcurrentHashMap<>();
@@ -96,7 +98,7 @@ public class HashTreesManager extends StoppableTask implements
 			boolean synchEnabled, ServerName localServer, HashTrees hashTrees,
 			HashTreesIdProvider treeIdProvider,
 			HashTreesSynchListProvider syncMgrStore,
-			HashTreesSynchAuthenticator authenticator) {
+			HashTreesSynchAuthenticator authenticator, SyncType syncType) {
 		this.noOfThreads = noOfThreads;
 		this.period = period;
 		this.fullRebuildPeriod = fullRebuildPeriod;
@@ -107,6 +109,7 @@ public class HashTreesManager extends StoppableTask implements
 		this.hashTrees = hashTrees;
 		this.treeIdProvider = treeIdProvider;
 		this.authenticator = authenticator;
+		this.syncType = syncType;
 	}
 
 	@Override
@@ -276,7 +279,8 @@ public class HashTreesManager extends StoppableTask implements
 
 							@Override
 							public Void call() throws Exception {
-								synch(input.getFirst(), input.getSecond());
+								synch(input.getFirst(), input.getSecond(),
+										false, syncType);
 								return null;
 							}
 						};
@@ -302,14 +306,20 @@ public class HashTreesManager extends StoppableTask implements
 	}
 
 	public void synch(ServerName sn, long treeId) throws Exception {
-		boolean synchAllowed = authenticator.canSynch(localServer, sn);
+		synch(sn, treeId, true, SyncType.UPDATE);
+	}
+
+	public void synch(ServerName sn, long treeId, boolean doAuthenticate,
+			SyncType syncType) throws Exception {
+		boolean synchAllowed = doAuthenticate ? authenticator.canSynch(
+				localServer, sn) : true;
 		Pair<ServerName, Long> hostNameAndTreeId = Pair.create(sn, treeId);
 		if (synchAllowed) {
 			try {
 				LOG.info("Syncing " + hostNameAndTreeId);
 				HashTreesSyncInterface.Iface remoteSyncClient = getHashTreeSyncClient(sn);
 				hashTrees.synch(treeId, new HashTreesRemoteClient(
-						remoteSyncClient));
+						remoteSyncClient), syncType);
 				LOG.info("Syncing " + hostNameAndTreeId + " complete.");
 			} catch (TException e) {
 				LOG.error("Unable to synch remote hash tree server : "
@@ -407,6 +417,7 @@ public class HashTreesManager extends StoppableTask implements
 		private int noOfThreads = DEF_NO_OF_THREADS;
 		private boolean rebuildEnabled = true, syncEnabled = true;
 		private HashTreesSynchAuthenticator authenticator;
+		private SyncType syncType;
 
 		public Builder(String serverName, int portNo, HashTrees hashTrees,
 				HashTreesIdProvider treeIdProvider,
@@ -480,12 +491,19 @@ public class HashTreesManager extends StoppableTask implements
 			return this;
 		}
 
+		public Builder setSyncType(SyncType syncType) {
+			this.syncType = syncType;
+			return this;
+		}
+
 		public HashTreesManager build() {
 			if (authenticator == null)
 				authenticator = new DefaultSynchAuthenticator();
+			if (syncType == null)
+				syncType = SyncType.UPDATE;
 			return new HashTreesManager(noOfThreads, period, fullRebuildPeriod,
 					rebuildEnabled, syncEnabled, localServer, hashTrees,
-					treeIdProvider, syncListProvider, authenticator);
+					treeIdProvider, syncListProvider, authenticator, syncType);
 		}
 	}
 }

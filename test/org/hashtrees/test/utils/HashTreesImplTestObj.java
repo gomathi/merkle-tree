@@ -10,6 +10,7 @@ import java.util.concurrent.BlockingQueue;
 import org.hashtrees.HashTrees;
 import org.hashtrees.HashTreesImpl;
 import org.hashtrees.ModuloSegIdProvider;
+import org.hashtrees.SyncDiffResult;
 import org.hashtrees.store.HashTreesStore;
 import org.hashtrees.store.Store;
 
@@ -43,8 +44,9 @@ public class HashTreesImplTestObj extends HashTreesImpl {
 	}
 
 	@Override
-	public boolean synch(long treeId, HashTrees remoteTree) throws Exception {
-		boolean result = super.synch(treeId, remoteTree);
+	public SyncDiffResult synch(long treeId, HashTrees remoteTree)
+			throws Exception {
+		SyncDiffResult result = super.synch(treeId, remoteTree);
 		events.add(HTSynchEvent.SYNCH);
 		return result;
 	}

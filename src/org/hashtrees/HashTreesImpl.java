@@ -168,35 +168,44 @@ public class HashTreesImpl implements HashTrees {
 	}
 
 	@Override
-	public boolean synch(long treeId, final HashTrees remoteTree)
+	public SyncDiffResult synch(long treeId, final HashTrees remoteTree)
 			throws Exception {
+		return synch(treeId, remoteTree, SyncType.UPDATE);
+	}
+
+	@Override
+	public SyncDiffResult synch(long treeId, final HashTrees remoteTree,
+			SyncType syncType) throws Exception {
 
 		Collection<Integer> leafNodesToCheck = new ArrayList<Integer>();
-		Collection<Integer> missingNodesInRemote = new ArrayList<Integer>();
-		List<Integer> missingNodesInLocal = new ArrayList<Integer>();
+		Collection<Integer> missingNodes = new ArrayList<Integer>();
+		List<Integer> extrinsicNodes = new ArrayList<Integer>();
+		boolean doUpdate = (syncType == SyncType.UPDATE) ? true : false;
 
-		findDifferences(treeId, remoteTree, leafNodesToCheck,
-				missingNodesInRemote, missingNodesInLocal);
+		findDifferences(treeId, remoteTree, leafNodesToCheck, missingNodes,
+				extrinsicNodes);
 
-		if (leafNodesToCheck.isEmpty() && missingNodesInLocal.isEmpty()
-				&& missingNodesInRemote.isEmpty())
-			return false;
+		if (leafNodesToCheck.isEmpty() && extrinsicNodes.isEmpty()
+				&& missingNodes.isEmpty())
+			return new SyncDiffResult(0, 0, 0);
 
 		Collection<Integer> segsToCheck = getSegmentIdsFromLeafIds(leafNodesToCheck);
-		syncSegments(treeId, segsToCheck, remoteTree);
+		int totKVUpdates = syncSegments(treeId, segsToCheck, remoteTree,
+				doUpdate);
 
-		Collection<Integer> missingSegsInRemote = getSegmentIdsFromLeafIds(getAllLeafNodeIds(missingNodesInRemote));
-		updateRemoteTreeWithMissingSegments(treeId, missingSegsInRemote,
-				remoteTree);
-
-		remoteTree.deleteTreeNodes(treeId, missingNodesInLocal);
-		return true;
+		if (doUpdate) {
+			Collection<Integer> missingSegments = getSegmentIdsFromLeafIds(getAllLeafNodeIds(missingNodes));
+			updateRemoteTreeWithMissingSegments(treeId, missingSegments,
+					remoteTree);
+			remoteTree.deleteTreeNodes(treeId, extrinsicNodes);
+		}
+		return new SyncDiffResult(totKVUpdates, missingNodes.size(),
+				extrinsicNodes.size());
 	}
 
 	private void findDifferences(long treeId, HashTrees remoteTree,
-			Collection<Integer> nodesToCheck,
-			Collection<Integer> missingNodesInRemote,
-			Collection<Integer> missingNodesInLocal) throws Exception {
+			Collection<Integer> nodesToCheck, Collection<Integer> missingNodes,
+			Collection<Integer> extrinsicNodes) throws Exception {
 		CollectionPeekingIterator<SegmentHash> localItr = null, remoteItr = null;
 		SegmentHash local, remote;
 
@@ -228,24 +237,26 @@ public class HashTreesImpl implements HashTrees {
 					localItr.next();
 					remoteItr.next();
 				} else if (compareRes < 0) {
-					missingNodesInRemote.add(local.getNodeId());
+					missingNodes.add(local.getNodeId());
 					localItr.next();
 				} else {
-					missingNodesInLocal.add(remote.getNodeId());
+					extrinsicNodes.add(remote.getNodeId());
 					remoteItr.next();
 				}
 			}
 		}
 	}
 
-	private void syncSegments(long treeId, Collection<Integer> segIds,
-			HashTrees remoteTree) throws Exception {
+	private int syncSegments(long treeId, Collection<Integer> segIds,
+			HashTrees remoteTree, boolean doUpdate) throws Exception {
+		int totUpdates = 0;
 		for (int segId : segIds)
-			syncSegment(treeId, segId, remoteTree);
+			totUpdates += syncSegment(treeId, segId, remoteTree, doUpdate);
+		return totUpdates;
 	}
 
-	private void syncSegment(long treeId, int segId, HashTrees remoteTree)
-			throws Exception {
+	private int syncSegment(long treeId, int segId, HashTrees remoteTree,
+			boolean doUpdate) throws Exception {
 		CollectionPeekingIterator<SegmentData> localDataItr = new CollectionPeekingIterator<SegmentData>(
 				getSegment(treeId, segId));
 		CollectionPeekingIterator<SegmentData> remoteDataItr = new CollectionPeekingIterator<SegmentData>(
@@ -276,10 +287,14 @@ public class HashTreesImpl implements HashTrees {
 			}
 		}
 
-		if (kvsForAddition.size() > 0)
-			remoteTree.sPut(kvsForAddition);
-		if (keysForRemoval.size() > 0)
-			remoteTree.sRemove(keysForRemoval);
+		if (doUpdate) {
+			if (kvsForAddition.size() > 0)
+				remoteTree.sPut(kvsForAddition);
+			if (keysForRemoval.size() > 0)
+				remoteTree.sRemove(keysForRemoval);
+		}
+
+		return kvsForAddition.size() + keysForRemoval.size();
 	}
 
 	private void updateRemoteTreeWithMissingSegments(long treeId,

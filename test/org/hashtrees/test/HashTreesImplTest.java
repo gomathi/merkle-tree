@@ -24,6 +24,7 @@ import org.hashtrees.HashTrees;
 import org.hashtrees.HashTreesConstants;
 import org.hashtrees.HashTreesImpl;
 import org.hashtrees.SimpleTreeIdProvider;
+import org.hashtrees.SyncDiffResult;
 import org.hashtrees.store.HashTreesMemStore;
 import org.hashtrees.store.HashTreesPersistentStore;
 import org.hashtrees.store.HashTreesStore;
@@ -249,14 +250,15 @@ public class HashTreesImplTest {
 				}
 
 				localHTreeComp.hTree.rebuildAllTrees(false);
-				boolean anyUpdates = localHTreeComp.hTree.synch(1,
+				SyncDiffResult synchDiff = localHTreeComp.hTree.synch(1,
 						remoteHTreeComp.hTree);
-				Assert.assertTrue(anyUpdates);
+				Assert.assertNotNull(synchDiff);
+				Assert.assertTrue(synchDiff.isAnyUpdatesMade());
 
 				remoteHTreeComp.hTree.rebuildAllTrees(false);
-				anyUpdates = localHTreeComp.hTree.synch(1,
-						remoteHTreeComp.hTree);
-				Assert.assertFalse(anyUpdates);
+				synchDiff = localHTreeComp.hTree
+						.synch(1, remoteHTreeComp.hTree);
+				Assert.assertFalse(synchDiff.isAnyUpdatesMade());
 
 				SegmentHash localRootHash = localHTreeComp.hTree
 						.getSegmentHash(DEFAULT_TREE_ID, ROOT_NODE);

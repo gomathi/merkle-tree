@@ -7,6 +7,7 @@ import junit.framework.Assert;
 import org.hashtrees.HashTrees;
 import org.hashtrees.HashTreesImpl;
 import org.hashtrees.SimpleTreeIdProvider;
+import org.hashtrees.SyncType;
 import org.hashtrees.store.HashTreesMemStore;
 import org.hashtrees.store.SimpleMemStore;
 import org.hashtrees.store.Store;
@@ -116,7 +117,7 @@ public class HashTreesUsage {
 		primary.getFirst().put(keyBytes, valueBytes);
 
 		primary.getSecond().rebuildHashTree(1, false);
-		primary.getSecond().synch(1, backup.getSecond());
+		primary.getSecond().synch(1, backup.getSecond(), SyncType.UPDATE);
 		Assert.assertTrue(Arrays.equals(backup.getFirst().get(keyBytes),
 				valueBytes));
 

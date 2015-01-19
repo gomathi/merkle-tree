@@ -13,6 +13,7 @@ import java.util.concurrent.TimeUnit;
 import junit.framework.Assert;
 
 import org.hashtrees.HashTreesConstants;
+import org.hashtrees.SyncType;
 import org.hashtrees.store.HashTreesMemStore;
 import org.hashtrees.store.HashTreesStore;
 import org.hashtrees.store.SimpleMemStore;
@@ -158,7 +159,7 @@ public class HashTreesManagerTest {
 					public boolean canSynch(ServerName source, ServerName dest) {
 						return false;
 					}
-				});
+				}, SyncType.UPDATE);
 		manager.synch(null, 1);
 	}
 }

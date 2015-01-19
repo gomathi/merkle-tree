@@ -6,6 +6,8 @@ import java.util.Map;
 
 import org.apache.thrift.TException;
 import org.hashtrees.HashTrees;
+import org.hashtrees.SyncType;
+import org.hashtrees.SyncDiffResult;
 import org.hashtrees.thrift.generated.HashTreesSyncInterface;
 import org.hashtrees.thrift.generated.SegmentData;
 import org.hashtrees.thrift.generated.SegmentHash;
@@ -78,12 +80,6 @@ public class HashTreesRemoteClient implements HashTrees {
 	}
 
 	@Override
-	public boolean synch(long treeId, HashTrees remoteTree) throws TException {
-		throw new UnsupportedOperationException(
-				"Remote tree does not support this operation.");
-	}
-
-	@Override
 	public void rebuildHashTree(long treeId, long fullRebuildPeriod)
 			throws Exception {
 		throw new UnsupportedOperationException(
@@ -105,6 +101,20 @@ public class HashTreesRemoteClient implements HashTrees {
 
 	@Override
 	public void rebuildAllTrees(long fullRebuildPeriod) throws Exception {
+		throw new UnsupportedOperationException(
+				"Remote tree does not support this operation.");
+	}
+
+	@Override
+	public SyncDiffResult synch(long treeId, HashTrees remoteTree,
+			SyncType syncType) throws Exception {
+		throw new UnsupportedOperationException(
+				"Remote tree does not support this operation.");
+	}
+
+	@Override
+	public SyncDiffResult synch(long treeId, HashTrees remoteTree)
+			throws Exception {
 		throw new UnsupportedOperationException(
 				"Remote tree does not support this operation.");
 	}

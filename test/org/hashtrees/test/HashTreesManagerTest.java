@@ -5,6 +5,7 @@ import static org.hashtrees.test.utils.HashTreesImplTestUtils.TREE_ID_PROVIDER;
 import static org.hashtrees.test.utils.HashTreesImplTestUtils.generateInMemoryStore;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
@@ -116,7 +117,8 @@ public class HashTreesManagerTest {
 
 	@Test
 	public void testSynch() throws Exception {
-		final List<ServerName> syncList = new ArrayList<>();
+		final List<ServerName> syncList = Collections
+				.synchronizedList(new ArrayList<ServerName>());
 		BlockingQueue<HTSynchEvent> localEvents = new ArrayBlockingQueue<HTSynchEvent>(
 				10000);
 		HashTreeSyncManagerComponents componentsLocal = createHashTreeSyncManager(

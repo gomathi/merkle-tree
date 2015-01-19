@@ -11,6 +11,7 @@ import org.hashtrees.HashTrees;
 import org.hashtrees.HashTreesImpl;
 import org.hashtrees.ModuloSegIdProvider;
 import org.hashtrees.SyncDiffResult;
+import org.hashtrees.SyncType;
 import org.hashtrees.store.HashTreesStore;
 import org.hashtrees.store.Store;
 
@@ -47,6 +48,14 @@ public class HashTreesImplTestObj extends HashTreesImpl {
 	public SyncDiffResult synch(long treeId, HashTrees remoteTree)
 			throws Exception {
 		SyncDiffResult result = super.synch(treeId, remoteTree);
+		events.add(HTSynchEvent.SYNCH);
+		return result;
+	}
+
+	@Override
+	public SyncDiffResult synch(long treeId, HashTrees remoteTree,
+			SyncType syncType) throws Exception {
+		SyncDiffResult result = super.synch(treeId, remoteTree, syncType);
 		events.add(HTSynchEvent.SYNCH);
 		return result;
 	}

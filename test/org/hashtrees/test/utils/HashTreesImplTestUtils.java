@@ -77,24 +77,28 @@ public class HashTreesImplTestUtils {
 	}
 
 	public static HTreeComponents createHashTree(int noOfSegDataBlocks,
+			boolean enabledNonBlockingCalls,
 			final HashTreesIdProvider treeIdProv,
 			final SegmentIdProvider segIdPro, final HashTreesStore hTStore)
 			throws Exception {
 		SimpleMemStore store = new SimpleMemStore();
 		HashTreesImpl hTree = new HashTreesImpl.Builder(store, treeIdProv,
 				hTStore).setNoOfSegments(noOfSegDataBlocks)
+				.setEnabledNonBlockingCalls(enabledNonBlockingCalls)
 				.setSegmentIdProvider(segIdPro).build();
 		store.registerHashTrees(hTree);
 		return new HTreeComponents(hTStore, store, hTree);
 	}
 
 	public static HTreeComponents createHashTree(int noOfSegments,
-			final HashTreesStore hTStore) throws Exception {
+			boolean enabledNonBlockingCalls, final HashTreesStore hTStore)
+			throws Exception {
 		SimpleMemStore store = new SimpleMemStore();
 		ModuloSegIdProvider segIdProvider = new ModuloSegIdProvider(
 				noOfSegments);
 		HashTrees hTree = new HashTreesImpl.Builder(store, TREE_ID_PROVIDER,
 				hTStore).setNoOfSegments(noOfSegments)
+				.setEnabledNonBlockingCalls(enabledNonBlockingCalls)
 				.setSegmentIdProvider(segIdProvider).build();
 		store.registerHashTrees(hTree);
 		return new HTreeComponents(hTStore, store, hTree);

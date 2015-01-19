@@ -89,17 +89,19 @@ public class HashTreesImpl implements HashTrees {
 
 	private final ConcurrentMap<Long, Lock> treeLocks = new ConcurrentHashMap<>();
 	private final Object nonBlockingCallsLock = new Object();
-	@LockedBy("nonBlockingCallsLock")
-	private volatile boolean enabledNonBlockingCalls;
+	private final boolean enabledNonBlockingCalls;
+	private final int nonBlockingQueueSize;
 	@LockedBy("nonBlockingCallsLock")
 	private volatile NonBlockingHTDataUpdater bgDataUpdater;
 
-	public HashTreesImpl(int noOfSegments,
-			final HashTreesIdProvider treeIdProvider,
+	public HashTreesImpl(int noOfSegments, boolean enabledNonBlockingCalls,
+			int nonBlockingQueueSize, final HashTreesIdProvider treeIdProvider,
 			final SegmentIdProvider segIdProvider,
 			final HashTreesStore htStore, final Store store) {
 		this.noOfChildren = BINARY_TREE;
 		this.segmentsCount = getValidSegmentsCount(noOfSegments);
+		this.enabledNonBlockingCalls = enabledNonBlockingCalls;
+		this.nonBlockingQueueSize = nonBlockingQueueSize;
 		this.internalNodesCount = getNoOfNodes(
 				(height(this.segmentsCount, noOfChildren) - 1), noOfChildren);
 		this.treeIdProvider = treeIdProvider;
@@ -150,7 +152,7 @@ public class HashTreesImpl implements HashTrees {
 		hRemoveInternal(HTOperation.REMOVE, key);
 	}
 
-	public void hRemoveInternal(HTOperation operation, final ByteBuffer key) {
+	private void hRemoveInternal(HTOperation operation, final ByteBuffer key) {
 		if (enabledNonBlockingCalls) {
 			List<ByteBuffer> input = new ArrayList<ByteBuffer>();
 			input.add(key);
@@ -520,30 +522,22 @@ public class HashTreesImpl implements HashTrees {
 		}
 	}
 
-	public boolean enableNonblockingOperations(int maxElementsToQue) {
-		return enableNonBlockingOperationsInternal(maxElementsToQue);
+	public void init() {
+		initDirtySegments();
+		if (enabledNonBlockingCalls)
+			enableNonBlockingOperationsInternal();
 	}
 
-	public boolean enableNonblockingOperations() {
-		return enableNonBlockingOperationsInternal(DEFAULT_NB_QUE_SIZE);
-	}
-
-	private boolean enableNonBlockingOperationsInternal(int maxElementsToQue) {
-		boolean result;
+	private void enableNonBlockingOperationsInternal() {
 		synchronized (nonBlockingCallsLock) {
-			result = enabledNonBlockingCalls;
 			if (enabledNonBlockingCalls) {
-				LOGGER.info("Non blocking calls are already enabled.");
-			} else {
 				if (bgDataUpdater == null)
 					bgDataUpdater = new NonBlockingHTDataUpdater(this,
-							maxElementsToQue);
+							nonBlockingQueueSize);
 				new Thread(bgDataUpdater).start();
-				enabledNonBlockingCalls = true;
 				LOGGER.info("Non blocking calls are enabled.");
 			}
 		}
-		return result;
 	}
 
 	private boolean disableNonblockingOperations() {
@@ -553,7 +547,6 @@ public class HashTreesImpl implements HashTrees {
 			if (!enabledNonBlockingCalls) {
 				LOGGER.info("Non blocking calls are already disabled.");
 			} else {
-				enabledNonBlockingCalls = false;
 				CountDownLatch countDownLatch = new CountDownLatch(1);
 				bgDataUpdater.stop(countDownLatch);
 				try {
@@ -566,14 +559,6 @@ public class HashTreesImpl implements HashTrees {
 				bgDataUpdater = null;
 				LOGGER.info("Non blocking calls are disabled.");
 			}
-		}
-		return result;
-	}
-
-	public boolean isNonBlockingCallsEnabled() {
-		boolean result;
-		synchronized (nonBlockingCallsLock) {
-			result = enabledNonBlockingCalls;
 		}
 		return result;
 	}
@@ -769,7 +754,9 @@ public class HashTreesImpl implements HashTrees {
 		private final HashTreesIdProvider treeIdProvider;
 
 		private SegmentIdProvider segIdProvider;
-		private int noOfSegments = MAX_NO_OF_SEGMENTS;
+		private int noOfSegments = MAX_NO_OF_SEGMENTS,
+				nonBlockingQueueSize = DEFAULT_NB_QUE_SIZE;
+		private boolean enabledNonBlockingCalls = true;
 
 		public Builder(Store store, HashTreesIdProvider treeIdProvider,
 				HashTreesStore htStore) {
@@ -824,11 +811,39 @@ public class HashTreesImpl implements HashTrees {
 			return this;
 		}
 
+		/**
+		 * Enable/Disable non blocking calls. By default non blocking calls are
+		 * enabled.
+		 * 
+		 * @param enabledNonBlockingCalls
+		 *            , true enables non blocking calls, false disables non
+		 *            blocking calls.
+		 * @return
+		 */
+		public Builder setEnabledNonBlockingCalls(
+				boolean enabledNonBlockingCalls) {
+			this.enabledNonBlockingCalls = enabledNonBlockingCalls;
+			return this;
+		}
+
+		/**
+		 * Sets queue size about how many elements can be queued in memory.
+		 * Default value is 10000.
+		 * 
+		 * @param nonBlockingQueueSize
+		 * @return
+		 */
+		public Builder setNonBlockingQueueSize(int nonBlockingQueueSize) {
+			this.nonBlockingQueueSize = nonBlockingQueueSize;
+			return this;
+		}
+
 		public HashTreesImpl build() {
 			if (segIdProvider == null)
 				segIdProvider = new ModuloSegIdProvider(noOfSegments);
-			return new HashTreesImpl(noOfSegments, treeIdProvider,
-					segIdProvider, htStore, store);
+			return new HashTreesImpl(noOfSegments, enabledNonBlockingCalls,
+					nonBlockingQueueSize, treeIdProvider, segIdProvider,
+					htStore, store);
 		}
 	}
 }

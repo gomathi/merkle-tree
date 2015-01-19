@@ -59,7 +59,7 @@ public class HashTreesUsage {
 	public static HashTreesImpl buildHashTrees(Store store) throws Exception {
 		HashTreesImpl hashTrees = new HashTreesImpl.Builder(store,
 				new SimpleTreeIdProvider(), new HashTreesMemStore())
-				.setNoOfSegments(16).build();
+				.setEnabledNonBlockingCalls(false).setNoOfSegments(16).build();
 		return hashTrees;
 	}
 

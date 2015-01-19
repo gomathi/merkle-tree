@@ -24,10 +24,12 @@ public class HashTreesImplTestObj extends HashTreesImpl {
 	}
 
 	public HashTreesImplTestObj(final int noOfSegments,
+			boolean enabledNonBlockingCalls, int nbQueSize,
 			final HashTreesStore htStore, final Store store,
 			BlockingQueue<HTSynchEvent> events) {
-		super(noOfSegments, TREE_ID_PROVIDER, new ModuloSegIdProvider(
-				noOfSegments), htStore, store);
+		super(noOfSegments, enabledNonBlockingCalls, nbQueSize,
+				TREE_ID_PROVIDER, new ModuloSegIdProvider(noOfSegments),
+				htStore, store);
 		this.events = events;
 	}
 

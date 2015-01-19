@@ -66,7 +66,8 @@ public class HashTreesManagerTest {
 		SimpleMemStore store = new SimpleMemStore();
 
 		HashTreesImplTestObj hTree = new HashTreesImplTestObj(
-				DEFAULT_SEG_DATA_BLOCKS_COUNT, htStore, store, events);
+				DEFAULT_SEG_DATA_BLOCKS_COUNT, false, 10, htStore, store,
+				events);
 		HashTreesManager syncManager = new HashTreesManager.Builder(
 				"localhost", portNo, hTree, TREE_ID_PROVIDER,
 				htSyncListProvider)

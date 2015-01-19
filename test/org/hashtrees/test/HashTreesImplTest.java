@@ -73,7 +73,7 @@ public class HashTreesImplTest {
 				int segId = 1;
 
 				HTreeComponents components = createHashTree(
-						DEFAULT_SEG_DATA_BLOCKS_COUNT, TREE_ID_PROVIDER,
+						DEFAULT_SEG_DATA_BLOCKS_COUNT, false, TREE_ID_PROVIDER,
 						SEG_ID_PROVIDER, store);
 				HashTrees testTree = components.hTree;
 				HashTreesStore testTreeStore = components.hTStore;
@@ -111,7 +111,7 @@ public class HashTreesImplTest {
 		try {
 			for (HashTreesStore store : stores) {
 				HTreeComponents components = createHashTree(
-						DEFAULT_SEG_DATA_BLOCKS_COUNT, TREE_ID_PROVIDER,
+						DEFAULT_SEG_DATA_BLOCKS_COUNT, false, TREE_ID_PROVIDER,
 						SEG_ID_PROVIDER, store);
 				HashTrees testTree = components.hTree;
 				HashTreesStore testTreeStore = components.hTStore;
@@ -146,7 +146,7 @@ public class HashTreesImplTest {
 		try {
 			for (HashTreesStore store : stores) {
 				HTreeComponents components = createHashTree(noOfSegments,
-						TREE_ID_PROVIDER, SEG_ID_PROVIDER, store);
+						false, TREE_ID_PROVIDER, SEG_ID_PROVIDER, store);
 				HashTrees testTree = components.hTree;
 				Store kvStore = components.store;
 				kvStore.registerHashTrees(null);
@@ -197,7 +197,7 @@ public class HashTreesImplTest {
 		try {
 			for (HashTreesStore store : stores) {
 				HTreeComponents components = createHashTree(noOfSegments,
-						TREE_ID_PROVIDER, SEG_ID_PROVIDER, store);
+						false, TREE_ID_PROVIDER, SEG_ID_PROVIDER, store);
 				HashTrees testTree = components.hTree;
 
 				ByteBuffer expectedKey = generateRandomKeyWithPrefix(segId);
@@ -241,9 +241,9 @@ public class HashTreesImplTest {
 		try {
 			for (int j = 0; j <= 1; j++) {
 				HTreeComponents localHTreeComp = createHashTree(
-						DEFAULT_SEG_DATA_BLOCKS_COUNT, stores[j]);
+						DEFAULT_SEG_DATA_BLOCKS_COUNT, false, stores[j]);
 				HTreeComponents remoteHTreeComp = createHashTree(
-						DEFAULT_SEG_DATA_BLOCKS_COUNT, remoteStores[j]);
+						DEFAULT_SEG_DATA_BLOCKS_COUNT, false, remoteStores[j]);
 
 				for (int i = 1; i <= DEFAULT_SEG_DATA_BLOCKS_COUNT; i++) {
 					localHTreeComp.store.put(randomBytes(), randomBytes());
@@ -285,9 +285,9 @@ public class HashTreesImplTest {
 		try {
 			for (int j = 0; j <= 1; j++) {
 				HTreeComponents localHTreeComp = createHashTree(
-						DEFAULT_SEG_DATA_BLOCKS_COUNT, stores[j]);
+						DEFAULT_SEG_DATA_BLOCKS_COUNT, false, stores[j]);
 				HTreeComponents remoteHTreeComp = createHashTree(
-						DEFAULT_SEG_DATA_BLOCKS_COUNT, remoteStores[j]);
+						DEFAULT_SEG_DATA_BLOCKS_COUNT, false, remoteStores[j]);
 
 				for (int i = 0; i < DEFAULT_SEG_DATA_BLOCKS_COUNT; i++) {
 					remoteHTreeComp.store.put(randomBytes(), randomBytes());
@@ -316,9 +316,9 @@ public class HashTreesImplTest {
 		try {
 			for (int j = 0; j <= 1; j++) {
 				HTreeComponents localHTreeComp = createHashTree(
-						DEFAULT_SEG_DATA_BLOCKS_COUNT, stores[j]);
+						DEFAULT_SEG_DATA_BLOCKS_COUNT, false, stores[j]);
 				HTreeComponents remoteHTreeComp = createHashTree(
-						DEFAULT_SEG_DATA_BLOCKS_COUNT, remoteStores[j]);
+						DEFAULT_SEG_DATA_BLOCKS_COUNT, false, remoteStores[j]);
 
 				for (int i = 0; i < DEFAULT_SEG_DATA_BLOCKS_COUNT; i++) {
 					localHTreeComp.store.put(randomBytes(), randomBytes());
@@ -345,10 +345,10 @@ public class HashTreesImplTest {
 		try {
 			for (int j = 0; j <= 1; j++) {
 				HTreeComponents localHTreeComp = createHashTree(
-						DEFAULT_SEG_DATA_BLOCKS_COUNT, TREE_ID_PROVIDER,
+						DEFAULT_SEG_DATA_BLOCKS_COUNT, false, TREE_ID_PROVIDER,
 						SEG_ID_PROVIDER, stores[j]);
 				HTreeComponents remoteHTreeComp = createHashTree(
-						DEFAULT_SEG_DATA_BLOCKS_COUNT, TREE_ID_PROVIDER,
+						DEFAULT_SEG_DATA_BLOCKS_COUNT, false, TREE_ID_PROVIDER,
 						SEG_ID_PROVIDER, remoteStores[j]);
 
 				for (int k = 0; k <= 1; k++) {
@@ -382,9 +382,9 @@ public class HashTreesImplTest {
 
 		try {
 			HTreeComponents localHTreeComp = createHashTree(
-					DEFAULT_SEG_DATA_BLOCKS_COUNT, store);
+					DEFAULT_SEG_DATA_BLOCKS_COUNT, false, store);
 			HTreeComponents remoteHTreeComp = createHashTree(
-					DEFAULT_SEG_DATA_BLOCKS_COUNT, remoteStore);
+					DEFAULT_SEG_DATA_BLOCKS_COUNT, false, remoteStore);
 			HashTreesManager hTreeManager = new HashTreesManager.Builder(
 					"test",
 					HashTreesConstants.DEFAULT_HASH_TREE_SERVER_PORT_NO,
@@ -392,7 +392,6 @@ public class HashTreesImplTest {
 					.build();
 
 			hTreeManager.init();
-			Thread.sleep(100);
 			HashTrees thriftClient = HashTreesThriftClientProvider
 					.getHashTreeRemoteClient(new ServerName("localhost",
 							HashTreesConstants.DEFAULT_HASH_TREE_SERVER_PORT_NO));
@@ -422,19 +421,6 @@ public class HashTreesImplTest {
 			HashTreesImplTestUtils.closeStores(store);
 			HashTreesImplTestUtils.closeStores(remoteStore);
 		}
-	}
-
-	@Test
-	public void testEnableNonBlockingCalls() {
-		HashTreesStore htStore = generateInMemoryStore();
-		SimpleMemStore store = new SimpleMemStore();
-		HashTreesImpl hTrees = new HashTreesImpl.Builder(store,
-				TREE_ID_PROVIDER, htStore)
-				.setNoOfSegments(DEFAULT_SEG_DATA_BLOCKS_COUNT)
-				.setSegmentIdProvider(SEG_ID_PROVIDER).build();
-		Assert.assertFalse(hTrees.enableNonblockingOperations());
-		Assert.assertTrue(hTrees.isNonBlockingCallsEnabled());
-		Assert.assertTrue(hTrees.enableNonblockingOperations());
 	}
 
 	@Test
@@ -469,9 +455,9 @@ public class HashTreesImplTest {
 		HashTreesImpl hTrees = new HashTreesImpl.Builder(store,
 				TREE_ID_PROVIDER, htStore)
 				.setNoOfSegments(DEFAULT_SEG_DATA_BLOCKS_COUNT)
-				.setSegmentIdProvider(SEG_ID_PROVIDER).build();
-		hTrees.enableNonblockingOperations(maxQueueSize);
-		Thread.sleep(100);
+				.setSegmentIdProvider(SEG_ID_PROVIDER)
+				.setNonBlockingQueueSize(maxQueueSize).build();
+		hTrees.init();
 
 		boolean exceptionOccurred = false;
 		for (int i = 0; i <= 2 * maxQueueSize; i++) {
@@ -485,9 +471,9 @@ public class HashTreesImplTest {
 
 		hTrees = new HashTreesImpl.Builder(store, TREE_ID_PROVIDER, htStore)
 				.setNoOfSegments(DEFAULT_SEG_DATA_BLOCKS_COUNT)
-				.setSegmentIdProvider(SEG_ID_PROVIDER).build();
-		hTrees.enableNonblockingOperations(maxQueueSize);
-		Thread.sleep(100);
+				.setSegmentIdProvider(SEG_ID_PROVIDER)
+				.setNonBlockingQueueSize(maxQueueSize).build();
+		hTrees.init();
 		exceptionOccurred = false;
 		for (int i = 0; i <= 2 * maxQueueSize; i++) {
 			try {
@@ -509,7 +495,7 @@ public class HashTreesImplTest {
 			htStore.putSegmentData(DEFAULT_TREE_ID, segId, randomByteBuffer(),
 					randomByteBuffer());
 			htStore.markSegments(DEFAULT_TREE_ID, expectedSegIds);
-			createHashTree(DEFAULT_SEG_DATA_BLOCKS_COUNT, htStore);
+			createHashTree(DEFAULT_SEG_DATA_BLOCKS_COUNT, false, htStore);
 			List<Integer> actualSegIds = htStore
 					.getDirtySegments(DEFAULT_TREE_ID);
 			Assert.assertNotNull(actualSegIds);
@@ -519,19 +505,5 @@ public class HashTreesImplTest {
 		} finally {
 			htStore.delete();
 		}
-	}
-
-	@Test
-	public void testStop() {
-		HashTreesStore htStore = generateInMemoryStore();
-		SimpleMemStore store = new SimpleMemStore();
-		HashTreesImpl hTrees = new HashTreesImpl.Builder(store,
-				TREE_ID_PROVIDER, htStore)
-				.setNoOfSegments(DEFAULT_SEG_DATA_BLOCKS_COUNT)
-				.setSegmentIdProvider(SEG_ID_PROVIDER).build();
-		hTrees.enableNonblockingOperations();
-		Assert.assertTrue(hTrees.isNonBlockingCallsEnabled());
-		hTrees.stop();
-		Assert.assertFalse(hTrees.isNonBlockingCallsEnabled());
 	}
 }

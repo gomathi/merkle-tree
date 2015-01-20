@@ -5,7 +5,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import org.hashtrees.thrift.generated.SegmentData;
-import org.hashtrees.thrift.generated.ServerName;
 import org.hashtrees.util.ByteUtils;
 import org.hashtrees.util.Pair;
 
@@ -15,15 +14,11 @@ public class ByteKeyValueConverter {
 
 	public static final int LEN_BASEKEY_AND_TREEID = BaseKey.LENGTH
 			+ ByteUtils.SIZEOF_LONG;
-	public static final int DIGEST_LENTH = 20; // Sha1 is used for digest
-												// calculation, which provides a
-												// 20 bytes digest.
 
 	public static enum BaseKey {
 
 		META_DATA((byte) 'M'), SEG_HASH((byte) 'H'), SEG_DATA((byte) 'S'), TREEID(
-				(byte) 'T'), DIRTY_SEG((byte) 'D'), REBUILD_MARKER((byte) 'R'), SERVER_NAME(
-				(byte) 'G');
+				(byte) 'T'), DIRTY_SEG((byte) 'D'), REBUILD_MARKER((byte) 'R');
 
 		public static final int LENGTH = 1; // in terms of bytes.
 		public final byte key;
@@ -35,7 +30,7 @@ public class ByteKeyValueConverter {
 
 	public static enum MetaDataKey {
 
-		FULL_REBUILT_TS("ltfbTs".getBytes()), SERVER_NAME("sn".getBytes());
+		FULL_REBUILT_TS("ltfbTs".getBytes());
 
 		public final byte[] key;
 		public final int length;
@@ -53,22 +48,6 @@ public class ByteKeyValueConverter {
 			byte[] key = readSegmentDataKey(kv.getKey());
 			return new SegmentData(ByteBuffer.wrap(key), ByteBuffer.wrap(kv
 					.getValue()));
-		}
-	};
-
-	public static Function<Map.Entry<byte[], byte[]>, ServerName> KVBYTES_TO_SERVERNAME_FROM_METADATAKEY = new Function<Map.Entry<byte[], byte[]>, ServerName>() {
-
-		@Override
-		public ServerName apply(Entry<byte[], byte[]> kv) {
-			return readServerNameAndTreeIdFrom(kv.getKey()).getFirst();
-		}
-	};
-
-	public static Function<Map.Entry<byte[], byte[]>, ServerName> KVBYTES_TO_SERVERNAME_CONVERTER = new Function<Map.Entry<byte[], byte[]>, ServerName>() {
-
-		@Override
-		public ServerName apply(Entry<byte[], byte[]> kv) {
-			return readServerNameFrom(kv.getKey());
 		}
 	};
 
@@ -201,50 +180,5 @@ public class ByteKeyValueConverter {
 		ByteBuffer bb = ByteBuffer.wrap(key);
 		fillBaseKey(bb, BaseKey.TREEID, treeId);
 		return key;
-	}
-
-	public static byte[] convertServerNameToBytes(ServerName sn) {
-		byte[] serverNameInBytes = sn.hostName.getBytes();
-		byte[] key = new byte[BaseKey.LENGTH + ByteUtils.SIZEOF_INT
-				+ serverNameInBytes.length];
-		ByteBuffer bb = ByteBuffer.wrap(key);
-		bb.put(BaseKey.SERVER_NAME.key);
-		bb.putInt(sn.portNo);
-		bb.put(serverNameInBytes);
-		return key;
-	}
-
-	public static ServerName readServerNameFrom(byte[] key) {
-		int offset = BaseKey.LENGTH;
-		ByteBuffer bb = ByteBuffer.wrap(key);
-		int portNo = bb.getInt(offset);
-		offset += ByteUtils.SIZEOF_INT;
-		byte[] snInBytes = ByteUtils.copy(key, offset, key.length);
-		String hostName = new String(snInBytes);
-		return new ServerName(hostName, portNo);
-	}
-
-	public static byte[] convertServerNameAndTreeIdToBytes(ServerName rTree,
-			long treeId) {
-		byte[] keyPrefix = generateMetaDataKey(MetaDataKey.SERVER_NAME, treeId);
-		byte[] serverNameInBytes = rTree.hostName.getBytes();
-		byte[] key = new byte[keyPrefix.length + ByteUtils.SIZEOF_INT
-				+ serverNameInBytes.length];
-		ByteBuffer bb = ByteBuffer.wrap(key);
-		bb.put(keyPrefix);
-		bb.putInt(rTree.portNo);
-		bb.put(serverNameInBytes);
-		return bb.array();
-	}
-
-	public static Pair<ServerName, Long> readServerNameAndTreeIdFrom(byte[] key) {
-		long treeId = readTreeIdFromBaseKey(key);
-		int offset = LEN_BASEKEY_AND_TREEID + MetaDataKey.SERVER_NAME.length;
-		ByteBuffer bb = ByteBuffer.wrap(key);
-		int portNo = bb.getInt(offset);
-		offset += ByteUtils.SIZEOF_INT;
-		byte[] snInBytes = ByteUtils.copy(key, offset, key.length);
-		String hostName = new String(snInBytes);
-		return Pair.create(new ServerName(hostName, portNo), treeId);
 	}
 }

@@ -1,5 +1,6 @@
 package org.hashtrees.util;
 
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 
 public class Pair<F, S> {
@@ -39,7 +40,7 @@ public class Pair<F, S> {
 
 	@Override
 	public String toString() {
-		return Objects.toStringHelper(this).add("first", f).add("second", s)
-				.toString();
+		return MoreObjects.toStringHelper(this).add("first", f)
+				.add("second", s).toString();
 	}
 }

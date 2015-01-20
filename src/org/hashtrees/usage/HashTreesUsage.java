@@ -91,12 +91,25 @@ public class HashTreesUsage {
 	}
 
 	/**
-	 * Stops all the operations on {@link HashTreesImpl}
+	 * {@link HashTreesImpl} requires explicitly callings its
+	 * {@link HashTreesImpl#start()} method.
 	 * 
 	 * @param hashTrees
 	 */
-	public static void stop(HashTreesImpl hashTrees) {
-		hashTrees.stop();
+	public static void start(HashTreesImpl... hashTrees) {
+		for (HashTreesImpl hashTree : hashTrees)
+			hashTree.start();
+	}
+
+	/**
+	 * {@link HashTreesImpl} requires explicitly callings its
+	 * {@link HashTreesImpl#stop()} method.
+	 * 
+	 * @param hashTrees
+	 */
+	public static void stop(HashTreesImpl... hashTrees) {
+		for (HashTreesImpl hashTree : hashTrees)
+			hashTree.stop();
 	}
 
 	/**
@@ -112,6 +125,8 @@ public class HashTreesUsage {
 		Pair<Store, HashTreesImpl> primary = createAStoreWithEnabledHashTrees();
 		Pair<Store, HashTreesImpl> backup = createAStoreWithEnabledHashTrees();
 
+		start(primary.getSecond(), backup.getSecond());
+
 		byte[] keyBytes = "testKey".getBytes();
 		byte[] valueBytes = "testValue".getBytes();
 		primary.getFirst().put(keyBytes, valueBytes);
@@ -121,7 +136,6 @@ public class HashTreesUsage {
 		Assert.assertTrue(Arrays.equals(backup.getFirst().get(keyBytes),
 				valueBytes));
 
-		stop(primary.getSecond());
-		stop(backup.getSecond());
+		stop(primary.getSecond(), backup.getSecond());
 	}
 }

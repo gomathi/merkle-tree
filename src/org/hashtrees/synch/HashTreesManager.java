@@ -36,6 +36,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Function;
+import com.google.common.base.Stopwatch;
 import com.google.common.collect.Collections2;
 
 /**
@@ -171,8 +172,13 @@ public class HashTreesManager extends StoppableTask implements
 							public Void call() throws Exception {
 								sendRebuildRequestToRemoteTrees(input
 										.getFirst());
+								Stopwatch watch = Stopwatch.createStarted();
 								hashTrees.rebuildHashTree(input.getFirst(),
 										input.getSecond());
+								watch.stop();
+								LOG.info("Time taken for rebuilding (treeId: "
+										+ input.getFirst() + ") (in ms):"
+										+ watch.elapsed(TimeUnit.MILLISECONDS));
 								return null;
 							}
 						};
@@ -318,9 +324,13 @@ public class HashTreesManager extends StoppableTask implements
 		if (synchAllowed) {
 			try {
 				LOG.info("Syncing " + hostNameAndTreeId);
+				Stopwatch watch = Stopwatch.createStarted();
 				HashTreesSyncInterface.Iface remoteSyncClient = getHashTreeSyncClient(sn);
 				hashTrees.synch(treeId, new HashTreesRemoteClient(
 						remoteSyncClient), syncType);
+				watch.stop();
+				LOG.info("Time taken for syncing (" + hostNameAndTreeId
+						+ ") (in ms):" + watch.elapsed(TimeUnit.MILLISECONDS));
 				LOG.info("Syncing " + hostNameAndTreeId + " complete.");
 			} catch (TException e) {
 				LOG.error("Unable to synch remote hash tree server : "
@@ -344,6 +354,7 @@ public class HashTreesManager extends StoppableTask implements
 	@Override
 	public void start() {
 		if (initialized.compareAndSet(false, true)) {
+			LOG.info("Hash tree sync manager operations starting.");
 			String hostNameAndPortNo = localServer.toString();
 			String threadPoolName = HT_MGR_TPOOL + "," + hostNameAndPortNo;
 			String executorThreadName = HT_MGR_SCHED_THREAD + ","
@@ -352,7 +363,6 @@ public class HashTreesManager extends StoppableTask implements
 					new CustomThreadFactory(threadPoolName));
 			scheduledExecutor = Executors.newScheduledThreadPool(1,
 					new CustomThreadFactory(executorThreadName));
-
 			CountDownLatch initializedLatch = new CountDownLatch(1);
 			htThriftServer = new HashTreesThriftServerTask(hashTrees, this,
 					syncListProvider, localServer.getPortNo(), initializedLatch);
@@ -399,9 +409,9 @@ public class HashTreesManager extends StoppableTask implements
 				htThriftServer.stopAsync();
 			if (threadPool != null)
 				threadPool.shutdown();
-			LOG.info("Hash tree sync manager operations stopped.");
+			LOG.info("Hash trees manager operations stopped.");
 		} else
-			LOG.info("Hash tree sync manager operations stopped already. No actions were taken.");
+			LOG.info("Hash trees manager operations stopped already. No actions were taken.");
 	}
 
 	@NotThreadSafe

@@ -89,9 +89,9 @@ public class HashTreesImpl implements HashTrees, Service {
 	private final SegmentIdProvider segIdProvider;
 
 	private final ConcurrentMap<Long, Lock> treeLocks = new ConcurrentHashMap<>();
-	private final Object nonBlockingCallsLock = new Object();
 	private final boolean enabledNonBlockingCalls;
 	private final int nonBlockingQueueSize;
+	private final Object nonBlockingCallsLock = new Object();
 	@LockedBy("nonBlockingCallsLock")
 	private volatile NonBlockingHTDataUpdater bgDataUpdater;
 
@@ -523,13 +523,15 @@ public class HashTreesImpl implements HashTrees, Service {
 		}
 	}
 
+	// Should be always called before using this instance.
+	@Override
 	public void start() {
 		initDirtySegments();
 		if (enabledNonBlockingCalls)
-			enableNonBlockingOperationsInternal();
+			enableNonBlockingOperations();
 	}
 
-	private void enableNonBlockingOperationsInternal() {
+	private void enableNonBlockingOperations() {
 		synchronized (nonBlockingCallsLock) {
 			if (enabledNonBlockingCalls) {
 				if (bgDataUpdater == null)
@@ -541,13 +543,9 @@ public class HashTreesImpl implements HashTrees, Service {
 		}
 	}
 
-	private boolean disableNonblockingOperations() {
-		boolean result;
+	private void disableNonblockingOperations() {
 		synchronized (nonBlockingCallsLock) {
-			result = !enabledNonBlockingCalls;
-			if (!enabledNonBlockingCalls) {
-				LOGGER.info("Non blocking calls are already disabled.");
-			} else {
+			if (enabledNonBlockingCalls && bgDataUpdater != null) {
 				CountDownLatch countDownLatch = new CountDownLatch(1);
 				bgDataUpdater.stopAsync(countDownLatch);
 				try {
@@ -561,9 +559,9 @@ public class HashTreesImpl implements HashTrees, Service {
 				LOGGER.info("Non blocking calls are disabled.");
 			}
 		}
-		return result;
 	}
 
+	@Override
 	public void stop() {
 		disableNonblockingOperations();
 	}

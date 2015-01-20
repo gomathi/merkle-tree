@@ -87,7 +87,7 @@ public class TaskQueue<T> implements Iterator<Future<T>>, Stoppable {
 	}
 
 	@Override
-	public void stop() {
+	public void stopAsync() {
 		stopRequested = true;
 	}
 

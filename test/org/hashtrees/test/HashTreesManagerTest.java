@@ -96,9 +96,9 @@ public class HashTreesManagerTest {
 
 		hashTreesStore.setCompleteRebuiltTimestamp(1,
 				System.currentTimeMillis());
-		syncManager.init();
+		syncManager.start();
 		waitForTheEvent(events, HTSynchEvent.UPDATE_SEGMENT, 10000);
-		syncManager.shutdown();
+		syncManager.stop();
 	}
 
 	@Test
@@ -111,9 +111,9 @@ public class HashTreesManagerTest {
 				3000000);
 		HashTreesManager syncManager = components.htMgr;
 
-		syncManager.init();
+		syncManager.start();
 		waitForTheEvent(events, HTSynchEvent.UPDATE_FULL_TREE, 10000);
-		syncManager.shutdown();
+		syncManager.stop();
 	}
 
 	@Test
@@ -142,15 +142,15 @@ public class HashTreesManagerTest {
 				new EmptySyncListProvider(), remoteEvents, 8999, 3000, 300);
 		HashTreesManager remoteSyncManager = componentsRemote.htMgr;
 
-		remoteSyncManager.init();
+		remoteSyncManager.start();
 		ServerName rTreeInfo = new ServerName("localhost", 8999);
 		syncList.add(rTreeInfo);
-		localSyncManager.init();
+		localSyncManager.start();
 
 		waitForTheEvent(localEvents, HTSynchEvent.SYNCH, 10000);
 		waitForTheEvent(remoteEvents, HTSynchEvent.SYNCH_INITIATED, 10000);
-		localSyncManager.shutdown();
-		remoteSyncManager.shutdown();
+		localSyncManager.stop();
+		remoteSyncManager.stop();
 	}
 
 	@Test(expected = SynchNotAllowedException.class)

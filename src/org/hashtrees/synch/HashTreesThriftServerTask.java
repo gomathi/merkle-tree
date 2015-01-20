@@ -44,10 +44,10 @@ public class HashTreesThriftServerTask extends StoppableTask {
 	}
 
 	@Override
-	public synchronized void stop() {
+	public synchronized void stopAsync() {
 		if (server.isServing())
 			server.stop();
-		super.stop();
+		super.stopAsync();
 	}
 
 	private static TServer createServer(int serverPortNo,

@@ -51,15 +51,15 @@ public abstract class StoppableTask implements Runnable, Stoppable {
 	}
 
 	@Override
-	public synchronized void stop() {
+	public synchronized void stopAsync() {
 		stopRequested = true;
 		if (!lock.get())
 			notifyStopListeners();
 	}
 
-	public synchronized void stop(final CountDownLatch stopListenerLatch) {
+	public synchronized void stopAsync(final CountDownLatch stopListenerLatch) {
 		stopListenerLatches.add(stopListenerLatch);
-		stop();
+		stopAsync();
 	}
 
 	protected abstract void runImpl();

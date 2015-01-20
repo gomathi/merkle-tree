@@ -197,4 +197,9 @@ public class HashTreesMemStore extends HashTreesBaseStore {
 	public void stop() {
 		// Nothing to stop.
 	}
+
+	@Override
+	public void start() {
+		// Nothing to initialize
+	}
 }

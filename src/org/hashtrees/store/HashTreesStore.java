@@ -8,6 +8,7 @@ import java.util.List;
 import org.hashtrees.HashTrees;
 import org.hashtrees.thrift.generated.SegmentData;
 import org.hashtrees.thrift.generated.SegmentHash;
+import org.hashtrees.util.Service;
 
 /**
  * Defines store interface for storing tree and segments and is used by
@@ -17,7 +18,7 @@ import org.hashtrees.thrift.generated.SegmentHash;
  * {@link HashTreesPersistentStore} provides persistent store implementation.
  * 
  */
-public interface HashTreesStore {
+public interface HashTreesStore extends Service {
 
 	/**
 	 * A segment data is the value inside a segment block.

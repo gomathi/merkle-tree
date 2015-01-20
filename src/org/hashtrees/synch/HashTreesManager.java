@@ -29,6 +29,7 @@ import org.hashtrees.thrift.generated.RebuildHashTreeResponse;
 import org.hashtrees.thrift.generated.ServerName;
 import org.hashtrees.util.CustomThreadFactory;
 import org.hashtrees.util.Pair;
+import org.hashtrees.util.Service;
 import org.hashtrees.util.StoppableTask;
 import org.hashtrees.util.TaskQueue;
 import org.slf4j.Logger;
@@ -62,7 +63,7 @@ import com.google.common.collect.Collections2;
  * 
  */
 public class HashTreesManager extends StoppableTask implements
-		HashTreesSyncCallsObserver {
+		HashTreesSyncCallsObserver, Service {
 
 	private final static Logger LOG = LoggerFactory
 			.getLogger(HashTreesManager.class);
@@ -187,7 +188,7 @@ public class HashTreesManager extends StoppableTask implements
 				LOG.info("Failure occurred in build task.", e);
 			}
 			if (hasStopRequested()) {
-				taskQueue.stop();
+				taskQueue.stopAsync();
 			}
 		}
 		LOG.info("No of successful/failed rebuild tasks : "
@@ -296,7 +297,7 @@ public class HashTreesManager extends StoppableTask implements
 				LOG.error("Exception occurred in synch task.", e);
 			}
 			if (hasStopRequested()) {
-				taskQueue.stop();
+				taskQueue.stopAsync();
 			}
 		}
 		LOG.info("No of successful/failed synch tasks : "
@@ -340,7 +341,8 @@ public class HashTreesManager extends StoppableTask implements
 		return client;
 	}
 
-	public void init() {
+	@Override
+	public void start() {
 		if (initialized.compareAndSet(false, true)) {
 			String hostNameAndPortNo = localServer.toString();
 			String threadPoolName = HT_MGR_TPOOL + "," + hostNameAndPortNo;
@@ -380,10 +382,11 @@ public class HashTreesManager extends StoppableTask implements
 		LOG.info("Executing rebuild/synch operations - Done.");
 	}
 
-	public void shutdown() {
+	@Override
+	public void stop() {
 		if (stopped.compareAndSet(false, true)) {
 			CountDownLatch localLatch = new CountDownLatch(1);
-			super.stop(localLatch);
+			super.stopAsync(localLatch);
 			try {
 				localLatch.await();
 			} catch (InterruptedException e) {
@@ -393,7 +396,7 @@ public class HashTreesManager extends StoppableTask implements
 			if (scheduledExecutor != null)
 				scheduledExecutor.shutdown();
 			if (htThriftServer != null)
-				htThriftServer.stop();
+				htThriftServer.stopAsync();
 			if (threadPool != null)
 				threadPool.shutdown();
 			LOG.info("Hash tree sync manager operations stopped.");
@@ -430,7 +433,7 @@ public class HashTreesManager extends StoppableTask implements
 
 		/**
 		 * Schedules rebuild and synch operation periodically. First execution
-		 * will begin after calling {@link HashTreesManager#init()}. The
+		 * will begin after calling {@link HashTreesManager#start()}. The
 		 * following execution will begin after 'period' time interval from the
 		 * first task's completion.
 		 * 

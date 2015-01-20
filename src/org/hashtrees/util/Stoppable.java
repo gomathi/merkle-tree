@@ -8,5 +8,5 @@ package org.hashtrees.util;
 
 public interface Stoppable {
 
-	void stop();
+	void stopAsync();
 }

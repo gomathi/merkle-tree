@@ -391,7 +391,7 @@ public class HashTreesImplTest {
 					remoteHTreeComp.hTree, TREE_ID_PROVIDER, syncListProvider)
 					.build();
 
-			hTreeManager.init();
+			hTreeManager.start();
 			HashTrees thriftClient = HashTreesThriftClientProvider
 					.getHashTreeRemoteClient(new ServerName("localhost",
 							HashTreesConstants.DEFAULT_HASH_TREE_SERVER_PORT_NO));
@@ -416,7 +416,7 @@ public class HashTreesImplTest {
 				Assert.assertEquals(localHTreeComp.store, remoteHTreeComp.store);
 			}
 
-			hTreeManager.shutdown();
+			hTreeManager.stop();
 		} finally {
 			HashTreesImplTestUtils.closeStores(store);
 			HashTreesImplTestUtils.closeStores(remoteStore);
@@ -457,7 +457,7 @@ public class HashTreesImplTest {
 				.setNoOfSegments(DEFAULT_SEG_DATA_BLOCKS_COUNT)
 				.setSegmentIdProvider(SEG_ID_PROVIDER)
 				.setNonBlockingQueueSize(maxQueueSize).build();
-		hTrees.init();
+		hTrees.start();
 
 		boolean exceptionOccurred = false;
 		for (int i = 0; i <= 2 * maxQueueSize; i++) {
@@ -473,7 +473,7 @@ public class HashTreesImplTest {
 				.setNoOfSegments(DEFAULT_SEG_DATA_BLOCKS_COUNT)
 				.setSegmentIdProvider(SEG_ID_PROVIDER)
 				.setNonBlockingQueueSize(maxQueueSize).build();
-		hTrees.init();
+		hTrees.start();
 		exceptionOccurred = false;
 		for (int i = 0; i <= 2 * maxQueueSize; i++) {
 			try {

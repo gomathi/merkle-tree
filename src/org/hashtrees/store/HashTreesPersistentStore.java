@@ -336,4 +336,9 @@ public class HashTreesPersistentStore extends HashTreesBaseStore {
 			}
 		}
 	}
+
+	@Override
+	public void start() {
+		// Nothing to do.
+	}
 }

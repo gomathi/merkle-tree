@@ -55,8 +55,8 @@ public class StoppableTaskTest {
 
 		final CountDownLatch firstListener = new CountDownLatch(1);
 		final CountDownLatch secondListener = new CountDownLatch(1);
-		myTask.stop(firstListener);
-		myTask.stop(secondListener);
+		myTask.stopAsync(firstListener);
+		myTask.stopAsync(secondListener);
 		taskWaitLatch.countDown();
 
 		Assert.assertTrue(firstListener.await(10000, TimeUnit.MILLISECONDS));
@@ -86,8 +86,8 @@ public class StoppableTaskTest {
 
 		final CountDownLatch firstListener = new CountDownLatch(1);
 		final CountDownLatch secondListener = new CountDownLatch(1);
-		myTask.stop(firstListener);
-		myTask.stop(secondListener);
+		myTask.stopAsync(firstListener);
+		myTask.stopAsync(secondListener);
 
 		Assert.assertFalse(firstListener.await(100, TimeUnit.MILLISECONDS));
 		Assert.assertFalse(secondListener.await(100, TimeUnit.MILLISECONDS));
@@ -116,7 +116,7 @@ public class StoppableTaskTest {
 
 			@Override
 			public void run() {
-				task.stop(listenerLatch);
+				task.stopAsync(listenerLatch);
 				listenerAddedLatch.countDown();
 				try {
 					listenerLatch.await();

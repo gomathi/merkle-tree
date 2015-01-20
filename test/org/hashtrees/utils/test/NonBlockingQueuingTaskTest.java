@@ -30,7 +30,7 @@ public class NonBlockingQueuingTaskTest {
 		for (int i = 0; i < 10; i++)
 			nbqTask.enque(i);
 		CountDownLatch stopLatch = new CountDownLatch(1);
-		nbqTask.stop(stopLatch);
+		nbqTask.stopAsync(stopLatch);
 		stopLatch.await(10000, TimeUnit.MILLISECONDS);
 		Assert.assertEquals(10, queuedElements.size());
 		for (int i = 0; i < 10; i++)
@@ -51,7 +51,7 @@ public class NonBlockingQueuingTaskTest {
 		new Thread(nbqTask).start();
 
 		CountDownLatch stopLatch = new CountDownLatch(1);
-		nbqTask.stop(stopLatch);
+		nbqTask.stopAsync(stopLatch);
 		stopLatch.await(10000, TimeUnit.MILLISECONDS);
 		nbqTask.enque(10);
 	}

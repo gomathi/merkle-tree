@@ -46,14 +46,14 @@ public abstract class NonBlockingQueuingTask<T> extends StoppableTask {
 	}
 
 	@Override
-	public synchronized void stop() {
-		super.stop();
+	public synchronized void stopAsync() {
+		super.stopAsync();
 		enque(stopMarker);
 	}
 
 	@Override
-	public synchronized void stop(final CountDownLatch shutDownLatch) {
-		super.stop(shutDownLatch);
+	public synchronized void stopAsync(final CountDownLatch shutDownLatch) {
+		super.stopAsync(shutDownLatch);
 		enque(stopMarker);
 	}
 

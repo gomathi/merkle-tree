@@ -40,6 +40,7 @@ import org.hashtrees.util.CollectionPeekingIterator;
 import org.hashtrees.util.LockedBy;
 import org.hashtrees.util.NonBlockingQueuingTask;
 import org.hashtrees.util.Pair;
+import org.hashtrees.util.Service;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -58,7 +59,7 @@ import org.slf4j.LoggerFactory;
  * 
  */
 @ThreadSafe
-public class HashTreesImpl implements HashTrees {
+public class HashTreesImpl implements HashTrees, Service {
 
 	/**
 	 * Specifies how much element can be queued when hash tree is backed by a
@@ -522,7 +523,7 @@ public class HashTreesImpl implements HashTrees {
 		}
 	}
 
-	public void init() {
+	public void start() {
 		initDirtySegments();
 		if (enabledNonBlockingCalls)
 			enableNonBlockingOperationsInternal();
@@ -548,7 +549,7 @@ public class HashTreesImpl implements HashTrees {
 				LOGGER.info("Non blocking calls are already disabled.");
 			} else {
 				CountDownLatch countDownLatch = new CountDownLatch(1);
-				bgDataUpdater.stop(countDownLatch);
+				bgDataUpdater.stopAsync(countDownLatch);
 				try {
 					countDownLatch.await();
 				} catch (InterruptedException e) {
@@ -565,7 +566,6 @@ public class HashTreesImpl implements HashTrees {
 
 	public void stop() {
 		disableNonblockingOperations();
-		htStore.stop();
 	}
 
 	private static int compareSegNodeIds(SegmentHash left, SegmentHash right) {

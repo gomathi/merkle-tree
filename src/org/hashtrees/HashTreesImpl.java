@@ -526,8 +526,7 @@ public class HashTreesImpl implements HashTrees, Service {
 	@Override
 	public void start() {
 		initDirtySegments();
-		if (enabledNonBlockingCalls)
-			enableNonBlockingOperations();
+		enableNonBlockingOperations();
 	}
 
 	private void enableNonBlockingOperations() {

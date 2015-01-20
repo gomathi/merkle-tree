@@ -91,7 +91,7 @@ public class HashTreesUsage {
 	}
 
 	/**
-	 * {@link HashTreesImpl} requires explicitly callings its
+	 * {@link HashTreesImpl} requires explicitly calling its
 	 * {@link HashTreesImpl#start()} method.
 	 * 
 	 * @param hashTrees
@@ -102,7 +102,7 @@ public class HashTreesUsage {
 	}
 
 	/**
-	 * {@link HashTreesImpl} requires explicitly callings its
+	 * {@link HashTreesImpl} requires explicitly calling its
 	 * {@link HashTreesImpl#stop()} method.
 	 * 
 	 * @param hashTrees

@@ -109,7 +109,6 @@ public class HashTreesImpl implements HashTrees, Service {
 		this.segIdProvider = segIdProvider;
 		this.htStore = htStore;
 		this.store = store;
-		initDirtySegments();
 	}
 
 	// If there are unfinished rebuild tasks, then we need to mark

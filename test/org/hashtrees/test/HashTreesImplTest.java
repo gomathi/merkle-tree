@@ -495,7 +495,8 @@ public class HashTreesImplTest {
 			htStore.putSegmentData(DEFAULT_TREE_ID, segId, randomByteBuffer(),
 					randomByteBuffer());
 			htStore.markSegments(DEFAULT_TREE_ID, expectedSegIds);
-			createHashTree(DEFAULT_SEG_DATA_BLOCKS_COUNT, false, htStore);
+			createHashTree(DEFAULT_SEG_DATA_BLOCKS_COUNT, false, htStore).hTree
+					.start();
 			List<Integer> actualSegIds = htStore
 					.getDirtySegments(DEFAULT_TREE_ID);
 			Assert.assertNotNull(actualSegIds);

@@ -5,7 +5,6 @@ import java.nio.ByteBuffer;
 import java.util.Random;
 
 import org.apache.commons.io.FileUtils;
-import org.hashtrees.HashTrees;
 import org.hashtrees.HashTreesIdProvider;
 import org.hashtrees.HashTreesImpl;
 import org.hashtrees.ModuloSegIdProvider;
@@ -50,10 +49,10 @@ public class HashTreesImplTestUtils {
 
 		public final HashTreesStore hTStore;
 		public final SimpleMemStore store;
-		public final HashTrees hTree;
+		public final HashTreesImpl hTree;
 
 		public HTreeComponents(final HashTreesStore hTStore,
-				final SimpleMemStore store, final HashTrees hTree) {
+				final SimpleMemStore store, final HashTreesImpl hTree) {
 			this.hTStore = hTStore;
 			this.store = store;
 			this.hTree = hTree;
@@ -96,8 +95,8 @@ public class HashTreesImplTestUtils {
 		SimpleMemStore store = new SimpleMemStore();
 		ModuloSegIdProvider segIdProvider = new ModuloSegIdProvider(
 				noOfSegments);
-		HashTrees hTree = new HashTreesImpl.Builder(store, TREE_ID_PROVIDER,
-				hTStore).setNoOfSegments(noOfSegments)
+		HashTreesImpl hTree = new HashTreesImpl.Builder(store,
+				TREE_ID_PROVIDER, hTStore).setNoOfSegments(noOfSegments)
 				.setEnabledNonBlockingCalls(enabledNonBlockingCalls)
 				.setSegmentIdProvider(segIdProvider).build();
 		store.registerHashTrees(hTree);

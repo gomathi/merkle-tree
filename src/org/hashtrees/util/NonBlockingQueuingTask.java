@@ -1,8 +1,8 @@
 package org.hashtrees.util;
 
-import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.LinkedBlockingQueue;
 
 /**
  * An abstract class which queues elements, and which can be dequeued while
@@ -33,7 +33,7 @@ public abstract class NonBlockingQueuingTask<T> extends StoppableTask {
 	 */
 	public NonBlockingQueuingTask(T stopMarker, int queueSize) {
 		this.stopMarker = stopMarker;
-		que = new ArrayBlockingQueue<T>(queueSize);
+		que = new LinkedBlockingQueue<T>(queueSize);
 	}
 
 	public void enque(T element) {

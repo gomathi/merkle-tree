@@ -10,8 +10,9 @@ import javax.annotation.concurrent.ThreadSafe;
  * A stoppable abstract class which can be scheduled through executors. This
  * abstract class makes sure only one task can run at any time. The
  * implementations are expected to provide code for {@link #runImpl()} method.
- * Also the callers of stop method, can use the latch {@link #stopListenerLatch}
- * to wait for the complete stop of this task.
+ * Also the callers of stop method, can pass a latch to
+ * {@link #stopAsync(CountDownLatch)}, and asynchronously wait for this task to
+ * complete.
  * 
  */
 @ThreadSafe

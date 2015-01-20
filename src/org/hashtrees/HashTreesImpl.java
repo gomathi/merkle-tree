@@ -66,7 +66,7 @@ public class HashTreesImpl implements HashTrees, Service {
 	 * non blocking queue. When the queue is full, the new puts or removes are
 	 * rejected.
 	 */
-	public final static int DEFAULT_NB_QUE_SIZE = 10000;
+	public final static int DEFAULT_NB_QUE_SIZE = Integer.MAX_VALUE;
 	/**
 	 * Specifies at most how many segments can be used by a single HashTree.
 	 */
@@ -809,7 +809,7 @@ public class HashTreesImpl implements HashTrees, Service {
 		 * data. When a segment is marked as dirty, the rebuild process has to
 		 * read huge data unnecessarily.
 		 * 
-		 * Default value is 1073741824.
+		 * Default value is 1 << 30.
 		 * 
 		 * @param noOfSegments
 		 *            , value should be a power of 2, otherwise it will be
@@ -838,12 +838,13 @@ public class HashTreesImpl implements HashTrees, Service {
 
 		/**
 		 * Sets queue size about how many elements can be queued in memory.
-		 * Default value is 10000.
+		 * Default value is {@link Integer#MAX_VALUE}.
 		 * 
 		 * @param nonBlockingQueueSize
 		 * @return
 		 */
 		public Builder setNonBlockingQueueSize(int nonBlockingQueueSize) {
+			assert (nonBlockingQueueSize > 0);
 			this.nonBlockingQueueSize = nonBlockingQueueSize;
 			return this;
 		}

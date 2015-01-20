@@ -15,7 +15,6 @@ import static org.hashtrees.test.utils.HashTreesImplTestUtils.randomBytes;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 
@@ -495,16 +494,12 @@ public class HashTreesImplTest {
 		try {
 			List<Integer> expectedSegIds = new ArrayList<>();
 			expectedSegIds.add(segId);
-			htStore.putSegmentData(DEFAULT_TREE_ID, segId, randomByteBuffer(),
-					randomByteBuffer());
 			htStore.markSegments(DEFAULT_TREE_ID, expectedSegIds);
-			createHashTree(DEFAULT_SEG_DATA_BLOCKS_COUNT, false, htStore).hTree
-					.start();
+			htStore.stop();
+			htStore = new HashTreesPersistentStore(htStore.getDbDir());
 			List<Integer> actualSegIds = htStore
 					.getDirtySegments(DEFAULT_TREE_ID);
 			Assert.assertNotNull(actualSegIds);
-			Assert.assertEquals(expectedSegIds.size(), actualSegIds.size());
-			Collections.sort(actualSegIds);
 			Assert.assertEquals(expectedSegIds, actualSegIds);
 		} finally {
 			htStore.delete();

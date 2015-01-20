@@ -202,4 +202,19 @@ public class HashTreesMemStore extends HashTreesBaseStore {
 	public void start() {
 		// Nothing to initialize
 	}
+
+	@Override
+	protected void setDirtySegmentInternal(long treeId, int segId) {
+		// Nothing to do.
+	}
+
+	@Override
+	protected void clearDirtySegmentInternal(long treeId, int segId) {
+		// Nothing to do.
+	}
+
+	@Override
+	protected List<Integer> getDirtySegmentsInternal(long treeId) {
+		return Collections.emptyList();
+	}
 }

@@ -3,7 +3,6 @@ package org.hashtrees.store;
 import static org.hashtrees.store.ByteKeyValueConverter.KVBYTES_TO_SEGDATA_CONVERTER;
 import static org.hashtrees.store.ByteKeyValueConverter.KVBYTES_TO_SEGID_CONVERTER;
 import static org.hashtrees.store.ByteKeyValueConverter.KVBYTES_TO_TREEID_CONVERTER;
-import static org.hashtrees.store.ByteKeyValueConverter.KVBYTES_TO_TREEID_SEGID_CONVERTER;
 import static org.hashtrees.store.ByteKeyValueConverter.LEN_BASEKEY_AND_TREEID;
 import static org.hashtrees.store.ByteKeyValueConverter.fillBaseKey;
 import static org.hashtrees.store.ByteKeyValueConverter.generateBaseKey;
@@ -35,7 +34,6 @@ import org.hashtrees.store.ByteKeyValueConverter.MetaDataKey;
 import org.hashtrees.thrift.generated.SegmentData;
 import org.hashtrees.thrift.generated.SegmentHash;
 import org.hashtrees.util.ByteUtils;
-import org.hashtrees.util.Pair;
 import org.iq80.leveldb.DB;
 import org.iq80.leveldb.DBIterator;
 import org.iq80.leveldb.Options;
@@ -71,7 +69,6 @@ public class HashTreesPersistentStore extends HashTreesBaseStore {
 	public HashTreesPersistentStore(String dbDir) throws Exception {
 		this.dbDir = dbDir;
 		this.dbObj = initDB(dbDir);
-		initDirtySegments();
 	}
 
 	private static boolean createDir(String dirName) {
@@ -88,49 +85,36 @@ public class HashTreesPersistentStore extends HashTreesBaseStore {
 		return new JniDBFactory().open(new File(dbDir), options);
 	}
 
-	/**
-	 * Need to inform {@link HashTreesBaseStore} about dirty segments which are
-	 * marked in the previous run.
-	 */
-	private void initDirtySegments() {
-		DBIterator itr = dbObj.iterator();
-		byte[] prefixKey = new byte[BaseKey.LENGTH];
-		ByteBuffer bb = ByteBuffer.wrap(prefixKey);
-		bb.put(BaseKey.DIRTY_SEG.key);
-		itr.seek(prefixKey);
-
-		Iterator<Pair<Long, Integer>> dirtySegments = new DataIterator<>(
-				prefixKey, KVBYTES_TO_TREEID_SEGID_CONVERTER, itr);
-
-		while (dirtySegments.hasNext()) {
-			Pair<Long, Integer> treeIdAndDirtySeg = dirtySegments.next();
-			super.setDirtySegment(treeIdAndDirtySeg.getFirst(),
-					treeIdAndDirtySeg.getSecond());
-		}
-	}
-
 	public String getDbDir() {
 		return dbDir;
 	}
 
 	@Override
-	public boolean setDirtySegment(long treeId, int segId) {
-		boolean hasSet = super.setDirtySegment(treeId, segId);
-		if (!hasSet)
-			dbObj.put(generateDirtySegmentKey(treeId, segId), EMPTY_VALUE);
-		return hasSet;
+	protected void setDirtySegmentInternal(long treeId, int segId) {
+		dbObj.put(generateDirtySegmentKey(treeId, segId), EMPTY_VALUE);
 	}
 
 	@Override
-	public void clearDirtySegment(long treeId, int segId) {
-		super.clearDirtySegment(treeId, segId);
+	protected void clearDirtySegmentInternal(long treeId, int segId) {
 		byte[] key = generateDirtySegmentKey(treeId, segId);
 		dbObj.delete(key);
 	}
 
 	@Override
-	public List<Integer> getDirtySegments(long treeId) {
-		return super.getDirtySegments(treeId);
+	protected List<Integer> getDirtySegmentsInternal(long treeId) {
+		DBIterator itr = dbObj.iterator();
+		byte[] prefixKey = generateBaseKey(BaseKey.DIRTY_SEG, treeId);
+		itr.seek(prefixKey);
+
+		Iterator<Integer> dirtySegmentsItr = new DataIterator<>(prefixKey,
+				KVBYTES_TO_SEGID_CONVERTER, itr);
+
+		List<Integer> dirtySegments = new ArrayList<>();
+		while (dirtySegmentsItr.hasNext()) {
+			Integer treeIdAndDirtySeg = dirtySegmentsItr.next();
+			dirtySegments.add(treeIdAndDirtySeg);
+		}
+		return dirtySegments;
 	}
 
 	@Override
@@ -288,15 +272,6 @@ public class HashTreesPersistentStore extends HashTreesBaseStore {
 			FileUtils.deleteQuietly(dbDirObj);
 	}
 
-	@Override
-	public void stop() {
-		try {
-			dbObj.close();
-		} catch (IOException e) {
-			LOG.warn("Exception occurred while closing leveldb connection.");
-		}
-	}
-
 	@NotThreadSafe
 	private static class DataIterator<T> implements Iterator<T> {
 
@@ -340,5 +315,14 @@ public class HashTreesPersistentStore extends HashTreesBaseStore {
 	@Override
 	public void start() {
 		// Nothing to do.
+	}
+
+	@Override
+	public void stop() {
+		try {
+			dbObj.close();
+		} catch (IOException e) {
+			LOG.warn("Exception occurred while closing leveldb connection.");
+		}
 	}
 }

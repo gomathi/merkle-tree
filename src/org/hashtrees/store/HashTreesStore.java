@@ -104,9 +104,8 @@ public interface HashTreesStore extends Service {
 	 * 
 	 * @param treeId
 	 * @param segId
-	 * @return the previous value of the segment.
 	 */
-	boolean setDirtySegment(long treeId, int segId);
+	void setDirtySegment(long treeId, int segId);
 
 	/**
 	 * Clears the segments, which are passed as an argument.

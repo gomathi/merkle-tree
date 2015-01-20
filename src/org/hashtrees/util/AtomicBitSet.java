@@ -45,7 +45,8 @@ public class AtomicBitSet {
 	 * Sets given bitIndex.
 	 * 
 	 * @param bitIndex
-	 *            , can not be negative.
+	 *            , can not be negative
+	 * @return, previousValue
 	 */
 	public boolean set(int bitIndex) {
 		AtomicLongArray bitsHolder = getBitsHolderFromMap(bitIndex);
@@ -156,6 +157,7 @@ public class AtomicBitSet {
 	 * 
 	 * @param bitIndex
 	 *            , can not be negative.
+	 * @return the previousValue
 	 */
 	public boolean clear(int bitIndex) {
 		AtomicLongArray bitsHolder = getBitsHolderFromMap(bitIndex);

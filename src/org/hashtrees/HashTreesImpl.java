@@ -114,18 +114,6 @@ public class HashTreesImpl implements HashTrees, Service {
 		this.hashTreesListener = hashTreesListener;
 	}
 
-	// If there are unfinished rebuild tasks, then we need to mark
-	// segments belonging to those rebuild tasks as dirty segments.
-	private void initDirtySegments() {
-		Iterator<Long> treeIds = htStore.getAllTreeIds();
-		while (treeIds.hasNext()) {
-			long treeId = treeIds.next();
-			List<Integer> segIds = htStore.getMarkedSegments(treeId);
-			for (int segId : segIds)
-				htStore.setDirtySegment(treeId, segId);
-		}
-	}
-
 	@Override
 	public void hPut(final ByteBuffer key, final ByteBuffer value) {
 		hPutInternal(HTOperation.PUT, key, value);
@@ -538,7 +526,6 @@ public class HashTreesImpl implements HashTrees, Service {
 	// Should be always called before using this instance.
 	@Override
 	public void start() {
-		initDirtySegments();
 		enableNonBlockingOperations();
 	}
 

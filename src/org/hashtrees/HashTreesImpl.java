@@ -144,13 +144,13 @@ public class HashTreesImpl implements HashTrees, Service {
 
 	private void hPutInternal(final ByteBuffer key, final ByteBuffer value) {
 		PutEntry putEntry = new PutEntry(key, value);
-		long treeId = treeIdProvider.getTreeId(key);
-		int segId = segIdProvider.getSegmentId(key);
 		if (hashTreesListener != null)
 			hashTreesListener.preHPut(putEntry);
+		long treeId = treeIdProvider.getTreeId(putEntry.getKey());
+		int segId = segIdProvider.getSegmentId(putEntry.getKey());
 		ByteBuffer digest = ByteBuffer.wrap(sha1(putEntry.getValue().array()));
 		htStore.setDirtySegment(treeId, segId);
-		htStore.putSegmentData(treeId, segId, key, digest);
+		htStore.putSegmentData(treeId, segId, putEntry.getKey(), digest);
 		if (hashTreesListener != null)
 			hashTreesListener.postHPut(putEntry);
 	}
@@ -172,12 +172,12 @@ public class HashTreesImpl implements HashTrees, Service {
 
 	private void hRemoveInternal(final ByteBuffer key) {
 		RemoveEntry removeEntry = new RemoveEntry(key);
-		long treeId = treeIdProvider.getTreeId(key);
-		int segId = segIdProvider.getSegmentId(key);
 		if (hashTreesListener != null)
 			hashTreesListener.preHRemove(removeEntry);
+		long treeId = treeIdProvider.getTreeId(removeEntry.getKey());
+		int segId = segIdProvider.getSegmentId(removeEntry.getKey());
 		htStore.setDirtySegment(treeId, segId);
-		htStore.deleteSegmentData(treeId, segId, key);
+		htStore.deleteSegmentData(treeId, segId, removeEntry.getKey());
 		if (hashTreesListener != null)
 			hashTreesListener.postHRemove(removeEntry);
 	}

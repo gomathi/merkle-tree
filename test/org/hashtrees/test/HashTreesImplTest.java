@@ -23,6 +23,9 @@ import org.apache.commons.codec.binary.Hex;
 import org.hashtrees.HashTrees;
 import org.hashtrees.HashTreesConstants;
 import org.hashtrees.HashTreesImpl;
+import org.hashtrees.HashTreesListener;
+import org.hashtrees.PutEntry;
+import org.hashtrees.RemoveEntry;
 import org.hashtrees.SimpleTreeIdProvider;
 import org.hashtrees.SyncDiffResult;
 import org.hashtrees.store.HashTreesMemStore;
@@ -506,5 +509,40 @@ public class HashTreesImplTest {
 		} finally {
 			htStore.delete();
 		}
+	}
+
+	@Test
+	public void testListeners() {
+		HashTreesMemStore htStore = generateInMemoryStore();
+		final boolean[] callsReceived = new boolean[4];
+		HashTreesImpl hashTrees = new HashTreesImpl.Builder(
+				new SimpleMemStore(), new SimpleTreeIdProvider(), htStore)
+				.setEnabledNonBlockingCalls(false)
+				.setHashTreesListener(new HashTreesListener() {
+
+					@Override
+					public void preHRemove(RemoveEntry removeEntry) {
+						callsReceived[0] = true;
+					}
+
+					@Override
+					public void preHPut(PutEntry putEntry) {
+						callsReceived[1] = true;
+					}
+
+					@Override
+					public void postHRemove(RemoveEntry removeEntry) {
+						callsReceived[2] = true;
+					}
+
+					@Override
+					public void postHPut(PutEntry putEntry) {
+						callsReceived[3] = true;
+					}
+				}).build();
+		hashTrees.hPut(randomByteBuffer(), randomByteBuffer());
+		hashTrees.hRemove(randomByteBuffer());
+		for (boolean value : callsReceived)
+			Assert.assertTrue(value);
 	}
 }

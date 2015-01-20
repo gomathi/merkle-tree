@@ -87,6 +87,7 @@ public class HashTreesImpl implements HashTrees, Service {
 	private final HashTreesStore htStore;
 	private final HashTreesIdProvider treeIdProvider;
 	private final SegmentIdProvider segIdProvider;
+	private final HashTreesListener hashTreesListener;
 
 	private final ConcurrentMap<Long, Lock> treeLocks = new ConcurrentHashMap<>();
 	private final boolean enabledNonBlockingCalls;
@@ -98,7 +99,8 @@ public class HashTreesImpl implements HashTrees, Service {
 	public HashTreesImpl(int noOfSegments, boolean enabledNonBlockingCalls,
 			int nonBlockingQueueSize, final HashTreesIdProvider treeIdProvider,
 			final SegmentIdProvider segIdProvider,
-			final HashTreesStore htStore, final Store store) {
+			final HashTreesStore htStore, final Store store,
+			final HashTreesListener hashTreesListener) {
 		this.noOfChildren = BINARY_TREE;
 		this.segmentsCount = getValidSegmentsCount(noOfSegments);
 		this.enabledNonBlockingCalls = enabledNonBlockingCalls;
@@ -109,6 +111,7 @@ public class HashTreesImpl implements HashTrees, Service {
 		this.segIdProvider = segIdProvider;
 		this.htStore = htStore;
 		this.store = store;
+		this.hashTreesListener = hashTreesListener;
 	}
 
 	// If there are unfinished rebuild tasks, then we need to mark
@@ -140,11 +143,16 @@ public class HashTreesImpl implements HashTrees, Service {
 	}
 
 	private void hPutInternal(final ByteBuffer key, final ByteBuffer value) {
+		PutEntry putEntry = new PutEntry(key, value);
 		long treeId = treeIdProvider.getTreeId(key);
 		int segId = segIdProvider.getSegmentId(key);
-		ByteBuffer digest = ByteBuffer.wrap(sha1(value.array()));
+		if (hashTreesListener != null)
+			hashTreesListener.preHPut(putEntry);
+		ByteBuffer digest = ByteBuffer.wrap(sha1(putEntry.getValue().array()));
 		htStore.setDirtySegment(treeId, segId);
 		htStore.putSegmentData(treeId, segId, key, digest);
+		if (hashTreesListener != null)
+			hashTreesListener.postHPut(putEntry);
 	}
 
 	@Override
@@ -163,10 +171,15 @@ public class HashTreesImpl implements HashTrees, Service {
 	}
 
 	private void hRemoveInternal(final ByteBuffer key) {
+		RemoveEntry removeEntry = new RemoveEntry(key);
 		long treeId = treeIdProvider.getTreeId(key);
 		int segId = segIdProvider.getSegmentId(key);
+		if (hashTreesListener != null)
+			hashTreesListener.preHRemove(removeEntry);
 		htStore.setDirtySegment(treeId, segId);
 		htStore.deleteSegmentData(treeId, segId, key);
+		if (hashTreesListener != null)
+			hashTreesListener.postHRemove(removeEntry);
 	}
 
 	@Override
@@ -753,6 +766,7 @@ public class HashTreesImpl implements HashTrees, Service {
 		private int noOfSegments = MAX_NO_OF_SEGMENTS,
 				nonBlockingQueueSize = DEFAULT_NB_QUE_SIZE;
 		private boolean enabledNonBlockingCalls = true;
+		private HashTreesListener listener;
 
 		public Builder(Store store, HashTreesIdProvider treeIdProvider,
 				HashTreesStore htStore) {
@@ -834,12 +848,17 @@ public class HashTreesImpl implements HashTrees, Service {
 			return this;
 		}
 
+		public Builder setHashTreesListener(HashTreesListener listener) {
+			this.listener = listener;
+			return this;
+		}
+
 		public HashTreesImpl build() {
 			if (segIdProvider == null)
 				segIdProvider = new ModuloSegIdProvider(noOfSegments);
 			return new HashTreesImpl(noOfSegments, enabledNonBlockingCalls,
 					nonBlockingQueueSize, treeIdProvider, segIdProvider,
-					htStore, store);
+					htStore, store, listener);
 		}
 	}
 }

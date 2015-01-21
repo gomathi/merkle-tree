@@ -40,10 +40,11 @@ public abstract class HashTreesBaseStore implements HashTreesStore {
 	}
 
 	@Override
-	public void setDirtySegment(long treeId, int segId) {
-		boolean alreadySet = getDirtySegmentsHolder(treeId).set(segId);
-		if (!alreadySet)
+	public boolean setDirtySegment(long treeId, int segId) {
+		boolean prevValue = getDirtySegmentsHolder(treeId).set(segId);
+		if (!prevValue)
 			setDirtySegmentInternal(treeId, segId);
+		return prevValue;
 	}
 
 	@Override
@@ -52,10 +53,11 @@ public abstract class HashTreesBaseStore implements HashTreesStore {
 	}
 
 	@Override
-	public void clearDirtySegment(long treeId, int segId) {
-		boolean alreadyCleared = getDirtySegmentsHolder(treeId).clear(segId);
-		if (!alreadyCleared)
+	public boolean clearDirtySegment(long treeId, int segId) {
+		boolean prevValue = getDirtySegmentsHolder(treeId).clear(segId);
+		if (prevValue)
 			clearDirtySegmentInternal(treeId, segId);
+		return prevValue;
 	}
 
 	protected abstract void setDirtySegmentInternal(long treeId, int segId);

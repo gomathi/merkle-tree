@@ -19,12 +19,8 @@ import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
 import java.util.TreeSet;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 
 import javax.annotation.concurrent.NotThreadSafe;
 import javax.annotation.concurrent.ThreadSafe;
@@ -89,7 +85,6 @@ public class HashTreesImpl implements HashTrees, Service {
 	private final SegmentIdProvider segIdProvider;
 	private final HashTreesListener hashTreesListener;
 
-	private final ConcurrentMap<Long, Lock> treeLocks = new ConcurrentHashMap<>();
 	private final boolean enabledNonBlockingCalls;
 	private final int nonBlockingQueueSize;
 	private final Object nonBlockingCallsLock = new Object();
@@ -334,23 +329,6 @@ public class HashTreesImpl implements HashTrees, Service {
 		return htStore.getSegment(treeId, segId);
 	}
 
-	private boolean acquireTreeLock(long treeId, boolean waitForLock) {
-		if (!treeLocks.containsKey(treeId)) {
-			ReentrantLock lock = new ReentrantLock();
-			treeLocks.putIfAbsent(treeId, lock);
-		}
-		Lock lock = treeLocks.get(treeId);
-		if (waitForLock) {
-			lock.lock();
-			return true;
-		}
-		return lock.tryLock();
-	}
-
-	private void releaseTreeLock(long treeId) {
-		treeLocks.get(treeId).unlock();
-	}
-
 	@Override
 	public void rebuildHashTree(long treeId, long fullRebuildPeriod)
 			throws Exception {
@@ -363,25 +341,16 @@ public class HashTreesImpl implements HashTrees, Service {
 
 	@Override
 	public void rebuildHashTree(long treeId, boolean fullRebuild) {
-		boolean acquiredLock = fullRebuild ? acquireTreeLock(treeId, true)
-				: acquireTreeLock(treeId, false);
-		if (acquiredLock) {
-			try {
-				if (fullRebuild)
-					rebuildCompleteTree(treeId);
-				List<Integer> dirtySegments = htStore.getDirtySegments(treeId);
-				htStore.markSegments(treeId, dirtySegments);
-				List<Integer> dirtyNodes = rebuildLeaves(treeId, dirtySegments);
-				rebuildInternalNodes(treeId, dirtyNodes);
-				htStore.unmarkSegments(treeId, dirtySegments);
-				if (fullRebuild) {
-					long currentTs = System.currentTimeMillis();
-					htStore.setCompleteRebuiltTimestamp(treeId, currentTs);
-				}
-			} finally {
-				releaseTreeLock(treeId);
-			}
-		}
+		long buildBeginTS = System.currentTimeMillis();
+		if (fullRebuild)
+			rebuildCompleteTree(treeId);
+		List<Integer> dirtySegments = htStore.getDirtySegments(treeId);
+		htStore.markSegments(treeId, dirtySegments);
+		List<Integer> dirtyNodes = rebuildLeaves(treeId, dirtySegments);
+		rebuildInternalNodes(treeId, dirtyNodes);
+		htStore.unmarkSegments(treeId, dirtySegments);
+		if (fullRebuild)
+			htStore.setCompleteRebuiltTimestamp(treeId, buildBeginTS);
 	}
 
 	/**
@@ -413,16 +382,21 @@ public class HashTreesImpl implements HashTrees, Service {
 	/**
 	 * Rebuilds the dirty segments, and updates the segment hashes of the
 	 * leaves.
+	 * 
+	 * @param treeId
+	 * @param dirtySegments
+	 * @return corresponding nodeIds of the segments.
 	 */
 	private List<Integer> rebuildLeaves(long treeId,
 			final List<Integer> dirtySegments) {
 		List<Integer> nodeIds = new ArrayList<>();
 		for (int dirtySegId : dirtySegments) {
-			htStore.clearDirtySegment(treeId, dirtySegId);
-			ByteBuffer digest = digestSegmentData(treeId, dirtySegId);
-			int nodeId = getLeafIdFromSegmentId(dirtySegId);
-			htStore.putSegmentHash(treeId, nodeId, digest);
-			nodeIds.add(nodeId);
+			if (htStore.clearDirtySegment(treeId, dirtySegId)) {
+				ByteBuffer digest = digestSegmentData(treeId, dirtySegId);
+				int nodeId = getLeafIdFromSegmentId(dirtySegId);
+				htStore.putSegmentHash(treeId, nodeId, digest);
+				nodeIds.add(nodeId);
+			}
 		}
 		return nodeIds;
 	}

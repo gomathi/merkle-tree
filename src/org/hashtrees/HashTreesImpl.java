@@ -93,7 +93,7 @@ public class HashTreesImpl implements HashTrees, Service {
 	private final Object nonBlockingCallsLock = new Object();
 	@LockedBy("nonBlockingCallsLock")
 	private volatile NonBlockingHTDataUpdater bgDataUpdater;
-	private final ConcurrentLinkedQueue<HashTreesListener> listeners = new ConcurrentLinkedQueue<>();
+	private final ConcurrentLinkedQueue<HashTreesObserver> observers = new ConcurrentLinkedQueue<>();
 
 	public HashTreesImpl(int noOfSegments, boolean enabledNonBlockingCalls,
 			int nonBlockingQueueSize, final HashTreesIdProvider treeIdProvider,
@@ -133,19 +133,19 @@ public class HashTreesImpl implements HashTrees, Service {
 		ByteBuffer digest = ByteBuffer.wrap(sha1(value.array()));
 		htStore.setDirtySegment(treeId, segId);
 		htStore.putSegmentData(treeId, segId, key, digest);
-		notifyListeners(new Function<HashTreesListener, Void>() {
+		notifyObservers(new Function<HashTreesObserver, Void>() {
 
 			@Override
-			public Void apply(HashTreesListener input) {
+			public Void apply(HashTreesObserver input) {
 				input.postPut(key, value);
 				return null;
 			}
 		});
 	}
 
-	private void notifyListeners(Function<HashTreesListener, Void> function) {
+	private void notifyObservers(Function<HashTreesObserver, Void> function) {
 		Iterator<Void> itr = Iterators
-				.transform(listeners.iterator(), function);
+				.transform(observers.iterator(), function);
 		while (itr.hasNext())
 			itr.next();
 	}
@@ -170,10 +170,10 @@ public class HashTreesImpl implements HashTrees, Service {
 		int segId = segIdProvider.getSegmentId(key);
 		htStore.setDirtySegment(treeId, segId);
 		htStore.deleteSegmentData(treeId, segId, key);
-		notifyListeners(new Function<HashTreesListener, Void>() {
+		notifyObservers(new Function<HashTreesObserver, Void>() {
 
 			@Override
-			public Void apply(HashTreesListener input) {
+			public Void apply(HashTreesObserver input) {
 				input.postRemove(key);
 				return null;
 			}
@@ -540,15 +540,15 @@ public class HashTreesImpl implements HashTrees, Service {
 	}
 
 	@Override
-	public void addListener(HashTreesListener listener) {
-		assert (listener != null);
-		listeners.add(listener);
+	public void addObserver(HashTreesObserver observer) {
+		assert (observer != null);
+		observers.add(observer);
 	}
 
 	@Override
-	public void removeListener(HashTreesListener listener) {
-		assert (listener != null);
-		listeners.remove(listener);
+	public void removeObserver(HashTreesObserver observer) {
+		assert (observer != null);
+		observers.remove(observer);
 	}
 
 	private static int compareSegNodeIds(SegmentHash left, SegmentHash right) {

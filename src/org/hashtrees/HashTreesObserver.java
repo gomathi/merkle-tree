@@ -7,7 +7,7 @@ import java.nio.ByteBuffer;
  * {@link HashTrees}
  * 
  */
-public interface HashTreesListener {
+public interface HashTreesObserver {
 
 	void postPut(ByteBuffer key, ByteBuffer value);
 

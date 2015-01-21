@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.hashtrees.HashTrees;
-import org.hashtrees.HashTreesListener;
+import org.hashtrees.HashTreesObserver;
 import org.hashtrees.SyncDiffResult;
 import org.hashtrees.SyncType;
 import org.hashtrees.thrift.generated.SegmentData;
@@ -89,12 +89,12 @@ public class MockHashTrees implements HashTrees {
 	}
 
 	@Override
-	public void addListener(HashTreesListener listener) {
+	public void addObserver(HashTreesObserver listener) {
 
 	}
 
 	@Override
-	public void removeListener(HashTreesListener listener) {
+	public void removeObserver(HashTreesObserver listener) {
 
 	}
 

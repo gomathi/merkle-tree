@@ -23,7 +23,7 @@ import org.apache.commons.codec.binary.Hex;
 import org.hashtrees.HashTrees;
 import org.hashtrees.HashTreesConstants;
 import org.hashtrees.HashTreesImpl;
-import org.hashtrees.HashTreesListener;
+import org.hashtrees.HashTreesObserver;
 import org.hashtrees.SimpleTreeIdProvider;
 import org.hashtrees.SyncDiffResult;
 import org.hashtrees.store.HashTreesMemStore;
@@ -517,14 +517,14 @@ public class HashTreesImplTest {
 	}
 
 	@Test
-	public void testListeners() throws Exception {
+	public void testObservers() throws Exception {
 		Store store = new SimpleMemStore();
 		HashTreesStore htStore = generateInMemoryStore();
 		HashTreesImpl hashTrees = new HashTreesImpl.Builder(store,
 				TREE_ID_PROVIDER, htStore).setEnabledNonBlockingCalls(false)
 				.build();
 		final AtomicIntegerArray receivedCalls = new AtomicIntegerArray(2);
-		hashTrees.addListener(new HashTreesListener() {
+		hashTrees.addObserver(new HashTreesObserver() {
 
 			@Override
 			public void postRemove(ByteBuffer key) {

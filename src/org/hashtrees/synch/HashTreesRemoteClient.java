@@ -6,7 +6,7 @@ import java.util.Map;
 
 import org.apache.thrift.TException;
 import org.hashtrees.HashTrees;
-import org.hashtrees.HashTreesListener;
+import org.hashtrees.HashTreesObserver;
 import org.hashtrees.SyncDiffResult;
 import org.hashtrees.SyncType;
 import org.hashtrees.thrift.generated.HashTreesSyncInterface;
@@ -109,13 +109,13 @@ public class HashTreesRemoteClient implements HashTrees {
 	}
 
 	@Override
-	public void addListener(HashTreesListener listener) {
+	public void addObserver(HashTreesObserver observer) {
 		throw new UnsupportedOperationException(
 				"Remote tree does not support this operation.");
 	}
 
 	@Override
-	public void removeListener(HashTreesListener listener) {
+	public void removeObserver(HashTreesObserver observer) {
 		throw new UnsupportedOperationException(
 				"Remote tree does not support this operation.");
 	}

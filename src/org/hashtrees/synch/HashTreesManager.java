@@ -511,7 +511,7 @@ public class HashTreesManager extends StoppableTask implements
 
 		public HashTreesManager build() {
 			if (authenticator == null)
-				authenticator = new DefaultSynchAuthenticator();
+				authenticator = new AllowAllSynchAuthenticator();
 			if (syncType == null)
 				syncType = SyncType.UPDATE;
 			return new HashTreesManager(noOfThreads, period, fullRebuildPeriod,

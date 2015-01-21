@@ -3,9 +3,7 @@ package org.hashtrees.test;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.List;
-import java.util.Random;
 
 import org.hashtrees.store.HashTreesPersistentStore;
 import org.hashtrees.test.utils.HashTreesImplTestUtils;
@@ -19,9 +17,6 @@ public class HashTreesPersistentStoreTest {
 
 	private static final int DEF_TREE_ID = 1;
 	private static final int DEF_SEG_ID = 0;
-	private static final byte[] EMPTY_BYTE_ARRAY = new byte[0];
-	private static final ByteBuffer EMPTY_BYTE_BUFFER = ByteBuffer
-			.wrap(EMPTY_BYTE_ARRAY);
 
 	@Test
 	public void testSegmentData() throws Exception {
@@ -126,32 +121,6 @@ public class HashTreesPersistentStoreTest {
 			dbObj.setCompleteRebuiltTimestamp(DEF_TREE_ID, exTs);
 			long dbTs = dbObj.getCompleteRebuiltTimestamp(DEF_TREE_ID);
 			Assert.assertEquals(exTs, dbTs);
-		} finally {
-			dbObj.delete();
-		}
-	}
-
-	@Test
-	public void testGetAllTreeIds() throws Exception {
-		String dbDir = HashTreesImplTestUtils.randomDirName();
-		HashTreesPersistentStore dbObj = new HashTreesPersistentStore(dbDir);
-
-		try {
-			List<Long> expected = new ArrayList<>();
-			for (int i = 1; i <= 10; i++) {
-				long treeId = new Random().nextLong();
-				dbObj.putSegmentData(treeId, DEF_SEG_ID, EMPTY_BYTE_BUFFER,
-						EMPTY_BYTE_BUFFER);
-				expected.add(treeId);
-			}
-			Iterator<Long> treeIdItr = dbObj.getAllTreeIds();
-			List<Long> actual = new ArrayList<>();
-			while (treeIdItr.hasNext())
-				actual.add(treeIdItr.next());
-			Assert.assertNotNull(actual);
-			Collections.sort(expected);
-			Collections.sort(actual);
-			Assert.assertEquals(expected, actual);
 		} finally {
 			dbObj.delete();
 		}

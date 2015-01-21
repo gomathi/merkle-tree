@@ -173,11 +173,4 @@ public interface HashTreesStore extends Service {
 	 * @return
 	 */
 	long getCompleteRebuiltTimestamp(long treeId);
-
-	/**
-	 * Returns all tree ids that are stored.
-	 * 
-	 * @return
-	 */
-	Iterator<Long> getAllTreeIds();
 }

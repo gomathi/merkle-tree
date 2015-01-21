@@ -2,7 +2,7 @@ package org.hashtrees.synch;
 
 import org.hashtrees.thrift.generated.ServerName;
 
-public class DefaultSynchAuthenticator implements HashTreesSynchAuthenticator {
+public class AllowAllSynchAuthenticator implements HashTreesSynchAuthenticator {
 
 	@Override
 	public boolean canSynch(ServerName localNodeToSynch,

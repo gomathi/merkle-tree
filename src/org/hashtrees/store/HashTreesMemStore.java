@@ -162,11 +162,6 @@ public class HashTreesMemStore extends HashTreesBaseStore {
 	}
 
 	@Override
-	public Iterator<Long> getAllTreeIds() {
-		return treeIdAndIndHashTree.keySet().iterator();
-	}
-
-	@Override
 	public void deleteTree(long treeId) {
 		treeIdAndIndHashTree.remove(treeId);
 	}

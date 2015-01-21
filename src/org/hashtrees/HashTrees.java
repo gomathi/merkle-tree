@@ -133,28 +133,6 @@ public interface HashTrees {
 	SyncDiffResult synch(long treeId, HashTrees remoteTree) throws Exception;
 
 	/**
-	 * Similar {@link #rebuildHashTree(long, long)}, except that allows to
-	 * specify whether a full rebuild should be triggered or not.
-	 * 
-	 * @param rebuild
-	 * @throws Exception
-	 */
-	void rebuildAllTrees(boolean fullRebuild) throws Exception;
-
-	/**
-	 * Updates segment hashes based on the dirty entries or entire dataset.
-	 * 
-	 * @param fullRebuildPeriod
-	 *            , indicates a time interval in milliseconds, and if a tree is
-	 *            not fully rebuilt for more than this value, a full rebuild
-	 *            will be triggered. Otherwise only dirty segments will be
-	 *            updated. If there is no information about when was the last
-	 *            time the tree was fully rebuilt, then a full rebuild will be
-	 *            triggered. A negative value indicates disabling full rebuild.
-	 */
-	void rebuildAllTrees(long fullRebuildPeriod) throws Exception;
-
-	/**
 	 * Updates segment hashes based on the dirty entries.
 	 * 
 	 * @param treeId

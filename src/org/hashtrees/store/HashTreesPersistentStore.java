@@ -2,7 +2,6 @@ package org.hashtrees.store;
 
 import static org.hashtrees.store.ByteKeyValueConverter.KVBYTES_TO_SEGDATA_CONVERTER;
 import static org.hashtrees.store.ByteKeyValueConverter.KVBYTES_TO_SEGID_CONVERTER;
-import static org.hashtrees.store.ByteKeyValueConverter.KVBYTES_TO_TREEID_CONVERTER;
 import static org.hashtrees.store.ByteKeyValueConverter.LEN_BASEKEY_AND_TREEID;
 import static org.hashtrees.store.ByteKeyValueConverter.fillBaseKey;
 import static org.hashtrees.store.ByteKeyValueConverter.generateBaseKey;
@@ -11,7 +10,6 @@ import static org.hashtrees.store.ByteKeyValueConverter.generateMetaDataKey;
 import static org.hashtrees.store.ByteKeyValueConverter.generateRebuildMarkerKey;
 import static org.hashtrees.store.ByteKeyValueConverter.generateSegmentDataKey;
 import static org.hashtrees.store.ByteKeyValueConverter.generateSegmentHashKey;
-import static org.hashtrees.store.ByteKeyValueConverter.generateTreeIdKey;
 
 import java.io.File;
 import java.io.IOException;
@@ -47,14 +45,8 @@ import com.google.common.collect.Lists;
  * Uses LevelDB for storing segment hashes and segment data. Dirty segment
  * markers are also stored on disk.
  * 
- * Stores the following data
- * 
- * 1) Metadata info [Like when the tree was built fully last time]. Format is
- * ['M'|treeId|key] -> [value] 2) SegmentData, format is ['S'|treeId|segId|key]
- * -> [digest] 3) SegmentHash, format is ['H'|treeId|nodeId] -> [value] 4)
- * TreeId, format is ['T'|treeId] -> [EMPTY_VALUE] 5) Dirty segment key
- * ['D'|treeId|dirtySegId] -> [EMPTY_VALUE]
- * 
+ * The byte keys and values are generated from {@link ByteKeyValueConverter}.
+ * Look at the class for more information about internal key format.
  */
 
 public class HashTreesPersistentStore extends HashTreesBaseStore {
@@ -119,7 +111,6 @@ public class HashTreesPersistentStore extends HashTreesBaseStore {
 
 	@Override
 	public void putSegmentHash(long treeId, int nodeId, ByteBuffer digest) {
-		dbObj.put(generateTreeIdKey(treeId), EMPTY_VALUE);
 		dbObj.put(generateSegmentHashKey(treeId, nodeId), digest.array());
 	}
 
@@ -181,7 +172,6 @@ public class HashTreesPersistentStore extends HashTreesBaseStore {
 	@Override
 	public void putSegmentData(long treeId, int segId, ByteBuffer key,
 			ByteBuffer digest) {
-		dbObj.put(generateTreeIdKey(treeId), EMPTY_VALUE);
 		byte[] dbKey = generateSegmentDataKey(treeId, segId, key);
 		dbObj.put(dbKey, digest.array());
 	}
@@ -246,19 +236,6 @@ public class HashTreesPersistentStore extends HashTreesBaseStore {
 
 		return Lists.newArrayList(new DataIterator<>(startKey,
 				KVBYTES_TO_SEGID_CONVERTER, itr));
-	}
-
-	/**
-	 * The iterator returned by the this function is not thread safe.
-	 */
-	@Override
-	public Iterator<Long> getAllTreeIds() {
-		final byte[] prefixKey = new byte[BaseKey.LENGTH];
-		ByteBuffer bb = ByteBuffer.wrap(prefixKey);
-		bb.put(BaseKey.TREEID.key);
-		final DBIterator itr = dbObj.iterator();
-		itr.seek(prefixKey);
-		return new DataIterator<>(prefixKey, KVBYTES_TO_TREEID_CONVERTER, itr);
 	}
 
 	/**

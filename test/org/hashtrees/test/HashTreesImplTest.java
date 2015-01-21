@@ -213,7 +213,7 @@ public class HashTreesImplTest {
 						.getBytes());
 
 				testTree.hPut(expectedKey, expectedValue);
-				testTree.rebuildAllTrees(false);
+				testTree.rebuildHashTree(SimpleTreeIdProvider.TREE_ID, false);
 				SegmentHash segHash = testTree.getSegmentHash(
 						SimpleTreeIdProvider.TREE_ID, nodeId);
 				Assert.assertNotNull(segHash);
@@ -251,13 +251,15 @@ public class HashTreesImplTest {
 					localHTreeComp.store.put(randomBytes(), randomBytes());
 				}
 
-				localHTreeComp.hTree.rebuildAllTrees(false);
+				localHTreeComp.hTree.rebuildHashTree(
+						SimpleTreeIdProvider.TREE_ID, false);
 				SyncDiffResult synchDiff = localHTreeComp.hTree.synch(1,
 						remoteHTreeComp.hTree);
 				Assert.assertNotNull(synchDiff);
 				Assert.assertTrue(synchDiff.isAnyUpdatesMade());
 
-				remoteHTreeComp.hTree.rebuildAllTrees(false);
+				remoteHTreeComp.hTree.rebuildHashTree(
+						SimpleTreeIdProvider.TREE_ID, false);
 				synchDiff = localHTreeComp.hTree
 						.synch(1, remoteHTreeComp.hTree);
 				Assert.assertFalse(synchDiff.isAnyUpdatesMade());
@@ -295,8 +297,10 @@ public class HashTreesImplTest {
 					remoteHTreeComp.store.put(randomBytes(), randomBytes());
 				}
 
-				localHTreeComp.hTree.rebuildAllTrees(false);
-				remoteHTreeComp.hTree.rebuildAllTrees(false);
+				localHTreeComp.hTree.rebuildHashTree(
+						SimpleTreeIdProvider.TREE_ID, false);
+				remoteHTreeComp.hTree.rebuildHashTree(
+						SimpleTreeIdProvider.TREE_ID, false);
 				localHTreeComp.hTree.synch(1, remoteHTreeComp.hTree);
 
 				Assert.assertEquals(localHTreeComp.store, remoteHTreeComp.store);
@@ -326,8 +330,10 @@ public class HashTreesImplTest {
 					localHTreeComp.store.put(randomBytes(), randomBytes());
 				}
 
-				localHTreeComp.hTree.rebuildAllTrees(false);
-				remoteHTreeComp.hTree.rebuildAllTrees(false);
+				localHTreeComp.hTree.rebuildHashTree(
+						SimpleTreeIdProvider.TREE_ID, false);
+				remoteHTreeComp.hTree.rebuildHashTree(
+						SimpleTreeIdProvider.TREE_ID, false);
 				localHTreeComp.hTree.synch(1, remoteHTreeComp.hTree);
 
 				Assert.assertEquals(localHTreeComp.store, remoteHTreeComp.store);
@@ -363,8 +369,10 @@ public class HashTreesImplTest {
 					localHTreeComp.store.put(key.array(), randomBytes());
 				}
 
-				localHTreeComp.hTree.rebuildAllTrees(false);
-				remoteHTreeComp.hTree.rebuildAllTrees(false);
+				localHTreeComp.hTree.rebuildHashTree(
+						SimpleTreeIdProvider.TREE_ID, false);
+				remoteHTreeComp.hTree.rebuildHashTree(
+						SimpleTreeIdProvider.TREE_ID, false);
 				localHTreeComp.hTree.synch(1, remoteHTreeComp.hTree);
 
 				Assert.assertEquals(localHTreeComp.store, remoteHTreeComp.store);
@@ -402,7 +410,8 @@ public class HashTreesImplTest {
 				localHTreeComp.store.put(randomBytes(), randomBytes());
 			}
 
-			localHTreeComp.hTree.rebuildAllTrees(false);
+			localHTreeComp.hTree.rebuildHashTree(SimpleTreeIdProvider.TREE_ID,
+					false);
 			localHTreeComp.hTree.synch(1, thriftClient);
 
 			for (int i = 0; i < DEFAULT_SEG_DATA_BLOCKS_COUNT; i++) {
@@ -411,8 +420,10 @@ public class HashTreesImplTest {
 				for (SegmentData sData : segBlock) {
 					localHTreeComp.store.put(sData.getKey(), randomBytes());
 				}
-				localHTreeComp.hTree.rebuildAllTrees(false);
-				remoteHTreeComp.hTree.rebuildAllTrees(false);
+				localHTreeComp.hTree.rebuildHashTree(
+						SimpleTreeIdProvider.TREE_ID, false);
+				remoteHTreeComp.hTree.rebuildHashTree(
+						SimpleTreeIdProvider.TREE_ID, false);
 				localHTreeComp.hTree.synch(1, thriftClient);
 
 				Assert.assertEquals(localHTreeComp.store, remoteHTreeComp.store);

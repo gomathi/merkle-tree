@@ -9,7 +9,9 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicIntegerArray;
 
 import junit.framework.Assert;
 
@@ -20,12 +22,14 @@ import org.hashtrees.store.HashTreesStore;
 import org.hashtrees.store.SimpleMemStore;
 import org.hashtrees.synch.EmptySyncListProvider;
 import org.hashtrees.synch.HashTreesManager;
+import org.hashtrees.synch.HashTreesManagerObserver;
 import org.hashtrees.synch.HashTreesSynchAuthenticator;
 import org.hashtrees.synch.HashTreesSynchListProvider;
 import org.hashtrees.synch.SynchNotAllowedException;
 import org.hashtrees.test.utils.HashTreesImplTestObj;
 import org.hashtrees.test.utils.HashTreesImplTestObj.HTSynchEvent;
 import org.hashtrees.test.utils.HashTreesImplTestUtils;
+import org.hashtrees.test.utils.MockHashTrees;
 import org.hashtrees.thrift.generated.ServerName;
 import org.junit.Test;
 
@@ -94,11 +98,14 @@ public class HashTreesManagerTest {
 		HashTreesManager syncManager = components.htMgr;
 		HashTreesStore hashTreesStore = components.htStore;
 
-		hashTreesStore.setCompleteRebuiltTimestamp(1,
-				System.currentTimeMillis());
-		syncManager.start();
-		waitForTheEvent(events, HTSynchEvent.UPDATE_SEGMENT, 10000);
-		syncManager.stop();
+		try {
+			hashTreesStore.setCompleteRebuiltTimestamp(1,
+					System.currentTimeMillis());
+			syncManager.start();
+			waitForTheEvent(events, HTSynchEvent.UPDATE_SEGMENT, 10000);
+		} finally {
+			syncManager.stop();
+		}
 	}
 
 	@Test
@@ -111,9 +118,12 @@ public class HashTreesManagerTest {
 				3000000);
 		HashTreesManager syncManager = components.htMgr;
 
-		syncManager.start();
-		waitForTheEvent(events, HTSynchEvent.UPDATE_FULL_TREE, 10000);
-		syncManager.stop();
+		try {
+			syncManager.start();
+			waitForTheEvent(events, HTSynchEvent.UPDATE_FULL_TREE, 10000);
+		} finally {
+			syncManager.stop();
+		}
 	}
 
 	@Test
@@ -142,15 +152,18 @@ public class HashTreesManagerTest {
 				new EmptySyncListProvider(), remoteEvents, 8999, 3000, 300);
 		HashTreesManager remoteSyncManager = componentsRemote.htMgr;
 
-		remoteSyncManager.start();
-		ServerName rTreeInfo = new ServerName("localhost", 8999);
-		syncList.add(rTreeInfo);
-		localSyncManager.start();
+		try {
+			remoteSyncManager.start();
+			ServerName rTreeInfo = new ServerName("localhost", 8999);
+			syncList.add(rTreeInfo);
+			localSyncManager.start();
 
-		waitForTheEvent(localEvents, HTSynchEvent.SYNCH, 10000);
-		waitForTheEvent(remoteEvents, HTSynchEvent.SYNCH_INITIATED, 10000);
-		localSyncManager.stop();
-		remoteSyncManager.stop();
+			waitForTheEvent(localEvents, HTSynchEvent.SYNCH, 10000);
+			waitForTheEvent(remoteEvents, HTSynchEvent.SYNCH_INITIATED, 10000);
+		} finally {
+			localSyncManager.stop();
+			remoteSyncManager.stop();
+		}
 	}
 
 	@Test(expected = SynchNotAllowedException.class)
@@ -164,5 +177,70 @@ public class HashTreesManagerTest {
 					}
 				}, SyncType.UPDATE);
 		manager.synch(null, 1);
+	}
+
+	@Test
+	public void testObservers() throws InterruptedException {
+		final List<ServerName> servers = Collections
+				.synchronizedList(new ArrayList<ServerName>());
+		servers.add(new ServerName("localhost", 8999));
+		HashTreesManager localManager = new HashTreesManager.Builder(
+				"localhost",
+				HashTreesConstants.DEFAULT_HASH_TREE_SERVER_PORT_NO,
+				new MockHashTrees(), TREE_ID_PROVIDER,
+				new HashTreesSynchListProvider() {
+
+					@Override
+					public List<ServerName> getServerNameListFor(long treeId) {
+						return servers;
+					}
+				}).setFullRebuildPeriod(3000).schedule(300).build();
+
+		HashTreesManager remoteManager = new HashTreesManager.Builder(
+				"localhost", 8999, new MockHashTrees(), TREE_ID_PROVIDER,
+				new EmptySyncListProvider()).build();
+
+		final AtomicIntegerArray receivedCalls = new AtomicIntegerArray(4);
+		final CountDownLatch receivedCallsLatch = new CountDownLatch(4);
+
+		try {
+			localManager.addObserver(new HashTreesManagerObserver() {
+
+				@Override
+				public void preRebuild(long treeId) {
+					receivedCalls.set(0, 1);
+					receivedCallsLatch.countDown();
+				}
+
+				@Override
+				public void postRebuild(long treeId) {
+					receivedCalls.set(1, 1);
+					receivedCallsLatch.countDown();
+				}
+
+				@Override
+				public void preSync(long treeId, ServerName remoteServerName) {
+					receivedCalls.set(2, 1);
+					receivedCallsLatch.countDown();
+				}
+
+				@Override
+				public void postSync(long treeId, ServerName remoteServerName) {
+					receivedCalls.set(3, 1);
+					receivedCallsLatch.countDown();
+				}
+
+			});
+
+			remoteManager.start();
+			localManager.start();
+			receivedCallsLatch.await(10, TimeUnit.SECONDS);
+			for (int i = 0; i < 4; i++)
+				Assert.assertEquals(1, receivedCalls.get(i));
+		} finally {
+			remoteManager.stop();
+			localManager.stop();
+		}
+
 	}
 }

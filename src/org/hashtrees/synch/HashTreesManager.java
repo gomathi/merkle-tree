@@ -1,11 +1,10 @@
 package org.hashtrees.synch;
 
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Iterator;
-import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.concurrent.CountDownLatch;
@@ -37,7 +36,7 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Function;
 import com.google.common.base.Stopwatch;
-import com.google.common.collect.Collections2;
+import com.google.common.collect.Iterators;
 
 /**
  * A hashtrees manager which runs background tasks to rebuild hash trees, and
@@ -84,6 +83,7 @@ public class HashTreesManager extends StoppableTask implements
 	private final HashTreesSynchAuthenticator authenticator;
 	private final SyncType syncType;
 
+	private final ConcurrentLinkedQueue<HashTreesManagerObserver> observers = new ConcurrentLinkedQueue<>();
 	private final ConcurrentSkipListMap<ServerName, HashTreesSyncInterface.Iface> servers = new ConcurrentSkipListMap<>();
 	private final ConcurrentMap<Pair<ServerName, Long>, Pair<Long, Boolean>> remoteTreeAndLastBuildReqTS = new ConcurrentHashMap<>();
 	private final ConcurrentMap<Pair<ServerName, Long>, Long> remoteTreeAndLastSyncedTS = new ConcurrentHashMap<>();
@@ -141,52 +141,26 @@ public class HashTreesManager extends StoppableTask implements
 	}
 
 	private void rebuildAllLocalTrees() {
-		Iterator<Long> treeIdItr = treeIdProvider.getAllPrimaryTreeIds();
-		if (!treeIdItr.hasNext()) {
-			LOG.info("There are no locally managed trees. So skipping rebuild operation.");
-			return;
-		}
-		List<Pair<Long, Long>> treeIdAndRebuildType = new ArrayList<>();
-		while (treeIdItr.hasNext()) {
-			long treeId = treeIdItr.next();
-			try {
-				treeIdAndRebuildType
-						.add(Pair.create(treeId, fullRebuildPeriod));
-			} catch (Exception e) {
-				LOG.error("Exception occurred while rebuilding.", e);
-			}
-			if (hasStopRequested()) {
-				LOG.info("Stop has been requested. Not proceeding with further rebuild task.");
-				return;
-			}
-		}
-		Collection<Callable<Void>> rebuildTasks = Collections2.transform(
-				treeIdAndRebuildType,
-				new Function<Pair<Long, Long>, Callable<Void>>() {
+		Iterator<Callable<Void>> rebuildTasks = Iterators.transform(
+				treeIdProvider.getAllPrimaryTreeIds(),
+				new Function<Long, Callable<Void>>() {
 
 					@Override
-					public Callable<Void> apply(final Pair<Long, Long> input) {
+					public Callable<Void> apply(final Long treeId) {
 						return new Callable<Void>() {
 
 							@Override
 							public Void call() throws Exception {
-								sendRebuildRequestToRemoteTrees(input
-										.getFirst());
-								Stopwatch watch = Stopwatch.createStarted();
-								hashTrees.rebuildHashTree(input.getFirst(),
-										input.getSecond());
-								watch.stop();
-								LOG.info("Time taken for rebuilding (treeId: "
-										+ input.getFirst() + ") (in ms):"
-										+ watch.elapsed(TimeUnit.MILLISECONDS));
+								rebuildHashTree(treeId, fullRebuildPeriod);
 								return null;
 							}
 						};
 					}
 				});
+
 		LOG.info("Building locally managed trees.");
 		TaskQueue<Void> taskQueue = new TaskQueue<Void>(threadPool,
-				rebuildTasks.iterator(), noOfThreads);
+				rebuildTasks, noOfThreads);
 		while (taskQueue.hasNext()) {
 			try {
 				taskQueue.next().get();
@@ -227,66 +201,75 @@ public class HashTreesManager extends StoppableTask implements
 	}
 
 	private void synchAllRemoteTrees() {
-		Iterator<Long> treeIds = treeIdProvider.getAllPrimaryTreeIds();
-		List<Pair<ServerName, Long>> remoteTrees = new ArrayList<>();
+		final Iterator<Long> treeIds = treeIdProvider.getAllPrimaryTreeIds();
+		Iterator<Pair<ServerName, Long>> remoteTreeIterator = new Iterator<Pair<ServerName, Long>>() {
 
-		while (treeIds.hasNext()) {
-			long treeId = treeIds.next();
-			Iterator<ServerName> serverItr = syncListProvider
-					.getServerNameListFor(treeId).iterator();
-			while (serverItr.hasNext()) {
-				ServerName sn = serverItr.next();
-				Pair<ServerName, Long> serverNameATreeId = Pair.create(sn,
-						treeId);
-				Pair<Long, Boolean> lastBuildReqTSAndResponse = remoteTreeAndLastBuildReqTS
-						.remove(serverNameATreeId);
-				Long unsyncedTime = remoteTreeAndLastSyncedTS
-						.get(serverNameATreeId);
+			private final ConcurrentLinkedQueue<Pair<ServerName, Long>> intQue = new ConcurrentLinkedQueue<>();
 
-				if (unsyncedTime == null || lastBuildReqTSAndResponse == null) {
-					LOG.info("Unsynced info entry is not available. Synch should be followed by rebuild. Skipping syncing "
-							+ serverNameATreeId);
-					continue;
-				}
+			@Override
+			public Pair<ServerName, Long> next() {
+				if (!hasNext())
+					throw new NoSuchElementException(
+							"No more elements exist to return.");
+				return intQue.remove();
+			}
 
-				try {
-					if ((lastBuildReqTSAndResponse.getSecond())
-							|| ((System.currentTimeMillis() - unsyncedTime) > MAX_UNSYNCED_TIME)) {
-						remoteTrees.add(serverNameATreeId);
-						remoteTreeAndLastSyncedTS.remove(serverNameATreeId);
-					} else {
-						LOG.info("Did not receive confirmation from "
-								+ serverNameATreeId
-								+ " for the rebuilding. Not syncing the remote node.");
+			@Override
+			public boolean hasNext() {
+				loadNextElement();
+				return !intQue.isEmpty();
+			}
+
+			private void loadNextElement() {
+				if (intQue.isEmpty()) {
+					while (treeIds.hasNext()) {
+						long treeId = treeIds.next();
+						for (ServerName sn : syncListProvider
+								.getServerNameListFor(treeId)) {
+							Pair<ServerName, Long> serverNameATreeId = Pair
+									.create(sn, treeId);
+							Pair<Long, Boolean> lastBuildReqTSAndResponse = remoteTreeAndLastBuildReqTS
+									.remove(serverNameATreeId);
+							Long unsyncedTime = remoteTreeAndLastSyncedTS
+									.get(serverNameATreeId);
+
+							if (unsyncedTime == null
+									|| lastBuildReqTSAndResponse == null) {
+								LOG.info("Unsynced info entry is not available. Synch should be followed by rebuild. Skipping syncing "
+										+ serverNameATreeId);
+								continue;
+							}
+
+							if ((lastBuildReqTSAndResponse.getSecond())
+									|| ((System.currentTimeMillis() - unsyncedTime) > MAX_UNSYNCED_TIME)) {
+								intQue.add(serverNameATreeId);
+								remoteTreeAndLastSyncedTS
+										.remove(serverNameATreeId);
+							} else {
+								LOG.info("Did not receive confirmation from "
+										+ serverNameATreeId
+										+ " for the rebuilding. Not syncing the remote node.");
+							}
+						}
+						if (!intQue.isEmpty())
+							break;
 					}
-				} catch (Exception e) {
-					LOG.error("Exception occurred while doing synch.", e);
-				}
-
-				if (hasStopRequested()) {
-					LOG.info("Stop has been requested. Skipping further sync tasks");
-					return;
 				}
 			}
-		}
+		};
 
-		if (remoteTrees.size() == 0) {
-			LOG.info("There is no synch required for any remote trees. Skipping this cycle.");
-			return;
-		}
-		LOG.info("Synching remote hash trees.");
-		Collection<Callable<Void>> syncTasks = Collections2.transform(
-				remoteTrees,
+		Iterator<Callable<Void>> syncTasks = Iterators.transform(
+				remoteTreeIterator,
 				new Function<Pair<ServerName, Long>, Callable<Void>>() {
 
 					@Override
 					public Callable<Void> apply(
-							final Pair<ServerName, Long> input) {
+							final Pair<ServerName, Long> serverNameAndTreeId) {
 						return new Callable<Void>() {
 
 							@Override
 							public Void call() throws Exception {
-								synch(input.getFirst(), input.getSecond(),
+								synch(serverNameAndTreeId.getFirst(), serverNameAndTreeId.getSecond(),
 										false, syncType);
 								return null;
 							}
@@ -294,8 +277,9 @@ public class HashTreesManager extends StoppableTask implements
 					}
 				});
 
-		TaskQueue<Void> taskQueue = new TaskQueue<Void>(threadPool,
-				syncTasks.iterator(), noOfThreads);
+		LOG.info("Synching remote hash trees.");
+		TaskQueue<Void> taskQueue = new TaskQueue<Void>(threadPool, syncTasks,
+				noOfThreads);
 		while (taskQueue.hasNext()) {
 			try {
 				taskQueue.next().get();
@@ -316,13 +300,48 @@ public class HashTreesManager extends StoppableTask implements
 		synch(sn, treeId, true, SyncType.UPDATE);
 	}
 
-	public void synch(ServerName sn, long treeId, boolean doAuthenticate,
-			SyncType syncType) throws Exception {
+	private void rebuildHashTree(final long treeId, long fullRebuildPeriod)
+			throws Exception {
+
+		notifyObservers(new Function<HashTreesManagerObserver, Void>() {
+
+			@Override
+			public Void apply(HashTreesManagerObserver htmObserver) {
+				htmObserver.preRebuild(treeId);
+				return null;
+			}
+		});
+		sendRebuildRequestToRemoteTrees(treeId);
+		Stopwatch watch = Stopwatch.createStarted();
+		hashTrees.rebuildHashTree(treeId, fullRebuildPeriod);
+		watch.stop();
+		LOG.info("Time taken for rebuilding (treeId: " + treeId + ") (in ms):"
+				+ watch.elapsed(TimeUnit.MILLISECONDS));
+		notifyObservers(new Function<HashTreesManagerObserver, Void>() {
+
+			@Override
+			public Void apply(HashTreesManagerObserver htmObserver) {
+				htmObserver.postRebuild(treeId);
+				return null;
+			}
+		});
+	}
+
+	public void synch(final ServerName sn, final long treeId,
+			boolean doAuthenticate, SyncType syncType) throws Exception {
 		boolean synchAllowed = doAuthenticate ? authenticator.canSynch(
 				localServer, sn) : true;
 		Pair<ServerName, Long> hostNameAndTreeId = Pair.create(sn, treeId);
 		if (synchAllowed) {
 			try {
+				notifyObservers(new Function<HashTreesManagerObserver, Void>() {
+
+					@Override
+					public Void apply(HashTreesManagerObserver input) {
+						input.preSync(treeId, sn);
+						return null;
+					}
+				});
 				LOG.info("Syncing " + hostNameAndTreeId);
 				Stopwatch watch = Stopwatch.createStarted();
 				HashTreesSyncInterface.Iface remoteSyncClient = getHashTreeSyncClient(sn);
@@ -332,6 +351,14 @@ public class HashTreesManager extends StoppableTask implements
 				LOG.info("Time taken for syncing (" + hostNameAndTreeId
 						+ ") (in ms):" + watch.elapsed(TimeUnit.MILLISECONDS));
 				LOG.info("Syncing " + hostNameAndTreeId + " complete.");
+				notifyObservers(new Function<HashTreesManagerObserver, Void>() {
+
+					@Override
+					public Void apply(HashTreesManagerObserver htmObserver) {
+						htmObserver.postSync(treeId, sn);
+						return null;
+					}
+				});
 			} catch (TException e) {
 				LOG.error("Unable to synch remote hash tree server : "
 						+ hostNameAndTreeId, e);
@@ -349,6 +376,22 @@ public class HashTreesManager extends StoppableTask implements
 			client = servers.get(sn);
 		}
 		return client;
+	}
+
+	public void addObserver(HashTreesManagerObserver observer) {
+		observers.add(observer);
+	}
+
+	public void removeObserver(HashTreesManagerObserver observer) {
+		observers.remove(observer);
+	}
+
+	private void notifyObservers(
+			Function<HashTreesManagerObserver, Void> function) {
+		Iterator<Void> itr = Iterators
+				.transform(observers.iterator(), function);
+		while (itr.hasNext())
+			itr.next();
 	}
 
 	@Override

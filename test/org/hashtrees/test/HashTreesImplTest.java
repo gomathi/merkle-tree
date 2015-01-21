@@ -17,6 +17,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.atomic.AtomicIntegerArray;
 
 import org.apache.commons.codec.binary.Hex;
 import org.hashtrees.HashTrees;
@@ -522,23 +523,23 @@ public class HashTreesImplTest {
 		HashTreesImpl hashTrees = new HashTreesImpl.Builder(store,
 				TREE_ID_PROVIDER, htStore).setEnabledNonBlockingCalls(false)
 				.build();
-		final boolean[] receivedCalls = new boolean[2];
+		final AtomicIntegerArray receivedCalls = new AtomicIntegerArray(2);
 		hashTrees.addListener(new HashTreesListener() {
 
 			@Override
 			public void postRemove(ByteBuffer key) {
-				receivedCalls[1] = true;
+				receivedCalls.set(0, 1);
 			}
 
 			@Override
 			public void postPut(ByteBuffer key, ByteBuffer value) {
-				receivedCalls[0] = true;
+				receivedCalls.set(1, 1);
 			}
 		});
 
 		hashTrees.hPut(randomByteBuffer(), randomByteBuffer());
 		hashTrees.hRemove(randomByteBuffer());
-		for (boolean value : receivedCalls)
-			Assert.assertTrue(value);
+		for (int i = 0; i < 2; i++)
+			Assert.assertEquals(1, receivedCalls.get(i));
 	}
 }

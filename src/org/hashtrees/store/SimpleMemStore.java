@@ -63,7 +63,6 @@ public class SimpleMemStore extends BaseStore {
 		return this.kvMap.equals(that.kvMap);
 	}
 
-	@Override
 	public Iterator<Pair<byte[], byte[]>> iterator() {
 		List<Pair<byte[], byte[]>> result = new ArrayList<>();
 		for (Map.Entry<ByteBuffer, ByteBuffer> entry : kvMap.entrySet())

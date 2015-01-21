@@ -54,14 +54,5 @@ public interface Store {
 	 */
 	Iterator<Pair<byte[], byte[]>> iterator(long treeId);
 
-	/**
-	 * Returns all keyValue pairs that are part of this store.Used by
-	 * {@link HashTrees#rebuildHashTree(long, boolean)} while rebuilding all
-	 * hashtrees.
-	 * 
-	 * @return
-	 */
-	Iterator<Pair<byte[], byte[]>> iterator();
-
 	void registerHashTrees(HashTrees hashTrees);
 }

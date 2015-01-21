@@ -1,48 +1,15 @@
 package org.hashtrees;
 
+import java.nio.ByteBuffer;
+
 /**
- * This interface provides an option to hook into {@link HashTrees} internal
- * methods.
+ * This interfaces provides a way to hook into listen the operations of
+ * {@link HashTrees}
  * 
  */
-
 public interface HashTreesListener {
 
-	/**
-	 * Called before
-	 * {@link HashTrees#hPut(java.nio.ByteBuffer, java.nio.ByteBuffer)}. The
-	 * implementations can change the putEntry to update what key, and value for
-	 * hPut call to use.
-	 * 
-	 * @param putEntry
-	 */
-	void preHPut(PutEntry putEntry);
+	void postPut(ByteBuffer key, ByteBuffer value);
 
-	/**
-	 * Called after finishing up
-	 * {@link HashTrees#hPut(java.nio.ByteBuffer, java.nio.ByteBuffer)}. This
-	 * can be used to bookkeeping about upto which key have been updated into
-	 * HashTrees.
-	 * 
-	 * @param putEntry
-	 */
-	void postHPut(PutEntry putEntry);
-
-	/**
-	 * Called before {@link HashTrees#hRemove(java.nio.ByteBuffer)}. The
-	 * implementations can change the removeEntry to update what key for hRemove
-	 * call to use.
-	 * 
-	 * @param removeEntry
-	 */
-	void preHRemove(RemoveEntry removeEntry);
-
-	/**
-	 * Called after finishing up {@link HashTrees#hRemove(java.nio.ByteBuffer)}
-	 * .This can be used to bookkeeping about upto which key have been updated
-	 * into HashTrees.
-	 * 
-	 * @param removeEntry
-	 */
-	void postHRemove(RemoveEntry removeEntry);
+	void postRemove(ByteBuffer key);
 }

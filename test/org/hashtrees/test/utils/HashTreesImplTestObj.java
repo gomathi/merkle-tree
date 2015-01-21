@@ -29,7 +29,7 @@ public class HashTreesImplTestObj extends HashTreesImpl {
 			BlockingQueue<HTSynchEvent> events) {
 		super(noOfSegments, enabledNonBlockingCalls, nbQueSize,
 				TREE_ID_PROVIDER, new ModuloSegIdProvider(noOfSegments),
-				htStore, store, null);
+				htStore, store);
 		this.events = events;
 	}
 

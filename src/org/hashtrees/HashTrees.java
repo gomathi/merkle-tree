@@ -155,4 +155,8 @@ public interface HashTrees {
 	 * @throws Exception
 	 */
 	void rebuildHashTree(long treeId, boolean fullRebuild) throws Exception;
+
+	void addListener(HashTreesListener listener);
+
+	void removeListener(HashTreesListener listener);
 }

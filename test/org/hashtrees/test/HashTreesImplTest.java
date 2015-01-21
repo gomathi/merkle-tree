@@ -23,8 +23,6 @@ import org.hashtrees.HashTrees;
 import org.hashtrees.HashTreesConstants;
 import org.hashtrees.HashTreesImpl;
 import org.hashtrees.HashTreesListener;
-import org.hashtrees.PutEntry;
-import org.hashtrees.RemoveEntry;
 import org.hashtrees.SimpleTreeIdProvider;
 import org.hashtrees.SyncDiffResult;
 import org.hashtrees.store.HashTreesMemStore;
@@ -518,47 +516,29 @@ public class HashTreesImplTest {
 	}
 
 	@Test
-	public void testListeners() {
-		HashTreesMemStore htStore = generateInMemoryStore();
-		final boolean[] callsReceived = new boolean[4];
-		int segId = 10;
-		final ByteBuffer expectedKey = generateRandomKeyWithPrefix(segId);
-		HashTreesImpl hashTrees = new HashTreesImpl.Builder(
-				new SimpleMemStore(), new SimpleTreeIdProvider(), htStore)
-				.setEnabledNonBlockingCalls(false)
-				.setSegmentIdProvider(SEG_ID_PROVIDER)
-				.setHashTreesListener(new HashTreesListener() {
+	public void testListeners() throws Exception {
+		Store store = new SimpleMemStore();
+		HashTreesStore htStore = generateInMemoryStore();
+		HashTreesImpl hashTrees = new HashTreesImpl.Builder(store,
+				TREE_ID_PROVIDER, htStore).setEnabledNonBlockingCalls(false)
+				.build();
+		final boolean[] receivedCalls = new boolean[2];
+		hashTrees.addListener(new HashTreesListener() {
 
-					@Override
-					public void preHPut(PutEntry putEntry) {
-						callsReceived[1] = true;
-						putEntry.setKey(expectedKey);
-					}
+			@Override
+			public void postRemove(ByteBuffer key) {
+				receivedCalls[1] = true;
+			}
 
-					@Override
-					public void postHPut(PutEntry putEntry) {
-						callsReceived[3] = true;
-					}
+			@Override
+			public void postPut(ByteBuffer key, ByteBuffer value) {
+				receivedCalls[0] = true;
+			}
+		});
 
-					@Override
-					public void preHRemove(RemoveEntry removeEntry) {
-						callsReceived[0] = true;
-						removeEntry.setKey(expectedKey);
-					}
-
-					@Override
-					public void postHRemove(RemoveEntry removeEntry) {
-						callsReceived[2] = true;
-					}
-
-				}).build();
 		hashTrees.hPut(randomByteBuffer(), randomByteBuffer());
-		Assert.assertNotNull(htStore.getSegmentData(
-				SimpleTreeIdProvider.TREE_ID, 10, expectedKey));
 		hashTrees.hRemove(randomByteBuffer());
-		Assert.assertNull(htStore.getSegmentData(SimpleTreeIdProvider.TREE_ID,
-				10, expectedKey));
-		for (boolean value : callsReceived)
+		for (boolean value : receivedCalls)
 			Assert.assertTrue(value);
 	}
 }

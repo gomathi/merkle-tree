@@ -539,6 +539,18 @@ public class HashTreesImpl implements HashTrees, Service {
 		disableNonblockingOperations();
 	}
 
+	@Override
+	public void addListener(HashTreesListener listener) {
+		assert (listener != null);
+		listeners.add(listener);
+	}
+
+	@Override
+	public void removeListener(HashTreesListener listener) {
+		assert (listener != null);
+		listeners.remove(listener);
+	}
+
 	private static int compareSegNodeIds(SegmentHash left, SegmentHash right) {
 		if (left == null && right == null)
 			return 0;
@@ -817,17 +829,5 @@ public class HashTreesImpl implements HashTrees, Service {
 					nonBlockingQueueSize, treeIdProvider, segIdProvider,
 					htStore, store);
 		}
-	}
-
-	@Override
-	public void addListener(HashTreesListener listener) {
-		assert (listener != null);
-		listeners.add(listener);
-	}
-
-	@Override
-	public void removeListener(HashTreesListener listener) {
-		assert (listener != null);
-		listeners.remove(listener);
 	}
 }

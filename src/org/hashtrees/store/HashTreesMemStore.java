@@ -17,6 +17,7 @@ import javax.annotation.concurrent.ThreadSafe;
 
 import org.hashtrees.thrift.generated.SegmentData;
 import org.hashtrees.thrift.generated.SegmentHash;
+import org.hashtrees.util.AtomicBitSet;
 
 /**
  * In memory implementation of {@link HashTreesStore}.
@@ -31,6 +32,7 @@ public class HashTreesMemStore extends HashTreesBaseStore {
 		private final ConcurrentMap<Integer, ByteBuffer> segmentHashes = new ConcurrentSkipListMap<Integer, ByteBuffer>();
 		private final ConcurrentMap<Integer, ConcurrentSkipListMap<ByteBuffer, ByteBuffer>> segDataBlocks = new ConcurrentHashMap<Integer, ConcurrentSkipListMap<ByteBuffer, ByteBuffer>>();
 		private final AtomicLong lastRebuiltTS = new AtomicLong(0);
+		private final AtomicBitSet markedSegments = new AtomicBitSet();
 	}
 
 	private HashTreeMemStore getIndHTree(long treeId) {
@@ -168,24 +170,18 @@ public class HashTreesMemStore extends HashTreesBaseStore {
 
 	@Override
 	public void markSegments(long treeId, List<Integer> segIds) {
-		// Intended to be reused across process restarts. This is in memory
-		// store, and does not persist anything. Implementing anything won't
-		// help here.
+		for (int segId : segIds)
+			getIndHTree(treeId).markedSegments.set(segId);
 	}
 
 	@Override
 	public void unmarkSegments(long treeId, List<Integer> segIds) {
-		// Intended to be reused across process restarts. This is in memory
-		// store, and does not persist anything. Implementing anything won't
-		// help here.
+		getIndHTree(treeId).markedSegments.clearBits(segIds);
 	}
 
 	@Override
 	public List<Integer> getMarkedSegments(long treeId) {
-		// Intended to be reused across process restarts. This is in memory
-		// store, and does not persist anything. Implementing anything won't
-		// help here.
-		return Collections.emptyList();
+		return getIndHTree(treeId).markedSegments.getAllSetBits();
 	}
 
 	@Override

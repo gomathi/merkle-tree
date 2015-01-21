@@ -137,7 +137,7 @@ public class HashTreesImpl implements HashTrees, Service {
 
 			@Override
 			public Void apply(HashTreesObserver input) {
-				input.postPut(key, value);
+				input.postHPut(key, value);
 				return null;
 			}
 		});
@@ -174,7 +174,7 @@ public class HashTreesImpl implements HashTrees, Service {
 
 			@Override
 			public Void apply(HashTreesObserver input) {
-				input.postRemove(key);
+				input.postHRemove(key);
 				return null;
 			}
 		});

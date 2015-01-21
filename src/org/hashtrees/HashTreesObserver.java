@@ -3,13 +3,13 @@ package org.hashtrees;
 import java.nio.ByteBuffer;
 
 /**
- * This interfaces provides a way to hook into listen the operations of
+ * This interfaces provides a way to hook into listen to the operations on
  * {@link HashTrees}
  * 
  */
 public interface HashTreesObserver {
 
-	void postPut(ByteBuffer key, ByteBuffer value);
+	void postHPut(ByteBuffer key, ByteBuffer value);
 
-	void postRemove(ByteBuffer key);
+	void postHRemove(ByteBuffer key);
 }

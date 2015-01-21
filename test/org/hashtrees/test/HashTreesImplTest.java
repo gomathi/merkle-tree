@@ -527,12 +527,12 @@ public class HashTreesImplTest {
 		hashTrees.addObserver(new HashTreesObserver() {
 
 			@Override
-			public void postRemove(ByteBuffer key) {
+			public void postHRemove(ByteBuffer key) {
 				receivedCalls.set(0, 1);
 			}
 
 			@Override
-			public void postPut(ByteBuffer key, ByteBuffer value) {
+			public void postHPut(ByteBuffer key, ByteBuffer value) {
 				receivedCalls.set(1, 1);
 			}
 		});

@@ -269,8 +269,9 @@ public class HashTreesManager extends StoppableTask implements
 
 							@Override
 							public Void call() throws Exception {
-								synch(serverNameAndTreeId.getFirst(), serverNameAndTreeId.getSecond(),
-										false, syncType);
+								synch(serverNameAndTreeId.getFirst(),
+										serverNameAndTreeId.getSecond(), false,
+										syncType);
 								return null;
 							}
 						};
@@ -438,6 +439,7 @@ public class HashTreesManager extends StoppableTask implements
 	@Override
 	public void stop() {
 		if (stopped.compareAndSet(false, true)) {
+			LOG.info("Stopping hash trees manager operations.");
 			CountDownLatch localLatch = new CountDownLatch(1);
 			super.stopAsync(localLatch);
 			try {
@@ -452,7 +454,7 @@ public class HashTreesManager extends StoppableTask implements
 				htThriftServer.stopAsync();
 			if (threadPool != null)
 				threadPool.shutdown();
-			LOG.info("Hash trees manager operations stopped.");
+			LOG.info("Stopping hash trees manager operations - Done.");
 		} else
 			LOG.info("Hash trees manager operations stopped already. No actions were taken.");
 	}

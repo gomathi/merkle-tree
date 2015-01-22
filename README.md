@@ -39,9 +39,6 @@ In the following design I will use the term HashTree instead of Merkle-tree. Bot
 
 3. HashTrees need to be informed about insertions/deletions, so the actual storage need to forward the call when the changes are happening to the storage. In order to avoid any increased latency, I have used a non blocking queue, and insertions/deletions are added as entries, so storage won't get blocked at any case. Still if the process shuts down immediately, then we might loose the entries on the non blocking queue. There are few workarounds, either by listening to the changes on hashtrees by implementing [HashTreesObserver] (https://github.com/gomathi/merkle-tree/blob/master/src/org/hashtrees/HashTreesObserver.java) and replay the storage calls after the process restart from last commit entry, or ask HashTrees to persist the changes to LevelDB instead of using non blocking queue.
 
-4. HashTrees has to sync up 
-5. 
-
 ###### Usage
 
 There are two main components, 

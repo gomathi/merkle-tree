@@ -1,5 +1,6 @@
 package org.hashtrees.synch;
 
+import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.List;
 import java.util.Map;
@@ -29,94 +30,116 @@ public class HashTreesRemoteClient implements HashTrees {
 
 	@Override
 	public void sPut(Map<ByteBuffer, ByteBuffer> keyValuePairs)
-			throws TException {
-		remoteTree.sPut(keyValuePairs);
+			throws IOException {
+		try {
+			remoteTree.sPut(keyValuePairs);
+		} catch (TException e) {
+			throw new IOException(e);
+		}
 	}
 
 	@Override
-	public void sRemove(List<ByteBuffer> keys) throws TException {
-		remoteTree.sRemove(keys);
+	public void sRemove(List<ByteBuffer> keys) throws IOException {
+		try {
+			remoteTree.sRemove(keys);
+		} catch (TException e) {
+			throw new IOException(e);
+		}
 	}
 
 	@Override
 	public List<SegmentHash> getSegmentHashes(long treeId, List<Integer> nodeIds)
-			throws TException {
-		return remoteTree.getSegmentHashes(treeId, nodeIds);
+			throws IOException {
+		try {
+			return remoteTree.getSegmentHashes(treeId, nodeIds);
+		} catch (TException e) {
+			throw new IOException(e);
+		}
 	}
 
 	@Override
 	public SegmentHash getSegmentHash(long treeId, int nodeId)
-			throws TException {
-		return remoteTree.getSegmentHash(treeId, nodeId);
+			throws IOException {
+		try {
+			return remoteTree.getSegmentHash(treeId, nodeId);
+		} catch (TException e) {
+			throw new IOException(e);
+		}
 	}
 
 	@Override
 	public List<SegmentData> getSegment(long treeId, int segId)
-			throws TException {
-		return remoteTree.getSegment(treeId, segId);
+			throws IOException {
+		try {
+			return remoteTree.getSegment(treeId, segId);
+		} catch (TException e) {
+			throw new IOException(e);
+		}
 	}
 
 	@Override
 	public SegmentData getSegmentData(long treeId, int segId, ByteBuffer key)
-			throws TException {
-		return remoteTree.getSegmentData(treeId, segId, key);
+			throws IOException {
+		try {
+			return remoteTree.getSegmentData(treeId, segId, key);
+		} catch (TException e) {
+			throw new IOException(e);
+		}
 	}
 
 	@Override
 	public void deleteTreeNodes(long treeId, List<Integer> nodeIds)
-			throws TException {
-		remoteTree.deleteTreeNodes(treeId, nodeIds);
+			throws IOException {
+		try {
+			remoteTree.deleteTreeNodes(treeId, nodeIds);
+		} catch (TException e) {
+			throw new IOException(e);
+		}
 	}
 
 	@Override
-	public void hPut(ByteBuffer key, ByteBuffer value) {
-		throw new UnsupportedOperationException(
-				"Remote tree does not support this operation.");
+	public void hPut(ByteBuffer key, ByteBuffer value) throws IOException {
+		throw new IOException("Remote tree does not support this operation.");
 	}
 
 	@Override
-	public void hRemove(ByteBuffer key) {
-		throw new UnsupportedOperationException(
-				"Remote tree does not support this operation.");
+	public void hRemove(ByteBuffer key) throws IOException {
+		throw new IOException("Remote tree does not support this operation.");
 	}
 
 	@Override
 	public void rebuildHashTree(long treeId, long fullRebuildPeriod)
-			throws Exception {
-		throw new UnsupportedOperationException(
-				"Remote tree does not support this operation.");
+			throws IOException {
+		throw new IOException("Remote tree does not support this operation.");
 	}
 
 	@Override
 	public void rebuildHashTree(long treeId, boolean fullRebuild)
-			throws Exception {
-		throw new UnsupportedOperationException(
-				"Remote tree does not support this operation.");
+			throws IOException {
+		throw new IOException("Remote tree does not support this operation.");
 	}
 
 	@Override
 	public SyncDiffResult synch(long treeId, HashTrees remoteTree,
-			SyncType syncType) throws Exception {
-		throw new UnsupportedOperationException(
-				"Remote tree does not support this operation.");
+			SyncType syncType) throws IOException {
+		throw new IOException("Remote tree does not support this operation.");
 	}
 
 	@Override
 	public SyncDiffResult synch(long treeId, HashTrees remoteTree)
-			throws Exception {
-		throw new UnsupportedOperationException(
-				"Remote tree does not support this operation.");
+			throws IOException {
+		throw new IOException("Remote tree does not support this operation.");
 	}
 
 	@Override
 	public void addObserver(HashTreesObserver observer) {
-		throw new UnsupportedOperationException(
+		throw new RuntimeException(
 				"Remote tree does not support this operation.");
 	}
 
 	@Override
 	public void removeObserver(HashTreesObserver observer) {
-		throw new UnsupportedOperationException(
+		throw new RuntimeException(
 				"Remote tree does not support this operation.");
 	}
 }

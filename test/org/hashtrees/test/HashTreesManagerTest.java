@@ -4,6 +4,7 @@ import static org.hashtrees.test.utils.HashTreesImplTestUtils.DEFAULT_SEG_DATA_B
 import static org.hashtrees.test.utils.HashTreesImplTestUtils.TREE_ID_PROVIDER;
 import static org.hashtrees.test.utils.HashTreesImplTestUtils.generateInMemoryStore;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -88,7 +89,7 @@ public class HashTreesManagerTest {
 	}
 
 	@Test
-	public void testSegmentUpdate() throws InterruptedException {
+	public void testSegmentUpdate() throws InterruptedException, IOException {
 		BlockingQueue<HTSynchEvent> events = new ArrayBlockingQueue<HTSynchEvent>(
 				1000);
 		HashTreeSyncManagerComponents components = createHashTreeSyncManager(

@@ -1,5 +1,6 @@
 package org.hashtrees.store;
 
+import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -27,7 +28,7 @@ public class SimpleMemStore extends BaseStore {
 	}
 
 	@Override
-	public void put(byte[] key, byte[] value) throws Exception {
+	public void put(byte[] key, byte[] value) throws IOException {
 		ByteBuffer intKey = ByteBuffer.wrap(key);
 		ByteBuffer intValue = ByteBuffer.wrap(value);
 		kvMap.put(intKey, intValue);
@@ -35,7 +36,7 @@ public class SimpleMemStore extends BaseStore {
 	}
 
 	@Override
-	public void remove(byte[] key) throws Exception {
+	public void remove(byte[] key) throws IOException {
 		ByteBuffer intKey = ByteBuffer.wrap(key);
 		kvMap.remove(intKey);
 		super.remove(key);

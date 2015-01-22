@@ -1,5 +1,6 @@
 package org.hashtrees.store;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -21,7 +22,8 @@ public abstract class HashTreesBaseStore implements HashTreesStore {
 
 	private final ConcurrentMap<Long, AtomicBitSet> treeIdAndDirtySegmentMap = new ConcurrentHashMap<Long, AtomicBitSet>();
 
-	private AtomicBitSet initializeDirtySegments(long treeId) {
+	private AtomicBitSet initializeDirtySegments(long treeId)
+			throws IOException {
 		AtomicBitSet dirtySegmentsBitSet = new AtomicBitSet();
 		List<Integer> dirtySegments = getDirtySegmentsInternal(treeId);
 		for (int dirtySegment : dirtySegments)
@@ -32,7 +34,7 @@ public abstract class HashTreesBaseStore implements HashTreesStore {
 		return dirtySegmentsBitSet;
 	}
 
-	private AtomicBitSet getDirtySegmentsHolder(long treeId) {
+	private AtomicBitSet getDirtySegmentsHolder(long treeId) throws IOException {
 		if (!treeIdAndDirtySegmentMap.containsKey(treeId))
 			treeIdAndDirtySegmentMap.putIfAbsent(treeId,
 					initializeDirtySegments(treeId));
@@ -40,7 +42,7 @@ public abstract class HashTreesBaseStore implements HashTreesStore {
 	}
 
 	@Override
-	public boolean setDirtySegment(long treeId, int segId) {
+	public boolean setDirtySegment(long treeId, int segId) throws IOException {
 		boolean prevValue = getDirtySegmentsHolder(treeId).set(segId);
 		if (!prevValue)
 			setDirtySegmentInternal(treeId, segId);
@@ -48,21 +50,24 @@ public abstract class HashTreesBaseStore implements HashTreesStore {
 	}
 
 	@Override
-	public List<Integer> getDirtySegments(long treeId) {
+	public List<Integer> getDirtySegments(long treeId) throws IOException {
 		return getDirtySegmentsHolder(treeId).getAllSetBits();
 	}
 
 	@Override
-	public boolean clearDirtySegment(long treeId, int segId) {
+	public boolean clearDirtySegment(long treeId, int segId) throws IOException {
 		boolean prevValue = getDirtySegmentsHolder(treeId).clear(segId);
 		if (prevValue)
 			clearDirtySegmentInternal(treeId, segId);
 		return prevValue;
 	}
 
-	protected abstract void setDirtySegmentInternal(long treeId, int segId);
+	protected abstract void setDirtySegmentInternal(long treeId, int segId)
+			throws IOException;
 
-	protected abstract void clearDirtySegmentInternal(long treeId, int segId);
+	protected abstract void clearDirtySegmentInternal(long treeId, int segId)
+			throws IOException;
 
-	protected abstract List<Integer> getDirtySegmentsInternal(long treeId);
+	protected abstract List<Integer> getDirtySegmentsInternal(long treeId)
+			throws IOException;
 }

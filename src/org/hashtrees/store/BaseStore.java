@@ -1,5 +1,6 @@
 package org.hashtrees.store;
 
+import java.io.IOException;
 import java.nio.ByteBuffer;
 
 import org.hashtrees.HashTrees;
@@ -17,13 +18,13 @@ public abstract class BaseStore implements Store {
 	private volatile HashTrees hashTrees;
 
 	@Override
-	public void put(byte[] key, byte[] value) throws Exception {
+	public void put(byte[] key, byte[] value) throws IOException {
 		if (hashTrees != null)
 			hashTrees.hPut(ByteBuffer.wrap(key), ByteBuffer.wrap(value));
 	}
 
 	@Override
-	public void remove(byte[] key) throws Exception {
+	public void remove(byte[] key) throws IOException {
 		if (hashTrees != null)
 			hashTrees.hRemove(ByteBuffer.wrap(key));
 	}

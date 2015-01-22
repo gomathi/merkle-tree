@@ -1,5 +1,6 @@
 package org.hashtrees.store;
 
+import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.Collection;
 import java.util.Iterator;
@@ -29,7 +30,7 @@ public interface HashTreesStore extends Service {
 	 * @param digest
 	 */
 	void putSegmentData(long treeId, int segId, ByteBuffer key,
-			ByteBuffer digest);
+			ByteBuffer digest) throws IOException;
 
 	/**
 	 * Returns the SegmentData for the given key if available, otherwise returns
@@ -40,7 +41,8 @@ public interface HashTreesStore extends Service {
 	 * @param key
 	 * @return
 	 */
-	SegmentData getSegmentData(long treeId, int segId, ByteBuffer key);
+	SegmentData getSegmentData(long treeId, int segId, ByteBuffer key)
+			throws IOException;
 
 	/**
 	 * Deletes the given segement data from the block.
@@ -49,7 +51,8 @@ public interface HashTreesStore extends Service {
 	 * @param segId
 	 * @param key
 	 */
-	void deleteSegmentData(long treeId, int segId, ByteBuffer key);
+	void deleteSegmentData(long treeId, int segId, ByteBuffer key)
+			throws IOException;
 
 	/**
 	 * Returns an iterator to read all the segment data of the given tree id.
@@ -57,7 +60,8 @@ public interface HashTreesStore extends Service {
 	 * @param treeId
 	 * @return
 	 */
-	Iterator<SegmentData> getSegmentDataIterator(long treeId);
+	Iterator<SegmentData> getSegmentDataIterator(long treeId)
+			throws IOException;
 
 	/**
 	 * Given a segment id, returns the list of all segment data in the
@@ -67,7 +71,7 @@ public interface HashTreesStore extends Service {
 	 * @param segId
 	 * @return
 	 */
-	List<SegmentData> getSegment(long treeId, int segId);
+	List<SegmentData> getSegment(long treeId, int segId) throws IOException;
 
 	/**
 	 * Segment hash is the hash of all data inside a segment block. A segment
@@ -78,7 +82,8 @@ public interface HashTreesStore extends Service {
 	 *            , identifier of the node in the hash tree.
 	 * @param digest
 	 */
-	void putSegmentHash(long treeId, int nodeId, ByteBuffer digest);
+	void putSegmentHash(long treeId, int nodeId, ByteBuffer digest)
+			throws IOException;
 
 	/**
 	 * 
@@ -86,7 +91,7 @@ public interface HashTreesStore extends Service {
 	 * @param nodeId
 	 * @return
 	 */
-	SegmentHash getSegmentHash(long treeId, int nodeId);
+	SegmentHash getSegmentHash(long treeId, int nodeId) throws IOException;
 
 	/**
 	 * Returns the data inside the nodes of the hash tree. If the node id is not
@@ -97,7 +102,8 @@ public interface HashTreesStore extends Service {
 	 *            , internal tree node ids.
 	 * @return
 	 */
-	List<SegmentHash> getSegmentHashes(long treeId, Collection<Integer> nodeIds);
+	List<SegmentHash> getSegmentHashes(long treeId, Collection<Integer> nodeIds)
+			throws IOException;
 
 	/**
 	 * Marks a segment as a dirty.
@@ -106,7 +112,7 @@ public interface HashTreesStore extends Service {
 	 * @param segId
 	 * @return previousValue
 	 */
-	boolean setDirtySegment(long treeId, int segId);
+	boolean setDirtySegment(long treeId, int segId) throws IOException;
 
 	/**
 	 * Clears the segments, which are passed as an argument.
@@ -115,7 +121,7 @@ public interface HashTreesStore extends Service {
 	 * @param segId
 	 * @return previousValue
 	 */
-	boolean clearDirtySegment(long treeId, int segId);
+	boolean clearDirtySegment(long treeId, int segId) throws IOException;
 
 	/**
 	 * Gets the dirty segments without clearing those bits.
@@ -123,7 +129,7 @@ public interface HashTreesStore extends Service {
 	 * @param treeId
 	 * @return
 	 */
-	List<Integer> getDirtySegments(long treeId);
+	List<Integer> getDirtySegments(long treeId) throws IOException;
 
 	/**
 	 * Sets flags for the given segments. Used during rebuild process by
@@ -134,7 +140,7 @@ public interface HashTreesStore extends Service {
 	 * 
 	 * @param segIds
 	 */
-	void markSegments(long treeId, List<Integer> segIds);
+	void markSegments(long treeId, List<Integer> segIds) throws IOException;
 
 	/**
 	 * Gets the marked segments for the given treeId.
@@ -142,7 +148,7 @@ public interface HashTreesStore extends Service {
 	 * @param treeId
 	 * @return
 	 */
-	List<Integer> getMarkedSegments(long treeId);
+	List<Integer> getMarkedSegments(long treeId) throws IOException;
 
 	/**
 	 * Unsets flags for the given segments. Used during rebuild process by
@@ -151,14 +157,14 @@ public interface HashTreesStore extends Service {
 	 * 
 	 * @param segIds
 	 */
-	void unmarkSegments(long treeId, List<Integer> segIds);
+	void unmarkSegments(long treeId, List<Integer> segIds) throws IOException;
 
 	/**
 	 * Deletes the segment hashes, and segment data for the given treeId.
 	 * 
 	 * @param treeId
 	 */
-	void deleteTree(long treeId);
+	void deleteTree(long treeId) throws IOException;
 
 	/**
 	 * Stores the timestamp at which the complete HashTree was rebuilt. This
@@ -167,12 +173,13 @@ public interface HashTreesStore extends Service {
 	 * 
 	 * @param timestamp
 	 */
-	void setCompleteRebuiltTimestamp(long treeId, long timestamp);
+	void setCompleteRebuiltTimestamp(long treeId, long timestamp)
+			throws IOException;
 
 	/**
 	 * Returns the timestamp at which the complete HashTree was rebuilt.
 	 * 
 	 * @return
 	 */
-	long getCompleteRebuiltTimestamp(long treeId);
+	long getCompleteRebuiltTimestamp(long treeId) throws IOException;
 }

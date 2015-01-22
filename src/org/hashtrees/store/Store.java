@@ -1,5 +1,6 @@
 package org.hashtrees.store;
 
+import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.Iterator;
 
@@ -16,9 +17,9 @@ import org.hashtrees.util.Pair;
  */
 public interface Store {
 
-	byte[] get(byte[] key);
+	byte[] get(byte[] key) throws IOException;
 
-	boolean contains(byte[] key);
+	boolean contains(byte[] key) throws IOException;
 
 	/**
 	 * Adds the key and value to the local store. Also this call should forward
@@ -30,7 +31,7 @@ public interface Store {
 	 * @param value
 	 * @throws Exception
 	 */
-	void put(byte[] key, byte[] value) throws Exception;
+	void put(byte[] key, byte[] value) throws IOException;
 
 	/**
 	 * Removes the key from the local store. Also this call should forward the
@@ -42,7 +43,7 @@ public interface Store {
 	 * @return
 	 * @throws Exception
 	 */
-	void remove(byte[] key) throws Exception;
+	void remove(byte[] key) throws IOException;
 
 	/**
 	 * This should return only (key,value) that are belonging to treeId. Used by
@@ -52,7 +53,13 @@ public interface Store {
 	 * @param treeId
 	 * @return
 	 */
-	Iterator<Pair<byte[], byte[]>> iterator(long treeId);
+	Iterator<Pair<byte[], byte[]>> iterator(long treeId) throws IOException;
 
+	/**
+	 * Register hashtrees with storage implementation. On modifications to the
+	 * storage, it should forward the calls to HashTrees.
+	 * 
+	 * @param hashTrees
+	 */
 	void registerHashTrees(HashTrees hashTrees);
 }

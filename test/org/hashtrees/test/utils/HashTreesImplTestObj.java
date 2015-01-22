@@ -2,6 +2,7 @@ package org.hashtrees.test.utils;
 
 import static org.hashtrees.test.utils.HashTreesImplTestUtils.TREE_ID_PROVIDER;
 
+import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.List;
 import java.util.Map;
@@ -35,20 +36,20 @@ public class HashTreesImplTestObj extends HashTreesImpl {
 
 	@Override
 	public void sPut(Map<ByteBuffer, ByteBuffer> keyValuePairs)
-			throws Exception {
+			throws IOException {
 		super.sPut(keyValuePairs);
-		events.put(HTSynchEvent.SYNCH_INITIATED);
+		events.add(HTSynchEvent.SYNCH_INITIATED);
 	}
 
 	@Override
-	public void sRemove(List<ByteBuffer> keys) throws Exception {
+	public void sRemove(List<ByteBuffer> keys) throws IOException {
 		super.sRemove(keys);
-		events.put(HTSynchEvent.SYNCH_INITIATED);
+		events.add(HTSynchEvent.SYNCH_INITIATED);
 	}
 
 	@Override
 	public SyncDiffResult synch(long treeId, HashTrees remoteTree)
-			throws Exception {
+			throws IOException {
 		SyncDiffResult result = super.synch(treeId, remoteTree);
 		events.add(HTSynchEvent.SYNCH);
 		return result;
@@ -56,14 +57,15 @@ public class HashTreesImplTestObj extends HashTreesImpl {
 
 	@Override
 	public SyncDiffResult synch(long treeId, HashTrees remoteTree,
-			SyncType syncType) throws Exception {
+			SyncType syncType) throws IOException {
 		SyncDiffResult result = super.synch(treeId, remoteTree, syncType);
 		events.add(HTSynchEvent.SYNCH);
 		return result;
 	}
 
 	@Override
-	public void rebuildHashTree(long treeId, boolean fullRebuild) {
+	public void rebuildHashTree(long treeId, boolean fullRebuild)
+			throws IOException {
 		super.rebuildHashTree(treeId, fullRebuild);
 		if (!fullRebuild)
 			events.add(HTSynchEvent.UPDATE_SEGMENT);

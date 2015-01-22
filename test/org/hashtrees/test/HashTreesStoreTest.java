@@ -229,7 +229,6 @@ public class HashTreesStoreTest {
 
 			try {
 				htStore.setDirtySegment(DEF_TREE_ID, DEF_SEG_ID);
-				htStore.stop();
 				htStore = helper.restartInstance(htStore);
 				List<Integer> dirtySegments = htStore
 						.getDirtySegments(DEF_TREE_ID);

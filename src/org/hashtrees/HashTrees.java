@@ -1,5 +1,6 @@
 package org.hashtrees;
 
+import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.List;
 import java.util.Map;
@@ -23,7 +24,7 @@ public interface HashTrees {
 	 * 
 	 * @param keyValuePairs
 	 */
-	void sPut(Map<ByteBuffer, ByteBuffer> keyValuePairs) throws Exception;
+	void sPut(Map<ByteBuffer, ByteBuffer> keyValuePairs) throws IOException;
 
 	/**
 	 * Deletes the keys from the store. Intended to be used while synch
@@ -32,7 +33,7 @@ public interface HashTrees {
 	 * @param keys
 	 * 
 	 */
-	void sRemove(List<ByteBuffer> keys) throws Exception;
+	void sRemove(List<ByteBuffer> keys) throws IOException;
 
 	/**
 	 * Hash tree internal nodes store the hash of their children nodes. Given a
@@ -46,7 +47,7 @@ public interface HashTrees {
 	 * 
 	 */
 	List<SegmentHash> getSegmentHashes(long treeId, List<Integer> nodeIds)
-			throws Exception;
+			throws IOException;
 
 	/**
 	 * Returns the segment hash that is stored on the tree.
@@ -58,7 +59,7 @@ public interface HashTrees {
 	 * @return
 	 * 
 	 */
-	SegmentHash getSegmentHash(long treeId, int nodeId) throws Exception;
+	SegmentHash getSegmentHash(long treeId, int nodeId) throws IOException;
 
 	/**
 	 * Hash tree data is stored on the leaf blocks. Given a segment id this
@@ -70,7 +71,7 @@ public interface HashTrees {
 	 * @return
 	 * 
 	 */
-	List<SegmentData> getSegment(long treeId, int segId) throws Exception;
+	List<SegmentData> getSegment(long treeId, int segId) throws IOException;
 
 	/**
 	 * Returns the (key,digest) for the given key in the given segment.
@@ -81,7 +82,7 @@ public interface HashTrees {
 	 * @param key
 	 */
 	SegmentData getSegmentData(long treeId, int segId, ByteBuffer key)
-			throws Exception;
+			throws IOException;
 
 	/**
 	 * Deletes tree nodes from the hash tree, and the corresponding segments.
@@ -90,7 +91,7 @@ public interface HashTrees {
 	 * @param treeId
 	 * @param nodeIds
 	 */
-	void deleteTreeNodes(long treeId, List<Integer> nodeIds) throws Exception;
+	void deleteTreeNodes(long treeId, List<Integer> nodeIds) throws IOException;
 
 	/**
 	 * Adds the key, and digest of value to the segment block in HashTree.
@@ -99,7 +100,7 @@ public interface HashTrees {
 	 * @param value
 	 * @throws Exception
 	 */
-	void hPut(ByteBuffer key, ByteBuffer value) throws Exception;
+	void hPut(ByteBuffer key, ByteBuffer value) throws IOException;
 
 	/**
 	 * Deletes the key from the hash tree.
@@ -107,7 +108,7 @@ public interface HashTrees {
 	 * @param key
 	 * @throws Exception
 	 */
-	void hRemove(ByteBuffer key) throws Exception;
+	void hRemove(ByteBuffer key) throws IOException;
 
 	/**
 	 * Updates the other HTree based on the differences with local objects. This
@@ -120,7 +121,7 @@ public interface HashTrees {
 	 *          and remote node.
 	 */
 	SyncDiffResult synch(long treeId, HashTrees remoteTree, SyncType syncType)
-			throws Exception;
+			throws IOException;
 
 	/**
 	 * Same as {@link #synch(long, HashTrees, SyncType)} except that, syncType
@@ -130,7 +131,7 @@ public interface HashTrees {
 	 * @param remoteTree
 	 * @return
 	 */
-	SyncDiffResult synch(long treeId, HashTrees remoteTree) throws Exception;
+	SyncDiffResult synch(long treeId, HashTrees remoteTree) throws IOException;
 
 	/**
 	 * Updates segment hashes based on the dirty entries.
@@ -144,7 +145,8 @@ public interface HashTrees {
 	 *            time the tree was fully rebuilt, then a full rebuild will be
 	 *            triggered. A negative value indicates disabling full rebuild.
 	 */
-	void rebuildHashTree(long treeId, long fullRebuildPeriod) throws Exception;
+	void rebuildHashTree(long treeId, long fullRebuildPeriod)
+			throws IOException;
 
 	/**
 	 * Similar to {@link #rebuildHashTree(long, long)}, except that allows to
@@ -154,7 +156,7 @@ public interface HashTrees {
 	 * @param fullRebuild
 	 * @throws Exception
 	 */
-	void rebuildHashTree(long treeId, boolean fullRebuild) throws Exception;
+	void rebuildHashTree(long treeId, boolean fullRebuild) throws IOException;
 
 	void addObserver(HashTreesObserver observer);
 

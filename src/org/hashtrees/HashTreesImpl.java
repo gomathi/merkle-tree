@@ -7,6 +7,7 @@ import static org.hashtrees.TreeUtils.height;
 import static org.hashtrees.util.ByteUtils.roundUpToPowerOf2;
 import static org.hashtrees.util.ByteUtils.sha1;
 
+import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -112,12 +113,13 @@ public class HashTreesImpl implements HashTrees, Service {
 	}
 
 	@Override
-	public void hPut(final ByteBuffer key, final ByteBuffer value) {
+	public void hPut(final ByteBuffer key, final ByteBuffer value)
+			throws IOException {
 		hPutInternal(HTOperation.PUT, key, value);
 	}
 
 	private void hPutInternal(HTOperation operation, final ByteBuffer key,
-			final ByteBuffer value) {
+			final ByteBuffer value) throws IOException {
 		if (enabledNonBlockingCalls) {
 			List<ByteBuffer> input = new ArrayList<ByteBuffer>();
 			input.add(key);
@@ -127,7 +129,8 @@ public class HashTreesImpl implements HashTrees, Service {
 			hPutInternal(key, value);
 	}
 
-	private void hPutInternal(final ByteBuffer key, final ByteBuffer value) {
+	private void hPutInternal(final ByteBuffer key, final ByteBuffer value)
+			throws IOException {
 		long treeId = treeIdProvider.getTreeId(key);
 		int segId = segIdProvider.getSegmentId(key);
 		ByteBuffer digest = ByteBuffer.wrap(sha1(value.array()));
@@ -151,11 +154,12 @@ public class HashTreesImpl implements HashTrees, Service {
 	}
 
 	@Override
-	public void hRemove(final ByteBuffer key) {
+	public void hRemove(final ByteBuffer key) throws IOException {
 		hRemoveInternal(HTOperation.REMOVE, key);
 	}
 
-	private void hRemoveInternal(HTOperation operation, final ByteBuffer key) {
+	private void hRemoveInternal(HTOperation operation, final ByteBuffer key)
+			throws IOException {
 		if (enabledNonBlockingCalls) {
 			List<ByteBuffer> input = new ArrayList<ByteBuffer>();
 			input.add(key);
@@ -165,7 +169,7 @@ public class HashTreesImpl implements HashTrees, Service {
 		}
 	}
 
-	private void hRemoveInternal(final ByteBuffer key) {
+	private void hRemoveInternal(final ByteBuffer key) throws IOException {
 		long treeId = treeIdProvider.getTreeId(key);
 		int segId = segIdProvider.getSegmentId(key);
 		htStore.setDirtySegment(treeId, segId);
@@ -182,13 +186,13 @@ public class HashTreesImpl implements HashTrees, Service {
 
 	@Override
 	public SyncDiffResult synch(long treeId, final HashTrees remoteTree)
-			throws Exception {
+			throws IOException {
 		return synch(treeId, remoteTree, SyncType.UPDATE);
 	}
 
 	@Override
 	public SyncDiffResult synch(long treeId, final HashTrees remoteTree,
-			SyncType syncType) throws Exception {
+			SyncType syncType) throws IOException {
 
 		Collection<Integer> leafNodesToCheck = new ArrayList<Integer>();
 		Collection<Integer> missingNodes = new ArrayList<Integer>();
@@ -218,7 +222,7 @@ public class HashTreesImpl implements HashTrees, Service {
 
 	private void findDifferences(long treeId, HashTrees remoteTree,
 			Collection<Integer> nodesToCheck, Collection<Integer> missingNodes,
-			Collection<Integer> extrinsicNodes) throws Exception {
+			Collection<Integer> extrinsicNodes) throws IOException {
 		CollectionPeekingIterator<SegmentHash> localItr = null, remoteItr = null;
 		SegmentHash local, remote;
 
@@ -261,7 +265,7 @@ public class HashTreesImpl implements HashTrees, Service {
 	}
 
 	private int syncSegments(long treeId, Collection<Integer> segIds,
-			HashTrees remoteTree, boolean doUpdate) throws Exception {
+			HashTrees remoteTree, boolean doUpdate) throws IOException {
 		int totUpdates = 0;
 		for (int segId : segIds)
 			totUpdates += syncSegment(treeId, segId, remoteTree, doUpdate);
@@ -269,7 +273,7 @@ public class HashTreesImpl implements HashTrees, Service {
 	}
 
 	private int syncSegment(long treeId, int segId, HashTrees remoteTree,
-			boolean doUpdate) throws Exception {
+			boolean doUpdate) throws IOException {
 		CollectionPeekingIterator<SegmentData> localDataItr = new CollectionPeekingIterator<SegmentData>(
 				getSegment(treeId, segId));
 		CollectionPeekingIterator<SegmentData> remoteDataItr = new CollectionPeekingIterator<SegmentData>(
@@ -311,7 +315,8 @@ public class HashTreesImpl implements HashTrees, Service {
 	}
 
 	private void updateRemoteTreeWithMissingSegments(long treeId,
-			Collection<Integer> segIds, HashTrees remoteTree) throws Exception {
+			Collection<Integer> segIds, HashTrees remoteTree)
+			throws IOException {
 		for (int segId : segIds) {
 			final Map<ByteBuffer, ByteBuffer> keyValuePairs = new HashMap<ByteBuffer, ByteBuffer>();
 			List<SegmentData> sdValues = getSegment(treeId, segId);
@@ -324,29 +329,32 @@ public class HashTreesImpl implements HashTrees, Service {
 	}
 
 	@Override
-	public SegmentHash getSegmentHash(long treeId, int nodeId) {
+	public SegmentHash getSegmentHash(long treeId, int nodeId)
+			throws IOException {
 		return htStore.getSegmentHash(treeId, nodeId);
 	}
 
 	@Override
 	public List<SegmentHash> getSegmentHashes(long treeId,
-			final List<Integer> nodeIds) {
+			final List<Integer> nodeIds) throws IOException {
 		return htStore.getSegmentHashes(treeId, nodeIds);
 	}
 
 	@Override
-	public SegmentData getSegmentData(long treeId, int segId, ByteBuffer key) {
+	public SegmentData getSegmentData(long treeId, int segId, ByteBuffer key)
+			throws IOException {
 		return htStore.getSegmentData(treeId, segId, key);
 	}
 
 	@Override
-	public List<SegmentData> getSegment(long treeId, int segId) {
+	public List<SegmentData> getSegment(long treeId, int segId)
+			throws IOException {
 		return htStore.getSegment(treeId, segId);
 	}
 
 	@Override
 	public void rebuildHashTree(long treeId, long fullRebuildPeriod)
-			throws Exception {
+			throws IOException {
 		long lastFullRebuiltTime = htStore.getCompleteRebuiltTimestamp(treeId);
 		boolean fullRebuild = (lastFullRebuiltTime == 0) ? true
 				: ((fullRebuildPeriod < 0) ? false
@@ -355,7 +363,8 @@ public class HashTreesImpl implements HashTrees, Service {
 	}
 
 	@Override
-	public void rebuildHashTree(long treeId, boolean fullRebuild) {
+	public void rebuildHashTree(long treeId, boolean fullRebuild)
+			throws IOException {
 		long buildBeginTS = System.currentTimeMillis();
 		if (fullRebuild)
 			rebuildCompleteTree(treeId);
@@ -375,8 +384,9 @@ public class HashTreesImpl implements HashTrees, Service {
 	 * the {@link Store}, removes from {@link HashTreesStore}.
 	 * 
 	 * @param treeId
+	 * @throws IOException
 	 */
-	private void rebuildCompleteTree(long treeId) {
+	private void rebuildCompleteTree(long treeId) throws IOException {
 		Iterator<Pair<byte[], byte[]>> itr = store.iterator(treeId);
 		while (itr.hasNext()) {
 			Pair<byte[], byte[]> pair = itr.next();
@@ -401,9 +411,10 @@ public class HashTreesImpl implements HashTrees, Service {
 	 * @param treeId
 	 * @param dirtySegments
 	 * @return corresponding nodeIds of the segments.
+	 * @throws IOException
 	 */
 	private List<Integer> rebuildLeaves(long treeId,
-			final List<Integer> dirtySegments) {
+			final List<Integer> dirtySegments) throws IOException {
 		List<Integer> nodeIds = new ArrayList<>();
 		for (int dirtySegId : dirtySegments) {
 			if (htStore.clearDirtySegment(treeId, dirtySegId)) {
@@ -416,7 +427,8 @@ public class HashTreesImpl implements HashTrees, Service {
 		return nodeIds;
 	}
 
-	private ByteBuffer digestSegmentData(long treeId, int segId) {
+	private ByteBuffer digestSegmentData(long treeId, int segId)
+			throws IOException {
 		List<SegmentData> dirtySegmentData = htStore.getSegment(treeId, segId);
 		List<String> hexStrings = new ArrayList<String>();
 		for (SegmentData sd : dirtySegmentData)
@@ -428,9 +440,10 @@ public class HashTreesImpl implements HashTrees, Service {
 	 * Updates the segment hashes iteratively for each level on the tree.
 	 * 
 	 * @param dirtyNodeIds
+	 * @throws IOException
 	 */
 	private void rebuildInternalNodes(long treeId,
-			final List<Integer> dirtyNodeIds) {
+			final List<Integer> dirtyNodeIds) throws IOException {
 		Set<Integer> parentNodeIds = new TreeSet<Integer>();
 		Set<Integer> nodeIds = new TreeSet<Integer>(dirtyNodeIds);
 		while (!nodeIds.isEmpty()) {
@@ -450,8 +463,10 @@ public class HashTreesImpl implements HashTrees, Service {
 	 * hash.
 	 * 
 	 * @param parentIds
+	 * @throws IOException
 	 */
-	private void rebuildParentNodes(long treeId, final Set<Integer> parentIds) {
+	private void rebuildParentNodes(long treeId, final Set<Integer> parentIds)
+			throws IOException {
 		List<Integer> children;
 		List<ByteBuffer> segHashes = new ArrayList<ByteBuffer>(noOfChildren);
 		ByteBuffer segHashBB;
@@ -473,7 +488,7 @@ public class HashTreesImpl implements HashTrees, Service {
 
 	@Override
 	public void sPut(final Map<ByteBuffer, ByteBuffer> keyValuePairs)
-			throws Exception {
+			throws IOException {
 		for (Map.Entry<ByteBuffer, ByteBuffer> keyValuePair : keyValuePairs
 				.entrySet())
 			store.put(keyValuePair.getKey().array(), keyValuePair.getValue()
@@ -481,14 +496,14 @@ public class HashTreesImpl implements HashTrees, Service {
 	}
 
 	@Override
-	public void sRemove(final List<ByteBuffer> keys) throws Exception {
+	public void sRemove(final List<ByteBuffer> keys) throws IOException {
 		for (ByteBuffer key : keys)
 			store.remove(key.array());
 	}
 
 	@Override
 	public void deleteTreeNodes(long treeId, List<Integer> nodeIds)
-			throws Exception {
+			throws IOException {
 		List<Integer> segIds = getSegmentIdsFromLeafIds(getAllLeafNodeIds(nodeIds));
 		for (int segId : segIds) {
 			Iterator<SegmentData> segDataItr = getSegment(treeId, segId)
@@ -722,6 +737,8 @@ public class HashTreesImpl implements HashTrees, Service {
 					hTree.hRemoveInternal(key);
 					break;
 				}
+			} catch (IOException e) {
+				throw new RuntimeException(e);
 			} finally {
 				keysOnQueue.remove(key);
 			}

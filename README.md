@@ -37,9 +37,22 @@ In the following design I will use the term HashTree instead of Merkle-tree. Bot
 
 2. HashTrees calculates the digest of each block, and also the complete tree using the digests of these blocks. Building and maintinaing the complete tree on every insertion/deletion to HashTrees will be costly. Hence I have implemented dirty buckets holder (implemented [AtomicBitSet] (https://github.com/gomathi/merkle-tree/blob/master/src/org/hashtrees/util/AtomicBitSet.java)), which will be marked on every insertions/deletions. Using the dirty segments, HashTrees periodically build and update the tree, and not on every update. Also added some code to persist dirty buckets information to LevelDB. 
 
-3. HashTrees need to be informed about insertions/deletions, so the actual storage need to forward the call when the changes are happening to the storage. For example, in our use case, Hbase forwards about insertions/deletions to HashTrees. In order to avoid any increased latency, I have used a non blocking queue, and insertions/deletions are added as entries, so storage won't get blocked at any case. Still if the process shuts down immediately, then we might loose the entries on the non blocking queue. There are few workarounds, either by listening to the changes on hashtrees by implementing [HashTreesObserver] (https://github.com/gomathi/merkle-tree/blob/master/src/org/hashtrees/HashTreesObserver.java) and replay the storage calls after the process restart, or ask trees to persist the changes to LevelDB instead of using non blocking queue. In my use case, I have used non blocking queue.
+3. HashTrees need to be informed about insertions/deletions, so the actual storage need to forward the call when the changes are happening to the storage. In order to avoid any increased latency, I have used a non blocking queue, and insertions/deletions are added as entries, so storage won't get blocked at any case. Still if the process shuts down immediately, then we might loose the entries on the non blocking queue. There are few workarounds, either by listening to the changes on hashtrees by implementing [HashTreesObserver] (https://github.com/gomathi/merkle-tree/blob/master/src/org/hashtrees/HashTreesObserver.java) and replay the storage calls after the process restart from last commit entry, or ask HashTrees to persist the changes to LevelDB instead of using non blocking queue.
 
-4. 
+4. HashTrees has to sync up 
+5. 
+
+###### Usage
+
+There are two main components, 
+
+1. HashTrees (which manages queueing up insertions/deletions, rebuilding the tree, and synch another remote tree on request). I have provided an example class [HashTreesUsage.java] (https://github.com/gomathi/merkle-tree/blob/master/src/org/hashtrees/usage/HashTreesUsage.java) in using HashTrees.
+2. HashTreesManager(which schedules rebuild/synch actions, and authorizes whether sync can happen from a tree to another tree). I will be documenting on using this class at [HashTreesManagerUsage.java] (https://github.com/gomathi/merkle-tree/blob/master/src/org/hashtrees/usage/HashTreesManagerUsage.java)
+
+###### Implementation
+
+1. Most of the classes are implemented against an interface. So different implementations can be provided. For example, [HashTreesStore] (https://github.com/gomathi/merkle-tree/blob/master/src/org/hashtrees/store/HashTreesStore.java) defines the storage to be used by hashtrees. [HashTreesPersistentStore.java] (https://github.com/gomathi/merkle-tree/blob/master/src/org/hashtrees/store/HashTreesPersistentStore.java) is an LevelDB based storage implementation. You can plugin your own class, if you dont want to use LevelDB.
+2. Also HashTrees and HashTreesManager provides observers, [HashTreesObserver.java] (https://github.com/gomathi/merkle-tree/blob/master/src/org/hashtrees/HashTreesObserver.java) and [HashTreesManagerObserver.java] (https://github.com/gomathi/merkle-tree/blob/master/src/org/hashtrees/synch/HashTreesManagerObserver.java). So you can plugin your own actions on certain events. 
 
 ###### Things to do
 1. Expose metrics through JMX. [Netflix opensourced a library for that] (https://github.com/Netflix/servo/wiki). Seems like this is a good option.

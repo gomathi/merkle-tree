@@ -3,7 +3,7 @@ merkle-tree
 
 Merkle tree is used in distributed systems(and many other places) to detect differences between two large datasets by using minimal network transfers. More information is avaiable in wikipedia. http://en.wikipedia.org/wiki/Merkle_tree. 
 
-Main principle behind merkle-tree is as shown below ![Image of merkle tree] (http://en.wikipedia.org/wiki/Merkle_tree#mediaviewer/File:Hash_Tree.svg)
+Main principle behind merkle-tree is as shown below ![Image of merkle tree] (http://upload.wikimedia.org/wikipedia/commons/9/95/Hash_Tree.svg)
 
 1) Divide the data into blocks, and compute digest(hash) of each block. Assuming 
 

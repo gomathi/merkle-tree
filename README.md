@@ -18,8 +18,7 @@ Merkle tree(Hash trees) is used in distributed systems(and many other places) to
 [Amazon Dynamo] (http://www.allthingsdistributed.com/files/amazon-dynamo-sosp2007.pdf) has used that in its implementation.
 There are even few [opensource] (http://www.ccnx.org/releases/ccnx-0.6.0/javasrc/src/org/ccnx/ccn/impl/security/crypto/MerkleTree.java) implementations available. 
 
-###### Problem
-========
+######Problem
 In one of my projects, we replicate some users' data acros multiple locations asynchronously. Replica nodes can differ from primary node's data for various reasons
 
 1. Replica nodes can miss replication events from primary node due to operational error(like disabling replication, bringing up a node without bootstrapping the initial data), a node being down for a longer period of time.

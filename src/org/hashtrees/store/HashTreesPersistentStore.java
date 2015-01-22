@@ -14,16 +14,10 @@ import static org.hashtrees.store.ByteKeyValueConverter.generateSegmentHashKey;
 import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
-import java.util.NoSuchElementException;
-import java.util.Queue;
-
-import javax.annotation.concurrent.NotThreadSafe;
 
 import org.apache.commons.io.FileUtils;
 import org.fusesource.leveldbjni.JniDBFactory;
@@ -32,13 +26,13 @@ import org.hashtrees.store.ByteKeyValueConverter.MetaDataKey;
 import org.hashtrees.thrift.generated.SegmentData;
 import org.hashtrees.thrift.generated.SegmentHash;
 import org.hashtrees.util.ByteUtils;
+import org.hashtrees.util.DataIterator;
 import org.iq80.leveldb.DB;
 import org.iq80.leveldb.DBIterator;
 import org.iq80.leveldb.Options;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Function;
 import com.google.common.collect.Lists;
 
 /**
@@ -247,46 +241,6 @@ public class HashTreesPersistentStore extends HashTreesBaseStore {
 		File dbDirObj = new File(dbDir);
 		if (dbDirObj.exists())
 			FileUtils.deleteQuietly(dbDirObj);
-	}
-
-	@NotThreadSafe
-	private static class DataIterator<T> implements Iterator<T> {
-
-		private final Queue<T> dataQueue = new ArrayDeque<>(1);
-		private final byte[] prefixKey;
-		private final Function<Map.Entry<byte[], byte[]>, T> converter;
-		private final Iterator<Map.Entry<byte[], byte[]>> kvBytesItr;
-
-		public DataIterator(byte[] prefixKey,
-				Function<Map.Entry<byte[], byte[]>, T> converter,
-				Iterator<Map.Entry<byte[], byte[]>> kvBytesItr) {
-			this.prefixKey = prefixKey;
-			this.converter = converter;
-			this.kvBytesItr = kvBytesItr;
-		}
-
-		@Override
-		public boolean hasNext() {
-			loadNextElement();
-			return dataQueue.size() > 0;
-		}
-
-		@Override
-		public T next() {
-			if (!hasNext())
-				throw new NoSuchElementException("No more elements exist.");
-			return dataQueue.remove();
-		}
-
-		private void loadNextElement() {
-			if (dataQueue.isEmpty() && kvBytesItr.hasNext()) {
-				Map.Entry<byte[], byte[]> entry = kvBytesItr.next();
-				if (ByteUtils.compareTo(prefixKey, 0, prefixKey.length,
-						entry.getKey(), 0, prefixKey.length) != 0)
-					return;
-				dataQueue.add(converter.apply(entry));
-			}
-		}
 	}
 
 	@Override

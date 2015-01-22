@@ -2,7 +2,8 @@
 
 Merkle tree(Hash trees) is used in distributed systems(and many other places) to detect differences between two large datasets by using minimal network transfers. More information is avaiable in wikipedia. http://en.wikipedia.org/wiki/Merkle_tree. 
 
-![Image of merkle tree] (http://upload.wikimedia.org/wikipedia/commons/9/95/Hash_Tree.svg)
+![Image of merkle tree] 
+(http://upload.wikimedia.org/wikipedia/commons/9/95/Hash_Tree.svg)
 
 ###### Idea behind the merkle-tree is as following
 

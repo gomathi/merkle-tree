@@ -131,8 +131,8 @@ public class HashTreesImpl implements HashTrees, Service {
 
 	private void hPutInternal(final ByteBuffer key, final ByteBuffer value)
 			throws IOException {
-		long treeId = treeIdProvider.getTreeId(key);
-		int segId = segIdProvider.getSegmentId(key);
+		long treeId = treeIdProvider.getTreeId(key.array());
+		int segId = segIdProvider.getSegmentId(key.array());
 		ByteBuffer digest = ByteBuffer.wrap(sha1(value.array()));
 		htStore.setDirtySegment(treeId, segId);
 		htStore.putSegmentData(treeId, segId, key, digest);
@@ -170,8 +170,8 @@ public class HashTreesImpl implements HashTrees, Service {
 	}
 
 	private void hRemoveInternal(final ByteBuffer key) throws IOException {
-		long treeId = treeIdProvider.getTreeId(key);
-		int segId = segIdProvider.getSegmentId(key);
+		long treeId = treeIdProvider.getTreeId(key.array());
+		int segId = segIdProvider.getSegmentId(key.array());
 		htStore.setDirtySegment(treeId, segId);
 		htStore.deleteSegmentData(treeId, segId, key);
 		notifyObservers(new Function<HashTreesObserver, Void>() {
@@ -402,7 +402,7 @@ public class HashTreesImpl implements HashTrees, Service {
 				.getSegmentDataIterator(treeId);
 		while (segDataItr.hasNext()) {
 			SegmentData sd = segDataItr.next();
-			if (!store.contains(sd.key.array())) {
+			if (!store.contains(sd.getKey())) {
 				hRemoveInternal(HTOperation.REMOVE_IF_ABSENT, sd.key);
 			}
 		}

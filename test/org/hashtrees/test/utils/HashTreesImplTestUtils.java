@@ -33,9 +33,9 @@ public class HashTreesImplTestUtils {
 	public static class SegIdProviderTest implements SegmentIdProvider {
 
 		@Override
-		public int getSegmentId(ByteBuffer key) {
+		public int getSegmentId(byte[] key) {
 			try {
-				ByteBuffer bb = ByteBuffer.wrap(key.array());
+				ByteBuffer bb = ByteBuffer.wrap(key);
 				return bb.getInt();
 			} catch (NumberFormatException e) {
 				throw new IllegalArgumentException(

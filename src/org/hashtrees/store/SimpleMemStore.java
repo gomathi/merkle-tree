@@ -24,7 +24,13 @@ public class SimpleMemStore extends BaseStore {
 	@Override
 	public byte[] get(byte[] key) {
 		ByteBuffer intKey = ByteBuffer.wrap(key);
-		return (intKey != null) ? kvMap.get(intKey).array() : null;
+		ByteBuffer valueBB = kvMap.get(intKey);
+		if (valueBB != null) {
+			byte[] value = new byte[valueBB.remaining()];
+			valueBB.duplicate().get(value);
+			return value;
+		}
+		return null;
 	}
 
 	@Override
@@ -82,12 +88,18 @@ public class SimpleMemStore extends BaseStore {
 
 									@Override
 									public byte[] getValue() {
-										return input.getValue().array();
+										byte[] value = new byte[input
+												.getValue().remaining()];
+										input.getValue().duplicate().get(value);
+										return value;
 									}
 
 									@Override
 									public byte[] getKey() {
-										return input.getKey().array();
+										byte[] key = new byte[input.getKey()
+												.remaining()];
+										input.getKey().duplicate().get(key);
+										return key;
 									}
 								};
 							}

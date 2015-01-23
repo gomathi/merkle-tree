@@ -22,7 +22,7 @@ import org.hashtrees.synch.HashTreesManager;
  */
 public interface HashTreesIdProvider {
 
-	long getTreeId(ByteBuffer key);
+	long getTreeId(byte[] key);
 
 	/**
 	 * Returns treeIds for which the current node is responsible for.

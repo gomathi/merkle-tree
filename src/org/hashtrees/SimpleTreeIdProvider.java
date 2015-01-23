@@ -1,6 +1,5 @@
 package org.hashtrees;
 
-import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
@@ -23,7 +22,7 @@ public class SimpleTreeIdProvider implements HashTreesIdProvider {
 	}
 
 	@Override
-	public long getTreeId(ByteBuffer key) {
+	public long getTreeId(byte[] key) {
 		return TREE_ID;
 	}
 

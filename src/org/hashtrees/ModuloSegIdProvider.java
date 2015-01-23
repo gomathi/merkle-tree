@@ -15,8 +15,8 @@ public class ModuloSegIdProvider implements SegmentIdProvider {
 	}
 
 	@Override
-	public int getSegmentId(ByteBuffer key) {
-		int hcode = key.hashCode();
+	public int getSegmentId(byte[] key) {
+		int hcode = ByteBuffer.wrap(key).hashCode();
 		return hcode & (noOfBuckets - 1);
 	}
 

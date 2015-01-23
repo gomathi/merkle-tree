@@ -99,7 +99,7 @@ public class HashTreesManager extends StoppableTask implements
 			long fullRebuildPeriod, boolean rebuildEnabled,
 			boolean synchEnabled, ServerName localServer, HashTrees hashTrees,
 			HashTreesIdProvider treeIdProvider,
-			HashTreesSynchListProvider syncMgrStore,
+			HashTreesSynchListProvider syncListProvider,
 			HashTreesSynchAuthenticator authenticator, SyncType syncType) {
 		this.noOfThreads = noOfThreads;
 		this.period = period;
@@ -107,7 +107,7 @@ public class HashTreesManager extends StoppableTask implements
 		this.synchEnabled = synchEnabled;
 		this.rebuildEnabled = rebuildEnabled;
 		this.localServer = localServer;
-		this.syncListProvider = syncMgrStore;
+		this.syncListProvider = syncListProvider;
 		this.hashTrees = hashTrees;
 		this.treeIdProvider = treeIdProvider;
 		this.authenticator = authenticator;

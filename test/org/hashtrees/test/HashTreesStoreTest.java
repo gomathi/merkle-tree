@@ -223,6 +223,28 @@ public class HashTreesStoreTest {
 	}
 
 	@Test
+	public void testDirtySegments() throws Exception {
+		for (HTStoreHelper helper : helpers) {
+			HashTreesStore htStore = helper.getInstance();
+
+			try {
+				htStore.setDirtySegment(DEF_TREE_ID, DEF_SEG_ID);
+				List<Integer> dirtySegments = htStore
+						.getDirtySegments(DEF_TREE_ID);
+				Assert.assertNotNull(dirtySegments);
+				Assert.assertEquals(1, dirtySegments.size());
+				Assert.assertEquals(DEF_SEG_ID, dirtySegments.get(0).intValue());
+				htStore.clearDirtySegment(DEF_TREE_ID, DEF_SEG_ID);
+				dirtySegments = htStore.getDirtySegments(DEF_TREE_ID);
+				Assert.assertNotNull(dirtySegments);
+				Assert.assertEquals(0, dirtySegments.size());
+			} finally {
+				helper.cleanup(htStore);
+			}
+		}
+	}
+
+	@Test
 	public void testDirtySegmentsPersistenceBetweenRestarts() throws Exception {
 		for (HTStoreHelper helper : helpers) {
 			HashTreesStore htStore = helper.getInstance();

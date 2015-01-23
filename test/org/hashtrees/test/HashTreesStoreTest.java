@@ -1,5 +1,6 @@
 package org.hashtrees.test;
 
+import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -24,17 +25,18 @@ public class HashTreesStoreTest {
 
 	private static interface HTStoreHelper {
 
-		HashTreesStore getInstance() throws Exception;
+		HashTreesStore getInstance() throws IOException;
 
-		HashTreesStore restartInstance(HashTreesStore htStore) throws Exception;
+		HashTreesStore restartInstance(HashTreesStore htStore)
+				throws IOException;
 
-		void cleanup(HashTreesStore htStore);
+		void cleanup(HashTreesStore htStore) throws IOException;
 	}
 
 	private static class HTPersistentStoreHelper implements HTStoreHelper {
 
 		@Override
-		public HashTreesStore getInstance() throws Exception {
+		public HashTreesStore getInstance() throws IOException {
 			return new HashTreesPersistentStore(
 					HashTreesImplTestUtils.randomDirName());
 		}
@@ -46,7 +48,7 @@ public class HashTreesStoreTest {
 
 		@Override
 		public HashTreesStore restartInstance(HashTreesStore htStore)
-				throws Exception {
+				throws IOException {
 			((HashTreesPersistentStore) htStore).stop();
 			return new HashTreesPersistentStore(
 					((HashTreesPersistentStore) htStore).getDbDir());
@@ -56,7 +58,7 @@ public class HashTreesStoreTest {
 	private static class HTMemStoreHelper implements HTStoreHelper {
 
 		@Override
-		public HashTreesStore getInstance() throws Exception {
+		public HashTreesStore getInstance() throws IOException {
 			return new HashTreesMemStore();
 		}
 
@@ -67,7 +69,7 @@ public class HashTreesStoreTest {
 
 		@Override
 		public HashTreesStore restartInstance(HashTreesStore htStore)
-				throws Exception {
+				throws IOException {
 			return htStore;
 		}
 
@@ -81,7 +83,7 @@ public class HashTreesStoreTest {
 	}
 
 	@Test
-	public void testSegmentData() throws Exception {
+	public void testSegmentData() throws IOException {
 		for (HTStoreHelper helper : helpers) {
 			HashTreesStore htStore = helper.getInstance();
 			try {
@@ -106,7 +108,7 @@ public class HashTreesStoreTest {
 	}
 
 	@Test
-	public void testSegment() throws Exception {
+	public void testSegment() throws IOException {
 		for (HTStoreHelper helper : helpers) {
 			HashTreesStore htStore = helper.getInstance();
 			try {
@@ -133,7 +135,7 @@ public class HashTreesStoreTest {
 	}
 
 	@Test
-	public void testPutSegmentHash() throws Exception {
+	public void testPutSegmentHash() throws IOException {
 		for (HTStoreHelper helper : helpers) {
 			HashTreesStore htStore = helper.getInstance();
 			try {
@@ -162,7 +164,7 @@ public class HashTreesStoreTest {
 	}
 
 	@Test
-	public void testDeleteTree() throws Exception {
+	public void testDeleteTree() throws IOException {
 		for (HTStoreHelper helper : helpers) {
 			HashTreesStore htStore = helper.getInstance();
 			try {
@@ -182,7 +184,7 @@ public class HashTreesStoreTest {
 	}
 
 	@Test
-	public void testSetLastFullyTreeBuiltTimestamp() throws Exception {
+	public void testSetLastFullyTreeBuiltTimestamp() throws IOException {
 		for (HTStoreHelper helper : helpers) {
 			HashTreesStore htStore = helper.getInstance();
 			try {
@@ -197,7 +199,7 @@ public class HashTreesStoreTest {
 	}
 
 	@Test
-	public void testSegmentRebuildMarkers() throws Exception {
+	public void testSegmentRebuildMarkers() throws IOException {
 		for (HTStoreHelper helper : helpers) {
 			HashTreesStore htStore = helper.getInstance();
 			try {
@@ -223,7 +225,7 @@ public class HashTreesStoreTest {
 	}
 
 	@Test
-	public void testDirtySegments() throws Exception {
+	public void testDirtySegments() throws IOException {
 		for (HTStoreHelper helper : helpers) {
 			HashTreesStore htStore = helper.getInstance();
 
@@ -245,7 +247,8 @@ public class HashTreesStoreTest {
 	}
 
 	@Test
-	public void testDirtySegmentsPersistenceBetweenRestarts() throws Exception {
+	public void testDirtySegmentsPersistenceBetweenRestarts()
+			throws IOException {
 		for (HTStoreHelper helper : helpers) {
 			HashTreesStore htStore = helper.getInstance();
 

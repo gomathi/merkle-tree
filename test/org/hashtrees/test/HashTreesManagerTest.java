@@ -128,7 +128,7 @@ public class HashTreesManagerTest {
 	}
 
 	@Test
-	public void testSynch() throws Exception {
+	public void testSynch() throws IOException, InterruptedException {
 		final List<ServerName> syncList = Collections
 				.synchronizedList(new ArrayList<ServerName>());
 		BlockingQueue<HTSynchEvent> localEvents = new ArrayBlockingQueue<HTSynchEvent>(
@@ -168,7 +168,8 @@ public class HashTreesManagerTest {
 	}
 
 	@Test(expected = SynchNotAllowedException.class)
-	public void testSynchAuthentication() throws Exception {
+	public void testSynchAuthentication() throws IOException,
+			SynchNotAllowedException {
 		HashTreesManager manager = new HashTreesManager(10, 0, 0, true, true,
 				null, null, null, null, new HashTreesSynchAuthenticator() {
 

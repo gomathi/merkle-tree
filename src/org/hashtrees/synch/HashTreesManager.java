@@ -1,5 +1,6 @@
 package org.hashtrees.synch;
 
+import java.io.IOException;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 import java.util.concurrent.Callable;
@@ -131,13 +132,17 @@ public class HashTreesManager extends StoppableTask implements
 
 	@Override
 	public void onRebuildHashTreeRequest(RebuildHashTreeRequest request)
-			throws Exception {
-		hashTrees
-				.rebuildHashTree(request.treeId, request.expFullRebuildTimeInt);
-		HashTreesSyncInterface.Iface client = getHashTreeSyncClient(request.requester);
-		RebuildHashTreeResponse response = new RebuildHashTreeResponse(
-				localServer, request.treeId, request.tokenNo);
-		client.submitRebuildResponse(response);
+			throws IOException {
+		try {
+			hashTrees.rebuildHashTree(request.treeId,
+					request.expFullRebuildTimeInt);
+			HashTreesSyncInterface.Iface client = getHashTreeSyncClient(request.requester);
+			RebuildHashTreeResponse response = new RebuildHashTreeResponse(
+					localServer, request.treeId, request.tokenNo);
+			client.submitRebuildResponse(response);
+		} catch (TException e) {
+			throw new IOException(e);
+		}
 	}
 
 	private void rebuildAllLocalTrees() {
@@ -150,7 +155,7 @@ public class HashTreesManager extends StoppableTask implements
 						return new Callable<Void>() {
 
 							@Override
-							public Void call() throws Exception {
+							public Void call() throws IOException {
 								rebuildHashTree(treeId, fullRebuildPeriod);
 								return null;
 							}
@@ -268,7 +273,8 @@ public class HashTreesManager extends StoppableTask implements
 						return new Callable<Void>() {
 
 							@Override
-							public Void call() throws Exception {
+							public Void call() throws IOException,
+									SynchNotAllowedException {
 								synch(serverNameAndTreeId.getFirst(),
 										serverNameAndTreeId.getSecond(), false,
 										syncType);
@@ -297,12 +303,13 @@ public class HashTreesManager extends StoppableTask implements
 		LOG.info("Synching remote hash trees. - Done");
 	}
 
-	public void synch(ServerName sn, long treeId) throws Exception {
+	public void synch(ServerName sn, long treeId) throws IOException,
+			SynchNotAllowedException {
 		synch(sn, treeId, true, SyncType.UPDATE);
 	}
 
 	private void rebuildHashTree(final long treeId, long fullRebuildPeriod)
-			throws Exception {
+			throws IOException {
 
 		notifyObservers(new Function<HashTreesManagerObserver, Void>() {
 
@@ -329,7 +336,8 @@ public class HashTreesManager extends StoppableTask implements
 	}
 
 	public void synch(final ServerName sn, final long treeId,
-			boolean doAuthenticate, SyncType syncType) throws Exception {
+			boolean doAuthenticate, SyncType syncType) throws IOException,
+			SynchNotAllowedException {
 		boolean synchAllowed = doAuthenticate ? authenticator.canSynch(
 				localServer, sn) : true;
 		Pair<ServerName, Long> hostNameAndTreeId = Pair.create(sn, treeId);

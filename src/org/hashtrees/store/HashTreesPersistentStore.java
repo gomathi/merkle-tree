@@ -52,7 +52,7 @@ public class HashTreesPersistentStore extends HashTreesBaseStore {
 	private final String dbDir;
 	private final DB dbObj;
 
-	public HashTreesPersistentStore(String dbDir) throws Exception {
+	public HashTreesPersistentStore(String dbDir) throws IOException {
 		this.dbDir = dbDir;
 		this.dbObj = initDB(dbDir);
 	}

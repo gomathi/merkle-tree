@@ -1,6 +1,7 @@
 package org.hashtrees.test.utils;
 
 import java.io.File;
+import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.Random;
 
@@ -78,8 +79,7 @@ public class HashTreesImplTestUtils {
 	public static HTreeComponents createHashTree(int noOfSegDataBlocks,
 			boolean enabledNonBlockingCalls,
 			final HashTreesIdProvider treeIdProv,
-			final SegmentIdProvider segIdPro, final HashTreesStore hTStore)
-			throws Exception {
+			final SegmentIdProvider segIdPro, final HashTreesStore hTStore) {
 		SimpleMemStore store = new SimpleMemStore();
 		HashTreesImpl hTree = new HashTreesImpl.Builder(store, treeIdProv,
 				hTStore).setNoOfSegments(noOfSegDataBlocks)
@@ -90,8 +90,7 @@ public class HashTreesImplTestUtils {
 	}
 
 	public static HTreeComponents createHashTree(int noOfSegments,
-			boolean enabledNonBlockingCalls, final HashTreesStore hTStore)
-			throws Exception {
+			boolean enabledNonBlockingCalls, final HashTreesStore hTStore) {
 		SimpleMemStore store = new SimpleMemStore();
 		ModuloSegIdProvider segIdProvider = new ModuloSegIdProvider(
 				noOfSegments);
@@ -108,12 +107,12 @@ public class HashTreesImplTestUtils {
 	}
 
 	public static HashTreesPersistentStore generatePersistentStore()
-			throws Exception {
+			throws IOException {
 		return new HashTreesPersistentStore(randomDirName());
 	}
 
 	public static HashTreesStore[] generateInMemoryAndPersistentStores()
-			throws Exception {
+			throws IOException {
 		HashTreesStore[] stores = new HashTreesStore[2];
 		stores[0] = generateInMemoryStore();
 		stores[1] = generatePersistentStore();

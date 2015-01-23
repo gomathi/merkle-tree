@@ -98,7 +98,7 @@ public interface HashTrees {
 	 * 
 	 * @param key
 	 * @param value
-	 * @throws Exception
+	 * @throws IOException
 	 */
 	void hPut(ByteBuffer key, ByteBuffer value) throws IOException;
 
@@ -106,7 +106,7 @@ public interface HashTrees {
 	 * Deletes the key from the hash tree.
 	 * 
 	 * @param key
-	 * @throws Exception
+	 * @throws IOException
 	 */
 	void hRemove(ByteBuffer key) throws IOException;
 
@@ -154,7 +154,7 @@ public interface HashTrees {
 	 * 
 	 * @param treeId
 	 * @param fullRebuild
-	 * @throws Exception
+	 * @throws IOException
 	 */
 	void rebuildHashTree(long treeId, boolean fullRebuild) throws IOException;
 

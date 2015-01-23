@@ -774,10 +774,10 @@ public class HashTreesImpl implements HashTrees, Service {
 		 * @param store
 		 * @param treeIdProvider
 		 * @param htStoreDirName
-		 * @throws Exception
+		 * @throws IOException
 		 */
 		public Builder(Store store, HashTreesIdProvider treeIdProvider,
-				String htStoreDirName) throws Exception {
+				String htStoreDirName) throws IOException {
 			this(store, treeIdProvider, new HashTreesPersistentStore(
 					htStoreDirName));
 		}

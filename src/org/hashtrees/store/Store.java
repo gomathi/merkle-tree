@@ -26,7 +26,7 @@ public interface Store {
 	 * 
 	 * @param key
 	 * @param value
-	 * @throws Exception
+	 * @throws IOException
 	 */
 	void put(byte[] key, byte[] value) throws IOException;
 
@@ -40,7 +40,7 @@ public interface Store {
 	 * 
 	 * @param key
 	 * @return
-	 * @throws Exception
+	 * @throws IOException
 	 */
 	void remove(byte[] key) throws IOException;
 
@@ -51,6 +51,7 @@ public interface Store {
 	 * 
 	 * @param treeId
 	 * @return
+	 * @throws IOException
 	 */
 	Iterator<Map.Entry<byte[], byte[]>> iterator(long treeId)
 			throws IOException;

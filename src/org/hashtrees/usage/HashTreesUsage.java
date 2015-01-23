@@ -1,5 +1,6 @@
 package org.hashtrees.usage;
 
+import java.io.IOException;
 import java.util.Arrays;
 
 import junit.framework.Assert;
@@ -54,9 +55,9 @@ public class HashTreesUsage {
 	 * 
 	 * @param store
 	 * @return
-	 * @throws Exception
+	 * @throws IOException
 	 */
-	public static HashTreesImpl buildHashTrees(Store store) throws Exception {
+	public static HashTreesImpl buildHashTrees(Store store) throws IOException {
 		HashTreesImpl hashTrees = new HashTreesImpl.Builder(store,
 				new SimpleTreeIdProvider(), new HashTreesMemStore())
 				.setEnabledNonBlockingCalls(false).setNoOfSegments(16).build();
@@ -83,10 +84,10 @@ public class HashTreesUsage {
 	 * object to support the {@link Store}.
 	 * 
 	 * @return
-	 * @throws Exception
+	 * @throws IOException
 	 */
 	public static Pair<Store, HashTreesImpl> createAStoreWithEnabledHashTrees()
-			throws Exception {
+			throws IOException {
 		Store store = buildStore();
 		HashTreesImpl hashTrees = buildHashTrees(store);
 		registerHashTreesWithStore(store, hashTrees);
@@ -120,11 +121,11 @@ public class HashTreesUsage {
 	 * support. It does some modifications on the primary database, and using
 	 * hash tree of the primary database synchs up the backup database.
 	 * 
-	 * @throws Exception
+	 * @throws IOException
 	 */
 	@Test
 	public void createPrimaryAndBackupStoresAndSynchThemUsingHashTrees()
-			throws Exception {
+			throws IOException {
 		Pair<Store, HashTreesImpl> primary = createAStoreWithEnabledHashTrees();
 		Pair<Store, HashTreesImpl> backup = createAStoreWithEnabledHashTrees();
 

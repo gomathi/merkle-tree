@@ -12,6 +12,7 @@ import static org.hashtrees.test.utils.HashTreesImplTestUtils.generatePersistent
 import static org.hashtrees.test.utils.HashTreesImplTestUtils.randomByteBuffer;
 import static org.hashtrees.test.utils.HashTreesImplTestUtils.randomBytes;
 
+import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -20,6 +21,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicIntegerArray;
 
 import org.apache.commons.codec.binary.Hex;
+import org.apache.thrift.transport.TTransportException;
 import org.hashtrees.HashTrees;
 import org.hashtrees.HashTreesConstants;
 import org.hashtrees.HashTreesImpl;
@@ -65,7 +67,7 @@ public class HashTreesImplTest {
 	}
 
 	@Test
-	public void testPut() throws Exception {
+	public void testPut() throws IOException {
 
 		HashTreesStore[] stores = generateInMemoryAndPersistentStores();
 
@@ -104,7 +106,7 @@ public class HashTreesImplTest {
 	}
 
 	@Test
-	public void testRemove() throws Exception {
+	public void testRemove() throws IOException {
 
 		HashTreesStore[] stores = generateInMemoryAndPersistentStores();
 		int segId = 2;
@@ -137,7 +139,7 @@ public class HashTreesImplTest {
 	}
 
 	@Test
-	public void testCompleteRebuild() throws Exception {
+	public void testCompleteRebuild() throws IOException {
 		int rootNodeId = 0;
 		int nodeId = 2;
 		int segId = 1;
@@ -187,7 +189,7 @@ public class HashTreesImplTest {
 	}
 
 	@Test
-	public void testUpdateSegmentHashesTest() throws Exception {
+	public void testUpdateSegmentHashesTest() throws IOException {
 
 		int rootNodeId = 0;
 		int nodeId = 2;
@@ -235,7 +237,7 @@ public class HashTreesImplTest {
 	}
 
 	@Test
-	public void testSynchWithEmptyTree() throws Exception {
+	public void testSynchWithEmptyTree() throws IOException {
 		HashTreesStore[] stores = generateInMemoryAndPersistentStores();
 		HashTreesStore[] remoteStores = generateInMemoryAndPersistentStores();
 
@@ -280,7 +282,7 @@ public class HashTreesImplTest {
 	}
 
 	@Test
-	public void testSynchWithMissingBlocksInLocal() throws Exception {
+	public void testSynchWithMissingBlocksInLocal() throws IOException {
 
 		HashTreesStore[] stores = generateInMemoryAndPersistentStores();
 		HashTreesStore[] remoteStores = generateInMemoryAndPersistentStores();
@@ -313,7 +315,7 @@ public class HashTreesImplTest {
 	}
 
 	@Test
-	public void testSynchWithMissingBlocksInRemote() throws Exception {
+	public void testSynchWithMissingBlocksInRemote() throws IOException {
 
 		HashTreesStore[] stores = generateInMemoryAndPersistentStores();
 		HashTreesStore[] remoteStores = generateInMemoryAndPersistentStores();
@@ -344,7 +346,7 @@ public class HashTreesImplTest {
 	}
 
 	@Test
-	public void testSynchTreeWithDifferingSegmentData() throws Exception {
+	public void testSynchTreeWithDifferingSegmentData() throws IOException {
 		HashTreesStore[] stores = generateInMemoryAndPersistentStores();
 		HashTreesStore[] remoteStores = generateInMemoryAndPersistentStores();
 		int segId = 1;
@@ -384,7 +386,8 @@ public class HashTreesImplTest {
 	}
 
 	@Test
-	public void testHashTreeServerAndClient() throws Exception {
+	public void testHashTreeServerAndClient() throws IOException,
+			TTransportException {
 		HashTreesStore store = generateInMemoryStore();
 		HashTreesStore remoteStore = generateInMemoryStore();
 		HashTreesSynchListProvider syncListProvider = new EmptySyncListProvider();
@@ -436,7 +439,7 @@ public class HashTreesImplTest {
 	}
 
 	@Test
-	public void testNonBlockingCalls() throws Exception {
+	public void testNonBlockingCalls() throws IOException {
 		int maxQueueSize = 5;
 		final CountDownLatch putLatch = new CountDownLatch(1);
 		final CountDownLatch deleteLatch = new CountDownLatch(1);
@@ -498,7 +501,7 @@ public class HashTreesImplTest {
 	}
 
 	@Test
-	public void testRebuildTasksBetweenRestarts() throws Exception {
+	public void testRebuildTasksBetweenRestarts() throws IOException {
 		HashTreesPersistentStore htStore = generatePersistentStore();
 		int segId = 1;
 		try {
@@ -517,7 +520,7 @@ public class HashTreesImplTest {
 	}
 
 	@Test
-	public void testObservers() throws Exception {
+	public void testObservers() throws IOException {
 		Store store = new SimpleMemStore();
 		HashTreesStore htStore = generateInMemoryStore();
 		HashTreesImpl hashTrees = new HashTreesImpl.Builder(store,

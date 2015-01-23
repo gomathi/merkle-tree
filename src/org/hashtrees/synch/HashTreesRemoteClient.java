@@ -3,7 +3,6 @@ package org.hashtrees.synch;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.List;
-import java.util.Map;
 
 import org.apache.thrift.TException;
 import org.hashtrees.HashTrees;
@@ -11,6 +10,7 @@ import org.hashtrees.HashTreesObserver;
 import org.hashtrees.SyncDiffResult;
 import org.hashtrees.SyncType;
 import org.hashtrees.thrift.generated.HashTreesSyncInterface;
+import org.hashtrees.thrift.generated.KeyValue;
 import org.hashtrees.thrift.generated.SegmentData;
 import org.hashtrees.thrift.generated.SegmentHash;
 
@@ -29,8 +29,7 @@ public class HashTreesRemoteClient implements HashTrees {
 	}
 
 	@Override
-	public void sPut(Map<ByteBuffer, ByteBuffer> keyValuePairs)
-			throws IOException {
+	public void sPut(List<KeyValue> keyValuePairs) throws IOException {
 		try {
 			remoteTree.sPut(keyValuePairs);
 		} catch (TException e) {

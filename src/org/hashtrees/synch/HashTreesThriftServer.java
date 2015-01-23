@@ -2,11 +2,11 @@ package org.hashtrees.synch;
 
 import java.nio.ByteBuffer;
 import java.util.List;
-import java.util.Map;
 
 import org.apache.thrift.TException;
 import org.hashtrees.HashTrees;
 import org.hashtrees.thrift.generated.HashTreesSyncInterface;
+import org.hashtrees.thrift.generated.KeyValue;
 import org.hashtrees.thrift.generated.RebuildHashTreeRequest;
 import org.hashtrees.thrift.generated.RebuildHashTreeResponse;
 import org.hashtrees.thrift.generated.SegmentData;
@@ -33,8 +33,7 @@ public class HashTreesThriftServer implements HashTreesSyncInterface.Iface {
 	}
 
 	@Override
-	public void sPut(Map<ByteBuffer, ByteBuffer> keyValuePairs)
-			throws TException {
+	public void sPut(List<KeyValue> keyValuePairs) throws TException {
 		try {
 			hashTrees.sPut(keyValuePairs);
 		} catch (Exception e) {

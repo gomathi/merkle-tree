@@ -149,7 +149,7 @@ public class HashTreesImplTest {
 				HTreeComponents components = createHashTree(noOfSegments,
 						false, TREE_ID_PROVIDER, SEG_ID_PROVIDER, store);
 				HashTrees testTree = components.hTree;
-				Store kvStore = components.store;
+				SimpleMemStore kvStore = components.store;
 				kvStore.registerHashTrees(null);
 
 				ByteBuffer expectedKey = generateRandomKeyWithPrefix(segId);

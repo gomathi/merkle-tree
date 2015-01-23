@@ -65,7 +65,10 @@ public class HashTreesUsage {
 
 	/**
 	 * We need to register {@link HashTrees} with {@link Store} object. So that
-	 * {@link Store} will forward the necessary calls to {@link HashTrees}.
+	 * {@link Store} will forward the necessary calls to {@link HashTrees}. Note
+	 * it is not compulsory to implement registerHashTrees method. As long as
+	 * the {@link HashTrees} gets update operations in some way, its more than
+	 * enough.
 	 * 
 	 * @param store
 	 * @param hashTrees

@@ -2,13 +2,13 @@ package org.hashtrees.store;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.hashtrees.util.Pair;
+import com.google.common.base.Function;
+import com.google.common.collect.Iterators;
 
 /**
  * In memory implementation of {@link Store}. Intended to be used in unit tests.
@@ -47,7 +47,7 @@ public class SimpleMemStore extends BaseStore {
 	 * treeId it belongs to.
 	 */
 	@Override
-	public Iterator<Pair<byte[], byte[]>> iterator(long treeId) {
+	public Iterator<Map.Entry<byte[], byte[]>> iterator(long treeId) {
 		return iterator();
 	}
 
@@ -64,12 +64,34 @@ public class SimpleMemStore extends BaseStore {
 		return this.kvMap.equals(that.kvMap);
 	}
 
-	public Iterator<Pair<byte[], byte[]>> iterator() {
-		List<Pair<byte[], byte[]>> result = new ArrayList<>();
-		for (Map.Entry<ByteBuffer, ByteBuffer> entry : kvMap.entrySet())
-			result.add(Pair.create(entry.getKey().array(), entry.getValue()
-					.array()));
-		return result.iterator();
+	public Iterator<Map.Entry<byte[], byte[]>> iterator() {
+		return Iterators
+				.transform(
+						kvMap.entrySet().iterator(),
+						new Function<Map.Entry<ByteBuffer, ByteBuffer>, Map.Entry<byte[], byte[]>>() {
+
+							@Override
+							public Entry<byte[], byte[]> apply(
+									final Entry<ByteBuffer, ByteBuffer> input) {
+								return new Entry<byte[], byte[]>() {
+
+									@Override
+									public byte[] setValue(byte[] value) {
+										throw new UnsupportedOperationException();
+									}
+
+									@Override
+									public byte[] getValue() {
+										return input.getValue().array();
+									}
+
+									@Override
+									public byte[] getKey() {
+										return input.getKey().array();
+									}
+								};
+							}
+						});
 	}
 
 	@Override

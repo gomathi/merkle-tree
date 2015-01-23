@@ -13,7 +13,6 @@ import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -31,6 +30,7 @@ import org.apache.commons.codec.binary.Hex;
 import org.hashtrees.store.HashTreesPersistentStore;
 import org.hashtrees.store.HashTreesStore;
 import org.hashtrees.store.Store;
+import org.hashtrees.thrift.generated.KeyValue;
 import org.hashtrees.thrift.generated.SegmentData;
 import org.hashtrees.thrift.generated.SegmentHash;
 import org.hashtrees.util.ByteUtils;
@@ -279,7 +279,7 @@ public class HashTreesImpl implements HashTrees, Service {
 		CollectionPeekingIterator<SegmentData> remoteDataItr = new CollectionPeekingIterator<SegmentData>(
 				remoteTree.getSegment(treeId, segId));
 
-		Map<ByteBuffer, ByteBuffer> kvsForAddition = new HashMap<ByteBuffer, ByteBuffer>();
+		List<KeyValue> kvsForAddition = new ArrayList<KeyValue>();
 		List<ByteBuffer> keysForRemoval = new ArrayList<ByteBuffer>();
 
 		SegmentData local, remote;
@@ -289,14 +289,18 @@ public class HashTreesImpl implements HashTrees, Service {
 
 			int compRes = compareSegmentKeys(local, remote);
 			if (compRes == 0) {
-				if (!Arrays.equals(local.getDigest(), remote.getDigest()))
-					kvsForAddition.put(ByteBuffer.wrap(local.getKey()),
-							ByteBuffer.wrap(store.get(local.getKey())));
+				if (!Arrays.equals(local.getDigest(), remote.getDigest())) {
+					ByteBuffer key = ByteBuffer.wrap(local.getKey());
+					ByteBuffer value = ByteBuffer
+							.wrap(store.get(local.getKey()));
+					kvsForAddition.add(new KeyValue(key, value));
+				}
 				localDataItr.next();
 				remoteDataItr.next();
 			} else if (compRes < 0) {
-				kvsForAddition.put(ByteBuffer.wrap(local.getKey()),
-						ByteBuffer.wrap(store.get(local.getKey())));
+				ByteBuffer key = ByteBuffer.wrap(local.getKey());
+				ByteBuffer value = ByteBuffer.wrap(store.get(local.getKey()));
+				kvsForAddition.add(new KeyValue(key, value));
 				localDataItr.next();
 			} else {
 				keysForRemoval.add(ByteBuffer.wrap(remote.getKey()));
@@ -318,11 +322,11 @@ public class HashTreesImpl implements HashTrees, Service {
 			Collection<Integer> segIds, HashTrees remoteTree)
 			throws IOException {
 		for (int segId : segIds) {
-			final Map<ByteBuffer, ByteBuffer> keyValuePairs = new HashMap<ByteBuffer, ByteBuffer>();
+			final List<KeyValue> keyValuePairs = new ArrayList<>();
 			List<SegmentData> sdValues = getSegment(treeId, segId);
 			for (SegmentData sd : sdValues)
-				keyValuePairs.put(ByteBuffer.wrap(sd.getKey()),
-						ByteBuffer.wrap(store.get(sd.getKey())));
+				keyValuePairs.add(new KeyValue(ByteBuffer.wrap(sd.getKey()),
+						ByteBuffer.wrap(store.get(sd.getKey()))));
 			if (sdValues.size() > 0)
 				remoteTree.sPut(keyValuePairs);
 		}
@@ -387,12 +391,12 @@ public class HashTreesImpl implements HashTrees, Service {
 	 * @throws IOException
 	 */
 	private void rebuildCompleteTree(long treeId) throws IOException {
-		Iterator<Pair<byte[], byte[]>> itr = store.iterator(treeId);
+		Iterator<Map.Entry<byte[], byte[]>> itr = store.iterator(treeId);
 		while (itr.hasNext()) {
-			Pair<byte[], byte[]> pair = itr.next();
+			Map.Entry<byte[], byte[]> pair = itr.next();
 			hPutInternal(HTOperation.PUT_IF_ABSENT,
-					ByteBuffer.wrap(pair.getFirst()),
-					ByteBuffer.wrap(pair.getSecond()));
+					ByteBuffer.wrap(pair.getKey()),
+					ByteBuffer.wrap(pair.getValue()));
 		}
 		Iterator<SegmentData> segDataItr = htStore
 				.getSegmentDataIterator(treeId);
@@ -487,12 +491,9 @@ public class HashTreesImpl implements HashTrees, Service {
 	}
 
 	@Override
-	public void sPut(final Map<ByteBuffer, ByteBuffer> keyValuePairs)
-			throws IOException {
-		for (Map.Entry<ByteBuffer, ByteBuffer> keyValuePair : keyValuePairs
-				.entrySet())
-			store.put(keyValuePair.getKey().array(), keyValuePair.getValue()
-					.array());
+	public void sPut(final List<KeyValue> keyValuePairs) throws IOException {
+		for (KeyValue keyValuePair : keyValuePairs)
+			store.put(keyValuePair.getKey(), keyValuePair.getValue());
 	}
 
 	@Override

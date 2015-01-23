@@ -3,8 +3,8 @@ package org.hashtrees;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.List;
-import java.util.Map;
 
+import org.hashtrees.thrift.generated.KeyValue;
 import org.hashtrees.thrift.generated.SegmentData;
 import org.hashtrees.thrift.generated.SegmentHash;
 
@@ -24,7 +24,7 @@ public interface HashTrees {
 	 * 
 	 * @param keyValuePairs
 	 */
-	void sPut(Map<ByteBuffer, ByteBuffer> keyValuePairs) throws IOException;
+	void sPut(List<KeyValue> keyValuePairs) throws IOException;
 
 	/**
 	 * Deletes the keys from the store. Intended to be used while synch

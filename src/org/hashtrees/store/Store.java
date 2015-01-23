@@ -1,11 +1,10 @@
 package org.hashtrees.store;
 
 import java.io.IOException;
-import java.nio.ByteBuffer;
 import java.util.Iterator;
+import java.util.Map;
 
 import org.hashtrees.HashTrees;
-import org.hashtrees.util.Pair;
 
 /**
  * There could be cases where actual store is missing (key,value) pairs, or
@@ -16,8 +15,6 @@ import org.hashtrees.util.Pair;
  * 
  */
 public interface Store {
-
-	byte[] get(byte[] key) throws IOException;
 
 	boolean contains(byte[] key) throws IOException;
 
@@ -32,6 +29,8 @@ public interface Store {
 	 * @throws Exception
 	 */
 	void put(byte[] key, byte[] value) throws IOException;
+
+	byte[] get(byte[] key) throws IOException;
 
 	/**
 	 * Removes the key from the local store. Also this call should forward the
@@ -53,7 +52,8 @@ public interface Store {
 	 * @param treeId
 	 * @return
 	 */
-	Iterator<Pair<byte[], byte[]>> iterator(long treeId) throws IOException;
+	Iterator<Map.Entry<byte[], byte[]>> iterator(long treeId)
+			throws IOException;
 
 	/**
 	 * Register hashtrees with storage implementation. On modifications to the

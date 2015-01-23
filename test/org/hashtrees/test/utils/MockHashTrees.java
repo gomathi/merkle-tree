@@ -4,22 +4,16 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 
 import org.hashtrees.HashTrees;
 import org.hashtrees.HashTreesObserver;
 import org.hashtrees.SyncDiffResult;
 import org.hashtrees.SyncType;
+import org.hashtrees.thrift.generated.KeyValue;
 import org.hashtrees.thrift.generated.SegmentData;
 import org.hashtrees.thrift.generated.SegmentHash;
 
 public class MockHashTrees implements HashTrees {
-
-	@Override
-	public void sPut(Map<ByteBuffer, ByteBuffer> keyValuePairs)
-			throws IOException {
-
-	}
 
 	@Override
 	public void sRemove(List<ByteBuffer> keys) throws IOException {
@@ -97,6 +91,11 @@ public class MockHashTrees implements HashTrees {
 
 	@Override
 	public void removeObserver(HashTreesObserver listener) {
+
+	}
+
+	@Override
+	public void sPut(List<KeyValue> keyValuePairs) throws IOException {
 
 	}
 

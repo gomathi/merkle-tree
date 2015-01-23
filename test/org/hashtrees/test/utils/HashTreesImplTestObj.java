@@ -5,7 +5,6 @@ import static org.hashtrees.test.utils.HashTreesImplTestUtils.TREE_ID_PROVIDER;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 
 import org.hashtrees.HashTrees;
@@ -15,6 +14,7 @@ import org.hashtrees.SyncDiffResult;
 import org.hashtrees.SyncType;
 import org.hashtrees.store.HashTreesStore;
 import org.hashtrees.store.Store;
+import org.hashtrees.thrift.generated.KeyValue;
 
 public class HashTreesImplTestObj extends HashTreesImpl {
 
@@ -35,8 +35,7 @@ public class HashTreesImplTestObj extends HashTreesImpl {
 	}
 
 	@Override
-	public void sPut(Map<ByteBuffer, ByteBuffer> keyValuePairs)
-			throws IOException {
+	public void sPut(List<KeyValue> keyValuePairs) throws IOException {
 		super.sPut(keyValuePairs);
 		events.add(HTSynchEvent.SYNCH_INITIATED);
 	}

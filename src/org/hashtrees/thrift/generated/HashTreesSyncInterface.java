@@ -38,7 +38,7 @@ public class HashTreesSyncInterface {
      * 
      * @param keyValuePairs
      */
-    public void sPut(Map<ByteBuffer,ByteBuffer> keyValuePairs) throws org.apache.thrift.TException;
+    public void sPut(List<KeyValue> keyValuePairs) throws org.apache.thrift.TException;
 
     /**
      * Deletes the keys from the store. While synching this function is used.
@@ -127,7 +127,7 @@ public class HashTreesSyncInterface {
 
   public interface AsyncIface {
 
-    public void sPut(Map<ByteBuffer,ByteBuffer> keyValuePairs, org.apache.thrift.async.AsyncMethodCallback<AsyncClient.sPut_call> resultHandler) throws org.apache.thrift.TException;
+    public void sPut(List<KeyValue> keyValuePairs, org.apache.thrift.async.AsyncMethodCallback<AsyncClient.sPut_call> resultHandler) throws org.apache.thrift.TException;
 
     public void sRemove(List<ByteBuffer> keys, org.apache.thrift.async.AsyncMethodCallback<AsyncClient.sRemove_call> resultHandler) throws org.apache.thrift.TException;
 
@@ -169,13 +169,13 @@ public class HashTreesSyncInterface {
       super(iprot, oprot);
     }
 
-    public void sPut(Map<ByteBuffer,ByteBuffer> keyValuePairs) throws org.apache.thrift.TException
+    public void sPut(List<KeyValue> keyValuePairs) throws org.apache.thrift.TException
     {
       send_sPut(keyValuePairs);
       recv_sPut();
     }
 
-    public void send_sPut(Map<ByteBuffer,ByteBuffer> keyValuePairs) throws org.apache.thrift.TException
+    public void send_sPut(List<KeyValue> keyValuePairs) throws org.apache.thrift.TException
     {
       sPut_args args = new sPut_args();
       args.setKeyValuePairs(keyValuePairs);
@@ -408,7 +408,7 @@ public class HashTreesSyncInterface {
       super(protocolFactory, clientManager, transport);
     }
 
-    public void sPut(Map<ByteBuffer,ByteBuffer> keyValuePairs, org.apache.thrift.async.AsyncMethodCallback<sPut_call> resultHandler) throws org.apache.thrift.TException {
+    public void sPut(List<KeyValue> keyValuePairs, org.apache.thrift.async.AsyncMethodCallback<sPut_call> resultHandler) throws org.apache.thrift.TException {
       checkReady();
       sPut_call method_call = new sPut_call(keyValuePairs, resultHandler, this, ___protocolFactory, ___transport);
       this.___currentMethod = method_call;
@@ -416,8 +416,8 @@ public class HashTreesSyncInterface {
     }
 
     public static class sPut_call extends org.apache.thrift.async.TAsyncMethodCall {
-      private Map<ByteBuffer,ByteBuffer> keyValuePairs;
-      public sPut_call(Map<ByteBuffer,ByteBuffer> keyValuePairs, org.apache.thrift.async.AsyncMethodCallback<sPut_call> resultHandler, org.apache.thrift.async.TAsyncClient client, org.apache.thrift.protocol.TProtocolFactory protocolFactory, org.apache.thrift.transport.TNonblockingTransport transport) throws org.apache.thrift.TException {
+      private List<KeyValue> keyValuePairs;
+      public sPut_call(List<KeyValue> keyValuePairs, org.apache.thrift.async.AsyncMethodCallback<sPut_call> resultHandler, org.apache.thrift.async.TAsyncClient client, org.apache.thrift.protocol.TProtocolFactory protocolFactory, org.apache.thrift.transport.TNonblockingTransport transport) throws org.apache.thrift.TException {
         super(client, protocolFactory, transport, resultHandler, false);
         this.keyValuePairs = keyValuePairs;
       }
@@ -937,7 +937,7 @@ public class HashTreesSyncInterface {
   public static class sPut_args implements org.apache.thrift.TBase<sPut_args, sPut_args._Fields>, java.io.Serializable, Cloneable   {
     private static final org.apache.thrift.protocol.TStruct STRUCT_DESC = new org.apache.thrift.protocol.TStruct("sPut_args");
 
-    private static final org.apache.thrift.protocol.TField KEY_VALUE_PAIRS_FIELD_DESC = new org.apache.thrift.protocol.TField("keyValuePairs", org.apache.thrift.protocol.TType.MAP, (short)1);
+    private static final org.apache.thrift.protocol.TField KEY_VALUE_PAIRS_FIELD_DESC = new org.apache.thrift.protocol.TField("keyValuePairs", org.apache.thrift.protocol.TType.LIST, (short)1);
 
     private static final Map<Class<? extends IScheme>, SchemeFactory> schemes = new HashMap<Class<? extends IScheme>, SchemeFactory>();
     static {
@@ -945,7 +945,7 @@ public class HashTreesSyncInterface {
       schemes.put(TupleScheme.class, new sPut_argsTupleSchemeFactory());
     }
 
-    public Map<ByteBuffer,ByteBuffer> keyValuePairs; // required
+    public List<KeyValue> keyValuePairs; // required
 
     /** The set of fields this struct contains, along with convenience methods for finding and manipulating them. */
     public enum _Fields implements org.apache.thrift.TFieldIdEnum {
@@ -1010,9 +1010,8 @@ public class HashTreesSyncInterface {
     static {
       Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> tmpMap = new EnumMap<_Fields, org.apache.thrift.meta_data.FieldMetaData>(_Fields.class);
       tmpMap.put(_Fields.KEY_VALUE_PAIRS, new org.apache.thrift.meta_data.FieldMetaData("keyValuePairs", org.apache.thrift.TFieldRequirementType.DEFAULT, 
-          new org.apache.thrift.meta_data.MapMetaData(org.apache.thrift.protocol.TType.MAP, 
-              new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING              , true), 
-              new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING              , true))));
+          new org.apache.thrift.meta_data.ListMetaData(org.apache.thrift.protocol.TType.LIST, 
+              new org.apache.thrift.meta_data.StructMetaData(org.apache.thrift.protocol.TType.STRUCT, KeyValue.class))));
       metaDataMap = Collections.unmodifiableMap(tmpMap);
       org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(sPut_args.class, metaDataMap);
     }
@@ -1021,7 +1020,7 @@ public class HashTreesSyncInterface {
     }
 
     public sPut_args(
-      Map<ByteBuffer,ByteBuffer> keyValuePairs)
+      List<KeyValue> keyValuePairs)
     {
       this();
       this.keyValuePairs = keyValuePairs;
@@ -1032,19 +1031,9 @@ public class HashTreesSyncInterface {
      */
     public sPut_args(sPut_args other) {
       if (other.isSetKeyValuePairs()) {
-        Map<ByteBuffer,ByteBuffer> __this__keyValuePairs = new HashMap<ByteBuffer,ByteBuffer>();
-        for (Map.Entry<ByteBuffer, ByteBuffer> other_element : other.keyValuePairs.entrySet()) {
-
-          ByteBuffer other_element_key = other_element.getKey();
-          ByteBuffer other_element_value = other_element.getValue();
-
-          ByteBuffer __this__keyValuePairs_copy_key = org.apache.thrift.TBaseHelper.copyBinary(other_element_key);
-;
-
-          ByteBuffer __this__keyValuePairs_copy_value = org.apache.thrift.TBaseHelper.copyBinary(other_element_value);
-;
-
-          __this__keyValuePairs.put(__this__keyValuePairs_copy_key, __this__keyValuePairs_copy_value);
+        List<KeyValue> __this__keyValuePairs = new ArrayList<KeyValue>();
+        for (KeyValue other_element : other.keyValuePairs) {
+          __this__keyValuePairs.add(new KeyValue(other_element));
         }
         this.keyValuePairs = __this__keyValuePairs;
       }
@@ -1063,18 +1052,22 @@ public class HashTreesSyncInterface {
       return (this.keyValuePairs == null) ? 0 : this.keyValuePairs.size();
     }
 
-    public void putToKeyValuePairs(ByteBuffer key, ByteBuffer val) {
-      if (this.keyValuePairs == null) {
-        this.keyValuePairs = new HashMap<ByteBuffer,ByteBuffer>();
-      }
-      this.keyValuePairs.put(key, val);
+    public java.util.Iterator<KeyValue> getKeyValuePairsIterator() {
+      return (this.keyValuePairs == null) ? null : this.keyValuePairs.iterator();
     }
 
-    public Map<ByteBuffer,ByteBuffer> getKeyValuePairs() {
+    public void addToKeyValuePairs(KeyValue elem) {
+      if (this.keyValuePairs == null) {
+        this.keyValuePairs = new ArrayList<KeyValue>();
+      }
+      this.keyValuePairs.add(elem);
+    }
+
+    public List<KeyValue> getKeyValuePairs() {
       return this.keyValuePairs;
     }
 
-    public sPut_args setKeyValuePairs(Map<ByteBuffer,ByteBuffer> keyValuePairs) {
+    public sPut_args setKeyValuePairs(List<KeyValue> keyValuePairs) {
       this.keyValuePairs = keyValuePairs;
       return this;
     }
@@ -1100,7 +1093,7 @@ public class HashTreesSyncInterface {
         if (value == null) {
           unsetKeyValuePairs();
         } else {
-          setKeyValuePairs((Map<ByteBuffer,ByteBuffer>)value);
+          setKeyValuePairs((List<KeyValue>)value);
         }
         break;
 
@@ -1247,19 +1240,18 @@ public class HashTreesSyncInterface {
           }
           switch (schemeField.id) {
             case 1: // KEY_VALUE_PAIRS
-              if (schemeField.type == org.apache.thrift.protocol.TType.MAP) {
+              if (schemeField.type == org.apache.thrift.protocol.TType.LIST) {
                 {
-                  org.apache.thrift.protocol.TMap _map0 = iprot.readMapBegin();
-                  struct.keyValuePairs = new HashMap<ByteBuffer,ByteBuffer>(2*_map0.size);
-                  for (int _i1 = 0; _i1 < _map0.size; ++_i1)
+                  org.apache.thrift.protocol.TList _list0 = iprot.readListBegin();
+                  struct.keyValuePairs = new ArrayList<KeyValue>(_list0.size);
+                  for (int _i1 = 0; _i1 < _list0.size; ++_i1)
                   {
-                    ByteBuffer _key2; // required
-                    ByteBuffer _val3; // required
-                    _key2 = iprot.readBinary();
-                    _val3 = iprot.readBinary();
-                    struct.keyValuePairs.put(_key2, _val3);
+                    KeyValue _elem2; // required
+                    _elem2 = new KeyValue();
+                    _elem2.read(iprot);
+                    struct.keyValuePairs.add(_elem2);
                   }
-                  iprot.readMapEnd();
+                  iprot.readListEnd();
                 }
                 struct.setKeyValuePairsIsSet(true);
               } else { 
@@ -1284,13 +1276,12 @@ public class HashTreesSyncInterface {
         if (struct.keyValuePairs != null) {
           oprot.writeFieldBegin(KEY_VALUE_PAIRS_FIELD_DESC);
           {
-            oprot.writeMapBegin(new org.apache.thrift.protocol.TMap(org.apache.thrift.protocol.TType.STRING, org.apache.thrift.protocol.TType.STRING, struct.keyValuePairs.size()));
-            for (Map.Entry<ByteBuffer, ByteBuffer> _iter4 : struct.keyValuePairs.entrySet())
+            oprot.writeListBegin(new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRUCT, struct.keyValuePairs.size()));
+            for (KeyValue _iter3 : struct.keyValuePairs)
             {
-              oprot.writeBinary(_iter4.getKey());
-              oprot.writeBinary(_iter4.getValue());
+              _iter3.write(oprot);
             }
-            oprot.writeMapEnd();
+            oprot.writeListEnd();
           }
           oprot.writeFieldEnd();
         }
@@ -1319,10 +1310,9 @@ public class HashTreesSyncInterface {
         if (struct.isSetKeyValuePairs()) {
           {
             oprot.writeI32(struct.keyValuePairs.size());
-            for (Map.Entry<ByteBuffer, ByteBuffer> _iter5 : struct.keyValuePairs.entrySet())
+            for (KeyValue _iter4 : struct.keyValuePairs)
             {
-              oprot.writeBinary(_iter5.getKey());
-              oprot.writeBinary(_iter5.getValue());
+              _iter4.write(oprot);
             }
           }
         }
@@ -1334,15 +1324,14 @@ public class HashTreesSyncInterface {
         BitSet incoming = iprot.readBitSet(1);
         if (incoming.get(0)) {
           {
-            org.apache.thrift.protocol.TMap _map6 = new org.apache.thrift.protocol.TMap(org.apache.thrift.protocol.TType.STRING, org.apache.thrift.protocol.TType.STRING, iprot.readI32());
-            struct.keyValuePairs = new HashMap<ByteBuffer,ByteBuffer>(2*_map6.size);
-            for (int _i7 = 0; _i7 < _map6.size; ++_i7)
+            org.apache.thrift.protocol.TList _list5 = new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRUCT, iprot.readI32());
+            struct.keyValuePairs = new ArrayList<KeyValue>(_list5.size);
+            for (int _i6 = 0; _i6 < _list5.size; ++_i6)
             {
-              ByteBuffer _key8; // required
-              ByteBuffer _val9; // required
-              _key8 = iprot.readBinary();
-              _val9 = iprot.readBinary();
-              struct.keyValuePairs.put(_key8, _val9);
+              KeyValue _elem7; // required
+              _elem7 = new KeyValue();
+              _elem7.read(iprot);
+              struct.keyValuePairs.add(_elem7);
             }
           }
           struct.setKeyValuePairsIsSet(true);
@@ -1907,13 +1896,13 @@ public class HashTreesSyncInterface {
             case 1: // KEYS
               if (schemeField.type == org.apache.thrift.protocol.TType.LIST) {
                 {
-                  org.apache.thrift.protocol.TList _list10 = iprot.readListBegin();
-                  struct.keys = new ArrayList<ByteBuffer>(_list10.size);
-                  for (int _i11 = 0; _i11 < _list10.size; ++_i11)
+                  org.apache.thrift.protocol.TList _list8 = iprot.readListBegin();
+                  struct.keys = new ArrayList<ByteBuffer>(_list8.size);
+                  for (int _i9 = 0; _i9 < _list8.size; ++_i9)
                   {
-                    ByteBuffer _elem12; // required
-                    _elem12 = iprot.readBinary();
-                    struct.keys.add(_elem12);
+                    ByteBuffer _elem10; // required
+                    _elem10 = iprot.readBinary();
+                    struct.keys.add(_elem10);
                   }
                   iprot.readListEnd();
                 }
@@ -1941,9 +1930,9 @@ public class HashTreesSyncInterface {
           oprot.writeFieldBegin(KEYS_FIELD_DESC);
           {
             oprot.writeListBegin(new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRING, struct.keys.size()));
-            for (ByteBuffer _iter13 : struct.keys)
+            for (ByteBuffer _iter11 : struct.keys)
             {
-              oprot.writeBinary(_iter13);
+              oprot.writeBinary(_iter11);
             }
             oprot.writeListEnd();
           }
@@ -1974,9 +1963,9 @@ public class HashTreesSyncInterface {
         if (struct.isSetKeys()) {
           {
             oprot.writeI32(struct.keys.size());
-            for (ByteBuffer _iter14 : struct.keys)
+            for (ByteBuffer _iter12 : struct.keys)
             {
-              oprot.writeBinary(_iter14);
+              oprot.writeBinary(_iter12);
             }
           }
         }
@@ -1988,13 +1977,13 @@ public class HashTreesSyncInterface {
         BitSet incoming = iprot.readBitSet(1);
         if (incoming.get(0)) {
           {
-            org.apache.thrift.protocol.TList _list15 = new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRING, iprot.readI32());
-            struct.keys = new ArrayList<ByteBuffer>(_list15.size);
-            for (int _i16 = 0; _i16 < _list15.size; ++_i16)
+            org.apache.thrift.protocol.TList _list13 = new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRING, iprot.readI32());
+            struct.keys = new ArrayList<ByteBuffer>(_list13.size);
+            for (int _i14 = 0; _i14 < _list13.size; ++_i14)
             {
-              ByteBuffer _elem17; // required
-              _elem17 = iprot.readBinary();
-              struct.keys.add(_elem17);
+              ByteBuffer _elem15; // required
+              _elem15 = iprot.readBinary();
+              struct.keys.add(_elem15);
             }
           }
           struct.setKeysIsSet(true);
@@ -2641,13 +2630,13 @@ public class HashTreesSyncInterface {
             case 2: // NODE_IDS
               if (schemeField.type == org.apache.thrift.protocol.TType.LIST) {
                 {
-                  org.apache.thrift.protocol.TList _list18 = iprot.readListBegin();
-                  struct.nodeIds = new ArrayList<Integer>(_list18.size);
-                  for (int _i19 = 0; _i19 < _list18.size; ++_i19)
+                  org.apache.thrift.protocol.TList _list16 = iprot.readListBegin();
+                  struct.nodeIds = new ArrayList<Integer>(_list16.size);
+                  for (int _i17 = 0; _i17 < _list16.size; ++_i17)
                   {
-                    int _elem20; // required
-                    _elem20 = iprot.readI32();
-                    struct.nodeIds.add(_elem20);
+                    int _elem18; // required
+                    _elem18 = iprot.readI32();
+                    struct.nodeIds.add(_elem18);
                   }
                   iprot.readListEnd();
                 }
@@ -2678,9 +2667,9 @@ public class HashTreesSyncInterface {
           oprot.writeFieldBegin(NODE_IDS_FIELD_DESC);
           {
             oprot.writeListBegin(new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.I32, struct.nodeIds.size()));
-            for (int _iter21 : struct.nodeIds)
+            for (int _iter19 : struct.nodeIds)
             {
-              oprot.writeI32(_iter21);
+              oprot.writeI32(_iter19);
             }
             oprot.writeListEnd();
           }
@@ -2717,9 +2706,9 @@ public class HashTreesSyncInterface {
         if (struct.isSetNodeIds()) {
           {
             oprot.writeI32(struct.nodeIds.size());
-            for (int _iter22 : struct.nodeIds)
+            for (int _iter20 : struct.nodeIds)
             {
-              oprot.writeI32(_iter22);
+              oprot.writeI32(_iter20);
             }
           }
         }
@@ -2735,13 +2724,13 @@ public class HashTreesSyncInterface {
         }
         if (incoming.get(1)) {
           {
-            org.apache.thrift.protocol.TList _list23 = new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.I32, iprot.readI32());
-            struct.nodeIds = new ArrayList<Integer>(_list23.size);
-            for (int _i24 = 0; _i24 < _list23.size; ++_i24)
+            org.apache.thrift.protocol.TList _list21 = new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.I32, iprot.readI32());
+            struct.nodeIds = new ArrayList<Integer>(_list21.size);
+            for (int _i22 = 0; _i22 < _list21.size; ++_i22)
             {
-              int _elem25; // required
-              _elem25 = iprot.readI32();
-              struct.nodeIds.add(_elem25);
+              int _elem23; // required
+              _elem23 = iprot.readI32();
+              struct.nodeIds.add(_elem23);
             }
           }
           struct.setNodeIdsIsSet(true);
@@ -3059,14 +3048,14 @@ public class HashTreesSyncInterface {
             case 0: // SUCCESS
               if (schemeField.type == org.apache.thrift.protocol.TType.LIST) {
                 {
-                  org.apache.thrift.protocol.TList _list26 = iprot.readListBegin();
-                  struct.success = new ArrayList<SegmentHash>(_list26.size);
-                  for (int _i27 = 0; _i27 < _list26.size; ++_i27)
+                  org.apache.thrift.protocol.TList _list24 = iprot.readListBegin();
+                  struct.success = new ArrayList<SegmentHash>(_list24.size);
+                  for (int _i25 = 0; _i25 < _list24.size; ++_i25)
                   {
-                    SegmentHash _elem28; // required
-                    _elem28 = new SegmentHash();
-                    _elem28.read(iprot);
-                    struct.success.add(_elem28);
+                    SegmentHash _elem26; // required
+                    _elem26 = new SegmentHash();
+                    _elem26.read(iprot);
+                    struct.success.add(_elem26);
                   }
                   iprot.readListEnd();
                 }
@@ -3094,9 +3083,9 @@ public class HashTreesSyncInterface {
           oprot.writeFieldBegin(SUCCESS_FIELD_DESC);
           {
             oprot.writeListBegin(new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRUCT, struct.success.size()));
-            for (SegmentHash _iter29 : struct.success)
+            for (SegmentHash _iter27 : struct.success)
             {
-              _iter29.write(oprot);
+              _iter27.write(oprot);
             }
             oprot.writeListEnd();
           }
@@ -3127,9 +3116,9 @@ public class HashTreesSyncInterface {
         if (struct.isSetSuccess()) {
           {
             oprot.writeI32(struct.success.size());
-            for (SegmentHash _iter30 : struct.success)
+            for (SegmentHash _iter28 : struct.success)
             {
-              _iter30.write(oprot);
+              _iter28.write(oprot);
             }
           }
         }
@@ -3141,14 +3130,14 @@ public class HashTreesSyncInterface {
         BitSet incoming = iprot.readBitSet(1);
         if (incoming.get(0)) {
           {
-            org.apache.thrift.protocol.TList _list31 = new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRUCT, iprot.readI32());
-            struct.success = new ArrayList<SegmentHash>(_list31.size);
-            for (int _i32 = 0; _i32 < _list31.size; ++_i32)
+            org.apache.thrift.protocol.TList _list29 = new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRUCT, iprot.readI32());
+            struct.success = new ArrayList<SegmentHash>(_list29.size);
+            for (int _i30 = 0; _i30 < _list29.size; ++_i30)
             {
-              SegmentHash _elem33; // required
-              _elem33 = new SegmentHash();
-              _elem33.read(iprot);
-              struct.success.add(_elem33);
+              SegmentHash _elem31; // required
+              _elem31 = new SegmentHash();
+              _elem31.read(iprot);
+              struct.success.add(_elem31);
             }
           }
           struct.setSuccessIsSet(true);
@@ -4711,14 +4700,14 @@ public class HashTreesSyncInterface {
             case 0: // SUCCESS
               if (schemeField.type == org.apache.thrift.protocol.TType.LIST) {
                 {
-                  org.apache.thrift.protocol.TList _list34 = iprot.readListBegin();
-                  struct.success = new ArrayList<SegmentData>(_list34.size);
-                  for (int _i35 = 0; _i35 < _list34.size; ++_i35)
+                  org.apache.thrift.protocol.TList _list32 = iprot.readListBegin();
+                  struct.success = new ArrayList<SegmentData>(_list32.size);
+                  for (int _i33 = 0; _i33 < _list32.size; ++_i33)
                   {
-                    SegmentData _elem36; // required
-                    _elem36 = new SegmentData();
-                    _elem36.read(iprot);
-                    struct.success.add(_elem36);
+                    SegmentData _elem34; // required
+                    _elem34 = new SegmentData();
+                    _elem34.read(iprot);
+                    struct.success.add(_elem34);
                   }
                   iprot.readListEnd();
                 }
@@ -4746,9 +4735,9 @@ public class HashTreesSyncInterface {
           oprot.writeFieldBegin(SUCCESS_FIELD_DESC);
           {
             oprot.writeListBegin(new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRUCT, struct.success.size()));
-            for (SegmentData _iter37 : struct.success)
+            for (SegmentData _iter35 : struct.success)
             {
-              _iter37.write(oprot);
+              _iter35.write(oprot);
             }
             oprot.writeListEnd();
           }
@@ -4779,9 +4768,9 @@ public class HashTreesSyncInterface {
         if (struct.isSetSuccess()) {
           {
             oprot.writeI32(struct.success.size());
-            for (SegmentData _iter38 : struct.success)
+            for (SegmentData _iter36 : struct.success)
             {
-              _iter38.write(oprot);
+              _iter36.write(oprot);
             }
           }
         }
@@ -4793,14 +4782,14 @@ public class HashTreesSyncInterface {
         BitSet incoming = iprot.readBitSet(1);
         if (incoming.get(0)) {
           {
-            org.apache.thrift.protocol.TList _list39 = new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRUCT, iprot.readI32());
-            struct.success = new ArrayList<SegmentData>(_list39.size);
-            for (int _i40 = 0; _i40 < _list39.size; ++_i40)
+            org.apache.thrift.protocol.TList _list37 = new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRUCT, iprot.readI32());
+            struct.success = new ArrayList<SegmentData>(_list37.size);
+            for (int _i38 = 0; _i38 < _list37.size; ++_i38)
             {
-              SegmentData _elem41; // required
-              _elem41 = new SegmentData();
-              _elem41.read(iprot);
-              struct.success.add(_elem41);
+              SegmentData _elem39; // required
+              _elem39 = new SegmentData();
+              _elem39.read(iprot);
+              struct.success.add(_elem39);
             }
           }
           struct.setSuccessIsSet(true);
@@ -6114,13 +6103,13 @@ public class HashTreesSyncInterface {
             case 2: // NODE_IDS
               if (schemeField.type == org.apache.thrift.protocol.TType.LIST) {
                 {
-                  org.apache.thrift.protocol.TList _list42 = iprot.readListBegin();
-                  struct.nodeIds = new ArrayList<Integer>(_list42.size);
-                  for (int _i43 = 0; _i43 < _list42.size; ++_i43)
+                  org.apache.thrift.protocol.TList _list40 = iprot.readListBegin();
+                  struct.nodeIds = new ArrayList<Integer>(_list40.size);
+                  for (int _i41 = 0; _i41 < _list40.size; ++_i41)
                   {
-                    int _elem44; // required
-                    _elem44 = iprot.readI32();
-                    struct.nodeIds.add(_elem44);
+                    int _elem42; // required
+                    _elem42 = iprot.readI32();
+                    struct.nodeIds.add(_elem42);
                   }
                   iprot.readListEnd();
                 }
@@ -6151,9 +6140,9 @@ public class HashTreesSyncInterface {
           oprot.writeFieldBegin(NODE_IDS_FIELD_DESC);
           {
             oprot.writeListBegin(new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.I32, struct.nodeIds.size()));
-            for (int _iter45 : struct.nodeIds)
+            for (int _iter43 : struct.nodeIds)
             {
-              oprot.writeI32(_iter45);
+              oprot.writeI32(_iter43);
             }
             oprot.writeListEnd();
           }
@@ -6190,9 +6179,9 @@ public class HashTreesSyncInterface {
         if (struct.isSetNodeIds()) {
           {
             oprot.writeI32(struct.nodeIds.size());
-            for (int _iter46 : struct.nodeIds)
+            for (int _iter44 : struct.nodeIds)
             {
-              oprot.writeI32(_iter46);
+              oprot.writeI32(_iter44);
             }
           }
         }
@@ -6208,13 +6197,13 @@ public class HashTreesSyncInterface {
         }
         if (incoming.get(1)) {
           {
-            org.apache.thrift.protocol.TList _list47 = new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.I32, iprot.readI32());
-            struct.nodeIds = new ArrayList<Integer>(_list47.size);
-            for (int _i48 = 0; _i48 < _list47.size; ++_i48)
+            org.apache.thrift.protocol.TList _list45 = new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.I32, iprot.readI32());
+            struct.nodeIds = new ArrayList<Integer>(_list45.size);
+            for (int _i46 = 0; _i46 < _list45.size; ++_i46)
             {
-              int _elem49; // required
-              _elem49 = iprot.readI32();
-              struct.nodeIds.add(_elem49);
+              int _elem47; // required
+              _elem47 = iprot.readI32();
+              struct.nodeIds.add(_elem47);
             }
           }
           struct.setNodeIdsIsSet(true);
@@ -8327,14 +8316,14 @@ public class HashTreesSyncInterface {
             case 0: // SUCCESS
               if (schemeField.type == org.apache.thrift.protocol.TType.LIST) {
                 {
-                  org.apache.thrift.protocol.TList _list50 = iprot.readListBegin();
-                  struct.success = new ArrayList<ServerName>(_list50.size);
-                  for (int _i51 = 0; _i51 < _list50.size; ++_i51)
+                  org.apache.thrift.protocol.TList _list48 = iprot.readListBegin();
+                  struct.success = new ArrayList<ServerName>(_list48.size);
+                  for (int _i49 = 0; _i49 < _list48.size; ++_i49)
                   {
-                    ServerName _elem52; // required
-                    _elem52 = new ServerName();
-                    _elem52.read(iprot);
-                    struct.success.add(_elem52);
+                    ServerName _elem50; // required
+                    _elem50 = new ServerName();
+                    _elem50.read(iprot);
+                    struct.success.add(_elem50);
                   }
                   iprot.readListEnd();
                 }
@@ -8362,9 +8351,9 @@ public class HashTreesSyncInterface {
           oprot.writeFieldBegin(SUCCESS_FIELD_DESC);
           {
             oprot.writeListBegin(new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRUCT, struct.success.size()));
-            for (ServerName _iter53 : struct.success)
+            for (ServerName _iter51 : struct.success)
             {
-              _iter53.write(oprot);
+              _iter51.write(oprot);
             }
             oprot.writeListEnd();
           }
@@ -8395,9 +8384,9 @@ public class HashTreesSyncInterface {
         if (struct.isSetSuccess()) {
           {
             oprot.writeI32(struct.success.size());
-            for (ServerName _iter54 : struct.success)
+            for (ServerName _iter52 : struct.success)
             {
-              _iter54.write(oprot);
+              _iter52.write(oprot);
             }
           }
         }
@@ -8409,14 +8398,14 @@ public class HashTreesSyncInterface {
         BitSet incoming = iprot.readBitSet(1);
         if (incoming.get(0)) {
           {
-            org.apache.thrift.protocol.TList _list55 = new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRUCT, iprot.readI32());
-            struct.success = new ArrayList<ServerName>(_list55.size);
-            for (int _i56 = 0; _i56 < _list55.size; ++_i56)
+            org.apache.thrift.protocol.TList _list53 = new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRUCT, iprot.readI32());
+            struct.success = new ArrayList<ServerName>(_list53.size);
+            for (int _i54 = 0; _i54 < _list53.size; ++_i54)
             {
-              ServerName _elem57; // required
-              _elem57 = new ServerName();
-              _elem57.read(iprot);
-              struct.success.add(_elem57);
+              ServerName _elem55; // required
+              _elem55 = new ServerName();
+              _elem55.read(iprot);
+              struct.success.add(_elem55);
             }
           }
           struct.setSuccessIsSet(true);

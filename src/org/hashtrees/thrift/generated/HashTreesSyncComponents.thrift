@@ -30,6 +30,12 @@ struct ServerName
 	2: required i32 portNo;
 }
 
+struct KeyValue
+{
+	1: required binary key;
+	2: required binary value;
+}
+
 /**
 * Rebuild hashtree request object.
 *
@@ -70,7 +76,7 @@ service HashTreesSyncInterface
      * while synch operation.
      * 
      */
-	void sPut(1:map<binary,binary> keyValuePairs);
+	void sPut(1:list<KeyValue> keyValuePairs);
 	
 	/**
      * Deletes the keys from the store. While synching this function is used.

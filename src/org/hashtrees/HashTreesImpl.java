@@ -29,6 +29,7 @@ import javax.annotation.concurrent.NotThreadSafe;
 import javax.annotation.concurrent.ThreadSafe;
 
 import org.apache.commons.codec.binary.Hex;
+import org.hashtrees.store.HashTreesMemStore;
 import org.hashtrees.store.HashTreesPersistentStore;
 import org.hashtrees.store.HashTreesStore;
 import org.hashtrees.store.Store;
@@ -46,6 +47,7 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Function;
 import com.google.common.collect.Iterators;
+import com.google.common.collect.PeekingIterator;
 
 /**
  * HashTrees has segment blocks and segment trees.
@@ -276,10 +278,11 @@ public class HashTreesImpl implements HashTrees, Service {
 
 	private int syncSegment(long treeId, int segId, HashTrees remoteTree,
 			boolean doUpdate) throws IOException {
-		CollectionPeekingIterator<SegmentData> localDataItr = new CollectionPeekingIterator<SegmentData>(
-				getSegment(treeId, segId));
-		CollectionPeekingIterator<SegmentData> remoteDataItr = new CollectionPeekingIterator<SegmentData>(
-				remoteTree.getSegment(treeId, segId));
+		PeekingIterator<SegmentData> localDataItr = Iterators
+				.peekingIterator(getSegment(treeId, segId).iterator());
+		PeekingIterator<SegmentData> remoteDataItr = Iterators
+				.peekingIterator(remoteTree.getSegment(treeId, segId)
+						.iterator());
 
 		List<KeyValue> kvsForAddition = new ArrayList<KeyValue>();
 		List<ByteBuffer> keysForRemoval = new ArrayList<ByteBuffer>();
@@ -323,23 +326,28 @@ public class HashTreesImpl implements HashTrees, Service {
 	private void updateRemoteTreeWithMissingSegments(long treeId,
 			Collection<Integer> leafNodeIds, HashTrees remoteTree)
 			throws IOException {
+		for (int rootMissingNodeId : leafNodeIds)
+			updateRemoteTreeWithMissingSegment(treeId, rootMissingNodeId,
+					remoteTree);
+	}
+
+	private void updateRemoteTreeWithMissingSegment(long treeId,
+			int rootMissingNodeId, HashTrees remoteTree) throws IOException {
 		final List<KeyValue> keyValuePairs = new ArrayList<>();
 		int maxSizeToTransfer = 5000;
-		for (int rootMissingNodeId : leafNodeIds) {
-			int leftMostNodeId = getSegmentIdFromLeafId(getLeftMostChildNode(
-					rootMissingNodeId, noOfChildren, height));
-			int rightMostNodeId = getSegmentIdFromLeafId(getRightMostChildNode(
-					rootMissingNodeId, noOfChildren, height));
-			Iterator<SegmentData> sdItr = htStore.getSegmentDataIterator(
-					treeId, leftMostNodeId, rightMostNodeId);
-			while (sdItr.hasNext()) {
-				SegmentData sd = sdItr.next();
-				keyValuePairs.add(new KeyValue(ByteBuffer.wrap(sd.getKey()),
-						ByteBuffer.wrap(store.get(sd.getKey()))));
-				if (keyValuePairs.size() > maxSizeToTransfer) {
-					remoteTree.sPut(keyValuePairs);
-					keyValuePairs.clear();
-				}
+		int leftMostNodeId = getSegmentIdFromLeafId(getLeftMostChildNode(
+				rootMissingNodeId, noOfChildren, height));
+		int rightMostNodeId = getSegmentIdFromLeafId(getRightMostChildNode(
+				rootMissingNodeId, noOfChildren, height));
+		Iterator<SegmentData> sdItr = htStore.getSegmentDataIterator(treeId,
+				leftMostNodeId, rightMostNodeId);
+		while (sdItr.hasNext()) {
+			SegmentData sd = sdItr.next();
+			keyValuePairs.add(new KeyValue(ByteBuffer.wrap(sd.getKey()),
+					ByteBuffer.wrap(store.get(sd.getKey()))));
+			if (keyValuePairs.size() > maxSizeToTransfer) {
+				remoteTree.sPut(keyValuePairs);
+				keyValuePairs.clear();
 			}
 		}
 		if (keyValuePairs.size() > 0)
@@ -778,6 +786,17 @@ public class HashTreesImpl implements HashTrees, Service {
 			this.store = store;
 			this.htStore = htStore;
 			this.treeIdProvider = treeIdProvider;
+		}
+
+		/**
+		 * Creates a in memory based hashtrees storage, and stores the digests
+		 * over there. Look at {@link HashTreesMemStore} for more information.
+		 * 
+		 * @param store
+		 * @param treeIdProvider
+		 */
+		public Builder(Store store, HashTreesIdProvider treeIdProvider) {
+			this(store, treeIdProvider, new HashTreesMemStore());
 		}
 
 		/**

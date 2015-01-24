@@ -117,6 +117,7 @@ public class HashTreesManager extends StoppableTask implements
 
 	@Override
 	public void onRebuildHashTreeResponse(RebuildHashTreeResponse response) {
+		LOG.info("Rebuild response arrived : " + response);
 		Pair<ServerName, Long> snAndTid = Pair.create(response.responder,
 				response.treeId);
 		Pair<Long, Boolean> tsAndResponse = remoteTreeAndLastBuildReqTS
@@ -128,11 +129,13 @@ public class HashTreesManager extends StoppableTask implements
 			remoteTreeAndLastBuildReqTS.replace(snAndTid, tsAndResponse,
 					updatedResponse);
 		}
+		LOG.info("Rebuild response : " + response + " - processed.");
 	}
 
 	@Override
 	public void onRebuildHashTreeRequest(RebuildHashTreeRequest request)
 			throws IOException {
+		LOG.info("Rebuild request arrived : " + request);
 		try {
 			hashTrees.rebuildHashTree(request.treeId,
 					request.expFullRebuildTimeInt);
@@ -143,6 +146,7 @@ public class HashTreesManager extends StoppableTask implements
 		} catch (TException e) {
 			throw new IOException(e);
 		}
+		LOG.info("Rebuild request : " + request + " - processed.");
 	}
 
 	private void rebuildAllLocalTrees() {
@@ -300,7 +304,7 @@ public class HashTreesManager extends StoppableTask implements
 		LOG.info("No of successful/failed synch tasks : "
 				+ taskQueue.getPasseTasksCount() + "/"
 				+ taskQueue.getFailedTasksCount());
-		LOG.info("Synching remote hash trees. - Done");
+		LOG.info("Synching remote hash trees - Done");
 	}
 
 	public void synch(ServerName sn, long treeId) throws IOException,
@@ -372,8 +376,11 @@ public class HashTreesManager extends StoppableTask implements
 				LOG.error("Unable to synch remote hash tree server : "
 						+ hostNameAndTreeId, e);
 			}
-		} else
+		} else {
+			LOG.error("Synch is not allowed between " + localServer + " and "
+					+ sn);
 			throw new SynchNotAllowedException(localServer, sn);
+		}
 	}
 
 	private HashTreesSyncInterface.Iface getHashTreeSyncClient(ServerName sn)

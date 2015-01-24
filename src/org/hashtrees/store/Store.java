@@ -42,7 +42,7 @@ public interface Store {
 	 * @return
 	 * @throws IOException
 	 */
-	void remove(byte[] key) throws IOException;
+	void delete(byte[] key) throws IOException;
 
 	/**
 	 * This should return only (key,value) that are belonging to treeId. Used by

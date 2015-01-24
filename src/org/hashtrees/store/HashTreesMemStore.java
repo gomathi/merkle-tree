@@ -1,5 +1,6 @@
 package org.hashtrees.store;
 
+import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -30,7 +31,7 @@ public class HashTreesMemStore extends HashTreesBaseStore {
 
 	private static class HashTreeMemStore {
 		private final ConcurrentMap<Integer, ByteBuffer> segmentHashes = new ConcurrentSkipListMap<Integer, ByteBuffer>();
-		private final ConcurrentMap<Integer, ConcurrentSkipListMap<ByteBuffer, ByteBuffer>> segDataBlocks = new ConcurrentHashMap<Integer, ConcurrentSkipListMap<ByteBuffer, ByteBuffer>>();
+		private final ConcurrentSkipListMap<Integer, ConcurrentSkipListMap<ByteBuffer, ByteBuffer>> segDataBlocks = new ConcurrentSkipListMap<Integer, ConcurrentSkipListMap<ByteBuffer, ByteBuffer>>();
 		private final AtomicLong lastRebuiltTS = new AtomicLong(0);
 		private final AtomicBitSet markedSegments = new AtomicBitSet();
 	}
@@ -95,6 +96,40 @@ public class HashTreesMemStore extends HashTreesBaseStore {
 		final HashTreeMemStore memStore = getIndHTree(treeId);
 		final Iterator<Map.Entry<Integer, ConcurrentSkipListMap<ByteBuffer, ByteBuffer>>> dataBlocksItr = memStore.segDataBlocks
 				.entrySet().iterator();
+		return new Iterator<SegmentData>() {
+
+			Iterator<Map.Entry<ByteBuffer, ByteBuffer>> itr = null;
+
+			@Override
+			public boolean hasNext() {
+				if (itr == null || !itr.hasNext()) {
+					while (dataBlocksItr.hasNext()) {
+						itr = dataBlocksItr.next().getValue().entrySet()
+								.iterator();
+						if (itr.hasNext())
+							break;
+					}
+				}
+				return (itr != null) && itr.hasNext();
+			}
+
+			@Override
+			public SegmentData next() {
+				if (itr == null || !itr.hasNext())
+					throw new NoSuchElementException(
+							"No more elements exist to return.");
+				Map.Entry<ByteBuffer, ByteBuffer> entry = itr.next();
+				return new SegmentData(entry.getKey(), entry.getValue());
+			}
+		};
+	}
+
+	@Override
+	public Iterator<SegmentData> getSegmentDataIterator(long treeId,
+			int fromSegId, int toSegId) throws IOException {
+		final HashTreeMemStore memStore = getIndHTree(treeId);
+		final Iterator<Map.Entry<Integer, ConcurrentSkipListMap<ByteBuffer, ByteBuffer>>> dataBlocksItr = memStore.segDataBlocks
+				.subMap(fromSegId, true, toSegId, true).entrySet().iterator();
 		return new Iterator<SegmentData>() {
 
 			Iterator<Map.Entry<ByteBuffer, ByteBuffer>> itr = null;

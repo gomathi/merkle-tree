@@ -26,7 +26,7 @@ import org.hashtrees.store.ByteKeyValueConverter.MetaDataKey;
 import org.hashtrees.thrift.generated.SegmentData;
 import org.hashtrees.thrift.generated.SegmentHash;
 import org.hashtrees.util.ByteUtils;
-import org.hashtrees.util.DataIterator;
+import org.hashtrees.util.DataFilterableIterator;
 import org.iq80.leveldb.DB;
 import org.iq80.leveldb.DBIterator;
 import org.iq80.leveldb.Options;
@@ -91,10 +91,8 @@ public class HashTreesPersistentStore extends HashTreesBaseStore {
 		DBIterator itr = dbObj.iterator();
 		byte[] prefixKey = generateBaseKey(BaseKey.DIRTY_SEG, treeId);
 		itr.seek(prefixKey);
-
-		Iterator<Integer> dirtySegmentsItr = new DataIterator<>(prefixKey,
-				KVBYTES_TO_SEGID_CONVERTER, itr);
-
+		Iterator<Integer> dirtySegmentsItr = new DataFilterableIterator<>(
+				prefixKey, true, KVBYTES_TO_SEGID_CONVERTER, itr);
 		List<Integer> dirtySegments = new ArrayList<>();
 		while (dirtySegmentsItr.hasNext()) {
 			Integer treeIdAndDirtySeg = dirtySegmentsItr.next();
@@ -190,11 +188,22 @@ public class HashTreesPersistentStore extends HashTreesBaseStore {
 
 	@Override
 	public Iterator<SegmentData> getSegmentDataIterator(long treeId) {
-		final byte[] startKey = generateBaseKey(BaseKey.SEG_DATA, treeId);
-		final DBIterator iterator = dbObj.iterator();
+		byte[] startKey = generateBaseKey(BaseKey.SEG_DATA, treeId);
+		DBIterator iterator = dbObj.iterator();
 		iterator.seek(startKey);
-		return new DataIterator<>(startKey, KVBYTES_TO_SEGDATA_CONVERTER,
-				iterator);
+		return new DataFilterableIterator<>(startKey, true,
+				KVBYTES_TO_SEGDATA_CONVERTER, iterator);
+	}
+
+	@Override
+	public Iterator<SegmentData> getSegmentDataIterator(long treeId,
+			int fromSegId, int toSegId) throws IOException {
+		byte[] startKey = generateSegmentDataKey(treeId, fromSegId);
+		byte[] endKey = generateSegmentDataKey(treeId, toSegId);
+		DBIterator iterator = dbObj.iterator();
+		iterator.seek(startKey);
+		return new DataFilterableIterator<>(endKey, false,
+				KVBYTES_TO_SEGDATA_CONVERTER, iterator);
 	}
 
 	@Override
@@ -202,7 +211,7 @@ public class HashTreesPersistentStore extends HashTreesBaseStore {
 		byte[] startKey = generateSegmentDataKey(treeId, segId);
 		DBIterator iterator = dbObj.iterator();
 		iterator.seek(startKey);
-		return Lists.newArrayList(new DataIterator<>(startKey,
+		return Lists.newArrayList(new DataFilterableIterator<>(startKey, true,
 				KVBYTES_TO_SEGDATA_CONVERTER, iterator));
 	}
 
@@ -228,7 +237,7 @@ public class HashTreesPersistentStore extends HashTreesBaseStore {
 		DBIterator itr = dbObj.iterator();
 		itr.seek(startKey);
 
-		return Lists.newArrayList(new DataIterator<>(startKey,
+		return Lists.newArrayList(new DataFilterableIterator<>(startKey, true,
 				KVBYTES_TO_SEGID_CONVERTER, itr));
 	}
 
@@ -256,4 +265,5 @@ public class HashTreesPersistentStore extends HashTreesBaseStore {
 			LOG.warn("Exception occurred while closing leveldb connection.");
 		}
 	}
+
 }

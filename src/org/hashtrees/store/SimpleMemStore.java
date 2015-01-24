@@ -42,10 +42,10 @@ public class SimpleMemStore extends BaseStore {
 	}
 
 	@Override
-	public void remove(byte[] key) throws IOException {
+	public void delete(byte[] key) throws IOException {
 		ByteBuffer intKey = ByteBuffer.wrap(key);
 		kvMap.remove(intKey);
-		super.remove(key);
+		super.delete(key);
 	}
 
 	/**

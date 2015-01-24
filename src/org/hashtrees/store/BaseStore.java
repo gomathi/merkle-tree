@@ -24,7 +24,7 @@ public abstract class BaseStore implements Store {
 	}
 
 	@Override
-	public void remove(byte[] key) throws IOException {
+	public void delete(byte[] key) throws IOException {
 		if (hashTrees != null)
 			hashTrees.hRemove(ByteBuffer.wrap(key));
 	}

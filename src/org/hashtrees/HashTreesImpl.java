@@ -1,8 +1,10 @@
 package org.hashtrees;
 
 import static org.hashtrees.TreeUtils.getImmediateChildren;
+import static org.hashtrees.TreeUtils.getLeftMostChildNode;
 import static org.hashtrees.TreeUtils.getNoOfNodes;
 import static org.hashtrees.TreeUtils.getParent;
+import static org.hashtrees.TreeUtils.getRightMostChildNode;
 import static org.hashtrees.TreeUtils.height;
 import static org.hashtrees.util.ByteUtils.roundUpToPowerOf2;
 import static org.hashtrees.util.ByteUtils.sha1;
@@ -83,6 +85,7 @@ public class HashTreesImpl implements HashTrees, Service {
 	private final int noOfChildren;
 	private final int internalNodesCount;
 	private final int segmentsCount;
+	private final int height;
 
 	private final Store store;
 	private final HashTreesStore htStore;
@@ -104,8 +107,8 @@ public class HashTreesImpl implements HashTrees, Service {
 		this.segmentsCount = getValidSegmentsCount(noOfSegments);
 		this.enabledNonBlockingCalls = enabledNonBlockingCalls;
 		this.nonBlockingQueueSize = nonBlockingQueueSize;
-		this.internalNodesCount = getNoOfNodes(
-				(height(this.segmentsCount, noOfChildren) - 1), noOfChildren);
+		this.height = height(this.segmentsCount, noOfChildren);
+		this.internalNodesCount = getNoOfNodes((height - 1), noOfChildren);
 		this.treeIdProvider = treeIdProvider;
 		this.segIdProvider = segIdProvider;
 		this.htStore = htStore;
@@ -211,8 +214,7 @@ public class HashTreesImpl implements HashTrees, Service {
 				doUpdate);
 
 		if (doUpdate) {
-			Collection<Integer> missingSegments = getSegmentIdsFromLeafIds(getAllLeafNodeIds(missingNodes));
-			updateRemoteTreeWithMissingSegments(treeId, missingSegments,
+			updateRemoteTreeWithMissingSegments(treeId, missingNodes,
 					remoteTree);
 			remoteTree.deleteTreeNodes(treeId, extrinsicNodes);
 		}
@@ -319,17 +321,29 @@ public class HashTreesImpl implements HashTrees, Service {
 	}
 
 	private void updateRemoteTreeWithMissingSegments(long treeId,
-			Collection<Integer> segIds, HashTrees remoteTree)
+			Collection<Integer> leafNodeIds, HashTrees remoteTree)
 			throws IOException {
-		for (int segId : segIds) {
-			final List<KeyValue> keyValuePairs = new ArrayList<>();
-			List<SegmentData> sdValues = getSegment(treeId, segId);
-			for (SegmentData sd : sdValues)
+		final List<KeyValue> keyValuePairs = new ArrayList<>();
+		int maxSizeToTransfer = 5000;
+		for (int rootMissingNodeId : leafNodeIds) {
+			int leftMostNodeId = getSegmentIdFromLeafId(getLeftMostChildNode(
+					rootMissingNodeId, noOfChildren, height));
+			int rightMostNodeId = getSegmentIdFromLeafId(getRightMostChildNode(
+					rootMissingNodeId, noOfChildren, height));
+			Iterator<SegmentData> sdItr = htStore.getSegmentDataIterator(
+					treeId, leftMostNodeId, rightMostNodeId);
+			while (sdItr.hasNext()) {
+				SegmentData sd = sdItr.next();
 				keyValuePairs.add(new KeyValue(ByteBuffer.wrap(sd.getKey()),
 						ByteBuffer.wrap(store.get(sd.getKey()))));
-			if (sdValues.size() > 0)
-				remoteTree.sPut(keyValuePairs);
+				if (keyValuePairs.size() > maxSizeToTransfer) {
+					remoteTree.sPut(keyValuePairs);
+					keyValuePairs.clear();
+				}
+			}
 		}
+		if (keyValuePairs.size() > 0)
+			remoteTree.sPut(keyValuePairs);
 	}
 
 	@Override
@@ -499,7 +513,7 @@ public class HashTreesImpl implements HashTrees, Service {
 	@Override
 	public void sRemove(final List<ByteBuffer> keys) throws IOException {
 		for (ByteBuffer key : keys)
-			store.remove(key.array());
+			store.delete(key.array());
 	}
 
 	@Override
@@ -510,7 +524,7 @@ public class HashTreesImpl implements HashTrees, Service {
 			Iterator<SegmentData> segDataItr = getSegment(treeId, segId)
 					.iterator();
 			while (segDataItr.hasNext())
-				store.remove(segDataItr.next().getKey());
+				store.delete(segDataItr.next().getKey());
 		}
 	}
 

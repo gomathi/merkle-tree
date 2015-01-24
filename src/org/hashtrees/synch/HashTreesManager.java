@@ -200,7 +200,7 @@ public class HashTreesManager extends StoppableTask implements
 				client.submitRebuildRequest(request);
 			} catch (TException e) {
 				LOG.error("Unable to send rebuild notification to "
-						+ serverNameWTreeId, e);
+						+ serverNameWTreeId + " - " + e.getMessage(), e);
 			}
 		}
 	}

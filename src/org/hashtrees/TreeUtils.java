@@ -66,4 +66,37 @@ public class TreeUtils {
 		}
 		return children;
 	}
+
+	public static int getLevelOfNode(int nodeId, int k) {
+		if (nodeId == 0)
+			return 0;
+		int level = 0;
+		while (nodeId > 0) {
+			nodeId = getParent(nodeId, k);
+			level++;
+		}
+		return level;
+	}
+
+	public static int getLeftMostChildNode(int parentId, int k, int height) {
+		int parentNodeLevel = getLevelOfNode(parentId, k);
+		int noOfItr = height - parentNodeLevel;
+		int leftMostChild = parentId;
+		while (noOfItr > 0) {
+			leftMostChild = k * leftMostChild + 1;
+			noOfItr--;
+		}
+		return leftMostChild;
+	}
+
+	public static int getRightMostChildNode(int parentId, int k, int height) {
+		int parentNodeLevel = getLevelOfNode(parentId, k);
+		int noOfItr = height - parentNodeLevel;
+		int rightMostChild = parentId;
+		while (noOfItr > 0) {
+			rightMostChild = k * rightMostChild + k;
+			noOfItr--;
+		}
+		return rightMostChild;
+	}
 }

@@ -64,6 +64,21 @@ public interface HashTreesStore extends Service {
 			throws IOException;
 
 	/**
+	 * Returns an iterator to read all the segment data of the given tree id,
+	 * and starting from a given segId and to segId.
+	 * 
+	 * @param treeId
+	 * @param fromSegId
+	 *            , inclusive
+	 * @param toSegId
+	 *            , inclusive
+	 * @return
+	 * @throws IOException
+	 */
+	Iterator<SegmentData> getSegmentDataIterator(long treeId, int fromSegId,
+			int toSegId) throws IOException;
+
+	/**
 	 * Given a segment id, returns the list of all segment data in the
 	 * individual segment block.
 	 * 

@@ -158,7 +158,7 @@ public interface HashTrees {
 	 */
 	void rebuildHashTree(long treeId, boolean fullRebuild) throws IOException;
 
-	void addObserver(HashTreesObserver observer);
+	void addObserver(HashTreesObserver observer) throws IOException;
 
-	void removeObserver(HashTreesObserver observer);
+	void removeObserver(HashTreesObserver observer) throws IOException;
 }

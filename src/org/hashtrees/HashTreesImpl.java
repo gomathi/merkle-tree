@@ -466,7 +466,7 @@ public class HashTreesImpl implements HashTrees, Service {
 	private void rebuildParentNodes(long treeId, final Set<Integer> parentIds)
 			throws IOException {
 		List<Integer> children;
-		List<ByteBuffer> segHashes = new ArrayList<ByteBuffer>(noOfChildren);
+		List<ByteBuffer> segHashes = new ArrayList<>(noOfChildren);
 		ByteBuffer segHashBB;
 		SegmentHash segHash;
 
@@ -474,7 +474,7 @@ public class HashTreesImpl implements HashTrees, Service {
 			children = getImmediateChildren(parentId, noOfChildren);
 			for (int child : children) {
 				segHash = htStore.getSegmentHash(treeId, child);
-				segHashBB = (segHash == null) ? null : segHash.hash;
+				segHashBB = (segHash == null) ? null : segHash.hash.duplicate();
 				if (segHashBB != null)
 					segHashes.add(segHashBB);
 			}

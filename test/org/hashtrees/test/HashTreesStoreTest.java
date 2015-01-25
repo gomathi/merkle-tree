@@ -145,7 +145,7 @@ public class HashTreesStoreTest {
 				SegmentHash sh = htStore
 						.getSegmentHash(DEF_TREE_ID, DEF_SEG_ID);
 				Assert.assertNotNull(sh);
-				Assert.assertEquals(digest, sh.hash);
+				Assert.assertEquals(digest, sh.hash.duplicate());
 
 				List<SegmentHash> expected = new ArrayList<SegmentHash>();
 				expected.add(sh);

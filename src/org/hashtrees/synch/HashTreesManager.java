@@ -22,6 +22,7 @@ import org.apache.thrift.TException;
 import org.apache.thrift.transport.TTransportException;
 import org.hashtrees.HashTrees;
 import org.hashtrees.HashTreesIdProvider;
+import org.hashtrees.SyncDiffResult;
 import org.hashtrees.SyncType;
 import org.hashtrees.thrift.generated.HashTreesSyncInterface;
 import org.hashtrees.thrift.generated.RebuildHashTreeRequest;
@@ -117,7 +118,7 @@ public class HashTreesManager extends StoppableTask implements
 
 	@Override
 	public void onRebuildHashTreeResponse(RebuildHashTreeResponse response) {
-		LOG.info("Rebuild response arrived : " + response);
+		LOG.info("Rebuild response arrived : {}.", response);
 		Pair<ServerName, Long> snAndTid = Pair.create(response.responder,
 				response.treeId);
 		Pair<Long, Boolean> tsAndResponse = remoteTreeAndLastBuildReqTS
@@ -129,13 +130,13 @@ public class HashTreesManager extends StoppableTask implements
 			remoteTreeAndLastBuildReqTS.replace(snAndTid, tsAndResponse,
 					updatedResponse);
 		}
-		LOG.info("Rebuild response : " + response + " - processed.");
+		LOG.info("Rebuild response : {} - processed.", response);
 	}
 
 	@Override
 	public void onRebuildHashTreeRequest(RebuildHashTreeRequest request)
 			throws IOException {
-		LOG.info("Rebuild request arrived : " + request);
+		LOG.info("Rebuild request arrived : {} .", request);
 		try {
 			hashTrees.rebuildHashTree(request.treeId,
 					request.expFullRebuildTimeInt);
@@ -146,7 +147,7 @@ public class HashTreesManager extends StoppableTask implements
 		} catch (TException e) {
 			throw new IOException(e);
 		}
-		LOG.info("Rebuild request : " + request + " - processed.");
+		LOG.info("Rebuild request : {} - processed", request);
 	}
 
 	private void rebuildAllLocalTrees() {
@@ -203,8 +204,8 @@ public class HashTreesManager extends StoppableTask implements
 						localServer, treeId, buildReqTS, fullRebuildPeriod);
 				client.submitRebuildRequest(request);
 			} catch (TException e) {
-				LOG.error("Unable to send rebuild notification to "
-						+ serverNameWTreeId + " - " + e.getMessage(), e);
+				LOG.error("Unable to send rebuild notification to {} - {}",
+						serverNameWTreeId, e.getMessage(), e);
 			}
 		}
 	}
@@ -244,8 +245,9 @@ public class HashTreesManager extends StoppableTask implements
 
 							if (unsyncedTime == null
 									|| lastBuildReqTSAndResponse == null) {
-								LOG.info("Unsynced info entry is not available. Synch should be followed by rebuild. Skipping syncing "
-										+ serverNameATreeId);
+								LOG.info(
+										"Unsynced info entry is not available. Synch should be followed by rebuild. Skipping syncing {}.",
+										serverNameATreeId);
 								continue;
 							}
 
@@ -255,9 +257,9 @@ public class HashTreesManager extends StoppableTask implements
 								remoteTreeAndLastSyncedTS
 										.remove(serverNameATreeId);
 							} else {
-								LOG.info("Did not receive confirmation from "
-										+ serverNameATreeId
-										+ " for the rebuilding. Not syncing the remote node.");
+								LOG.info(
+										"Did not receive confirmation from {} for the rebuilding. Not syncing the remote node.",
+										serverNameATreeId);
 							}
 						}
 						if (!intQue.isEmpty())
@@ -289,7 +291,7 @@ public class HashTreesManager extends StoppableTask implements
 				});
 
 		LOG.info("Synching remote hash trees.");
-		TaskQueue<Void> taskQueue = new TaskQueue<Void>(threadPool, syncTasks,
+		TaskQueue<Void> taskQueue = new TaskQueue<>(threadPool, syncTasks,
 				noOfThreads);
 		while (taskQueue.hasNext()) {
 			try {
@@ -301,9 +303,8 @@ public class HashTreesManager extends StoppableTask implements
 				taskQueue.stopAsync();
 			}
 		}
-		LOG.info("No of successful/failed synch tasks : "
-				+ taskQueue.getPasseTasksCount() + "/"
-				+ taskQueue.getFailedTasksCount());
+		LOG.info("No of successful/failed synch tasks : {} / {}",
+				taskQueue.getPasseTasksCount(), taskQueue.getFailedTasksCount());
 		LOG.info("Synching remote hash trees - Done");
 	}
 
@@ -327,8 +328,8 @@ public class HashTreesManager extends StoppableTask implements
 		Stopwatch watch = Stopwatch.createStarted();
 		hashTrees.rebuildHashTree(treeId, fullRebuildPeriod);
 		watch.stop();
-		LOG.info("Time taken for rebuilding (treeId: " + treeId + ") (in ms):"
-				+ watch.elapsed(TimeUnit.MILLISECONDS));
+		LOG.info("Time taken for rebuilding (treeId: {}) (in ms) :", treeId,
+				watch.elapsed(TimeUnit.MILLISECONDS));
 		notifyObservers(new Function<HashTreesManagerObserver, Void>() {
 
 			@Override
@@ -355,15 +356,16 @@ public class HashTreesManager extends StoppableTask implements
 						return null;
 					}
 				});
-				LOG.info("Syncing " + hostNameAndTreeId);
+				LOG.info("Syncing {}.", hostNameAndTreeId);
 				Stopwatch watch = Stopwatch.createStarted();
 				HashTreesSyncInterface.Iface remoteSyncClient = getHashTreeSyncClient(sn);
-				hashTrees.synch(treeId, new HashTreesRemoteClient(
-						remoteSyncClient), syncType);
+				SyncDiffResult result = hashTrees.synch(treeId,
+						new HashTreesRemoteClient(remoteSyncClient), syncType);
+				LOG.info("Synch result for {} - {}", hostNameAndTreeId, result);
 				watch.stop();
-				LOG.info("Time taken for syncing (" + hostNameAndTreeId
-						+ ") (in ms):" + watch.elapsed(TimeUnit.MILLISECONDS));
-				LOG.info("Syncing " + hostNameAndTreeId + " complete.");
+				LOG.info("Time taken for syncing ({}) (in ms) : {}",
+						hostNameAndTreeId, watch.elapsed(TimeUnit.MILLISECONDS));
+				LOG.info("Syncing {} complete.", hostNameAndTreeId);
 				notifyObservers(new Function<HashTreesManagerObserver, Void>() {
 
 					@Override
@@ -373,12 +375,11 @@ public class HashTreesManager extends StoppableTask implements
 					}
 				});
 			} catch (TException e) {
-				LOG.error("Unable to synch remote hash tree server : "
-						+ hostNameAndTreeId, e);
+				LOG.error("Unable to synch remote hash tree server {} : {}",
+						hostNameAndTreeId, e);
 			}
 		} else {
-			LOG.error("Synch is not allowed between " + localServer + " and "
-					+ sn);
+			LOG.error("Synch is not allowed between {} and {}", localServer, sn);
 			throw new SynchNotAllowedException(localServer, sn);
 		}
 	}

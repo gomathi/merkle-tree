@@ -13,6 +13,7 @@ import org.hashtrees.thrift.generated.KeyValue;
 import org.hashtrees.thrift.generated.SegmentData;
 import org.hashtrees.thrift.generated.SegmentHash;
 
+// Dummy HashTrees
 public class MockHashTrees implements HashTrees {
 
 	@Override
@@ -45,12 +46,6 @@ public class MockHashTrees implements HashTrees {
 	}
 
 	@Override
-	public void deleteTreeNodes(long treeId, List<Integer> nodeIds)
-			throws IOException {
-
-	}
-
-	@Override
 	public void hPut(ByteBuffer key, ByteBuffer value) throws IOException {
 
 	}
@@ -63,13 +58,13 @@ public class MockHashTrees implements HashTrees {
 	@Override
 	public SyncDiffResult synch(long treeId, HashTrees remoteTree,
 			SyncType syncType) throws IOException {
-		return new SyncDiffResult(0, 0, 0);
+		return new SyncDiffResult(0, 0);
 	}
 
 	@Override
 	public SyncDiffResult synch(long treeId, HashTrees remoteTree)
 			throws IOException {
-		return new SyncDiffResult(0, 0, 0);
+		return new SyncDiffResult(0, 0);
 	}
 
 	@Override
@@ -96,6 +91,11 @@ public class MockHashTrees implements HashTrees {
 
 	@Override
 	public void sPut(List<KeyValue> keyValuePairs) throws IOException {
+
+	}
+
+	@Override
+	public void deleteTreeNode(long treeId, int nodeId) throws IOException {
 
 	}
 

@@ -60,8 +60,9 @@ public class ByteKeyValueConverter {
 		@Override
 		public SegmentData apply(Entry<byte[], byte[]> kv) {
 			byte[] key = readSegmentDataKey(kv.getKey());
-			return new SegmentData(ByteBuffer.wrap(key), ByteBuffer.wrap(kv
-					.getValue()));
+			int segId = readSegmentIdFrom(kv.getKey());
+			return new SegmentData(segId, ByteBuffer.wrap(key),
+					ByteBuffer.wrap(kv.getValue()));
 		}
 	};
 

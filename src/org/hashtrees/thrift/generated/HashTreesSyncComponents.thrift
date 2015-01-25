@@ -16,8 +16,9 @@ struct SegmentHash
 **/
 struct SegmentData
 {
-	1: required binary key;
-	2: required binary digest;
+	1: required i32 segId; 
+	2: required binary key;
+	3: required binary digest;
 }
 
 /**
@@ -112,10 +113,10 @@ service HashTreesSyncInterface
 	SegmentData getSegmentData(1:i64 treeId, 2:i32 segId, 3:binary key);
 	
 	/**
-     * Deletes tree nodes from the hash tree, and the corresponding segments.
-     * 
-     */
-	void deleteTreeNodes(1:i64 treeId, 2:list<i32> nodeIds);
+	 * Deletes the given node on remote tree.
+	 *
+	 */
+	void deleteTreeNode(1:i64 treeId, 2:i32 nodeId);
 	
 	/**
 	 * Requests a rebuild of the hashtree.

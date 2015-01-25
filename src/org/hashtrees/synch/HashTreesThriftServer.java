@@ -1,5 +1,6 @@
 package org.hashtrees.synch;
 
+import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.List;
 
@@ -91,16 +92,6 @@ public class HashTreesThriftServer implements HashTreesSyncInterface.Iface {
 	}
 
 	@Override
-	public void deleteTreeNodes(long treeId, List<Integer> nodeIds)
-			throws TException {
-		try {
-			hashTrees.deleteTreeNodes(treeId, nodeIds);
-		} catch (Exception e) {
-			throw new TException(e);
-		}
-	}
-
-	@Override
 	public void submitRebuildRequest(RebuildHashTreeRequest request)
 			throws TException {
 		try {
@@ -123,5 +114,14 @@ public class HashTreesThriftServer implements HashTreesSyncInterface.Iface {
 	@Override
 	public List<ServerName> getServerNameListFor(long treeId) throws TException {
 		return syncListProvider.getServerNameListFor(treeId);
+	}
+
+	@Override
+	public void deleteTreeNode(long treeId, int nodeId) throws TException {
+		try {
+			hashTrees.deleteTreeNode(treeId, nodeId);
+		} catch (IOException e) {
+			throw new TException(e);
+		}
 	}
 }

@@ -50,7 +50,7 @@ public class HashTreesMemStore extends HashTreesBaseStore {
 			ByteBuffer value = segDataBlock.get(key);
 			if (value != null) {
 				ByteBuffer intKey = ByteBuffer.wrap(key.array());
-				return new SegmentData(intKey, value);
+				return new SegmentData(segId, intKey, value);
 			}
 		}
 		return null;
@@ -63,7 +63,8 @@ public class HashTreesMemStore extends HashTreesBaseStore {
 		if (!hTreeStore.segDataBlocks.containsKey(segId))
 			hTreeStore.segDataBlocks.putIfAbsent(segId,
 					new ConcurrentSkipListMap<ByteBuffer, ByteBuffer>());
-		hTreeStore.segDataBlocks.get(segId).put(key, digest);
+		hTreeStore.segDataBlocks.get(segId).put(key.duplicate(),
+				digest.duplicate());
 	}
 
 	@Override
@@ -72,7 +73,7 @@ public class HashTreesMemStore extends HashTreesBaseStore {
 		Map<ByteBuffer, ByteBuffer> segDataBlock = indPartition.segDataBlocks
 				.get(segId);
 		if (segDataBlock != null)
-			segDataBlock.remove(key);
+			segDataBlock.remove(key.duplicate());
 	}
 
 	@Override
@@ -84,7 +85,7 @@ public class HashTreesMemStore extends HashTreesBaseStore {
 			return Collections.emptyList();
 		List<SegmentData> result = new ArrayList<SegmentData>();
 		for (Map.Entry<ByteBuffer, ByteBuffer> entry : segDataBlock.entrySet())
-			result.add(new SegmentData(entry.getKey(), entry.getValue()));
+			result.add(new SegmentData(segId, entry.getKey(), entry.getValue()));
 		return result;
 	}
 
@@ -96,32 +97,7 @@ public class HashTreesMemStore extends HashTreesBaseStore {
 		final HashTreeMemStore memStore = getIndHTree(treeId);
 		final Iterator<Map.Entry<Integer, ConcurrentSkipListMap<ByteBuffer, ByteBuffer>>> dataBlocksItr = memStore.segDataBlocks
 				.entrySet().iterator();
-		return new Iterator<SegmentData>() {
-
-			Iterator<Map.Entry<ByteBuffer, ByteBuffer>> itr = null;
-
-			@Override
-			public boolean hasNext() {
-				if (itr == null || !itr.hasNext()) {
-					while (dataBlocksItr.hasNext()) {
-						itr = dataBlocksItr.next().getValue().entrySet()
-								.iterator();
-						if (itr.hasNext())
-							break;
-					}
-				}
-				return (itr != null) && itr.hasNext();
-			}
-
-			@Override
-			public SegmentData next() {
-				if (itr == null || !itr.hasNext())
-					throw new NoSuchElementException(
-							"No more elements exist to return.");
-				Map.Entry<ByteBuffer, ByteBuffer> entry = itr.next();
-				return new SegmentData(entry.getKey(), entry.getValue());
-			}
-		};
+		return convertMapEntriesToSegmentData(dataBlocksItr);
 	}
 
 	@Override
@@ -130,16 +106,24 @@ public class HashTreesMemStore extends HashTreesBaseStore {
 		final HashTreeMemStore memStore = getIndHTree(treeId);
 		final Iterator<Map.Entry<Integer, ConcurrentSkipListMap<ByteBuffer, ByteBuffer>>> dataBlocksItr = memStore.segDataBlocks
 				.subMap(fromSegId, true, toSegId, true).entrySet().iterator();
+		return convertMapEntriesToSegmentData(dataBlocksItr);
+	}
+
+	private static Iterator<SegmentData> convertMapEntriesToSegmentData(
+			final Iterator<Map.Entry<Integer, ConcurrentSkipListMap<ByteBuffer, ByteBuffer>>> dataBlocksItr) {
 		return new Iterator<SegmentData>() {
 
-			Iterator<Map.Entry<ByteBuffer, ByteBuffer>> itr = null;
+			volatile int segId;
+			volatile Iterator<Map.Entry<ByteBuffer, ByteBuffer>> itr = null;
 
 			@Override
 			public boolean hasNext() {
 				if (itr == null || !itr.hasNext()) {
 					while (dataBlocksItr.hasNext()) {
-						itr = dataBlocksItr.next().getValue().entrySet()
-								.iterator();
+						Map.Entry<Integer, ConcurrentSkipListMap<ByteBuffer, ByteBuffer>> entry = dataBlocksItr
+								.next();
+						segId = entry.getKey();
+						itr = entry.getValue().entrySet().iterator();
 						if (itr.hasNext())
 							break;
 					}
@@ -153,7 +137,7 @@ public class HashTreesMemStore extends HashTreesBaseStore {
 					throw new NoSuchElementException(
 							"No more elements exist to return.");
 				Map.Entry<ByteBuffer, ByteBuffer> entry = itr.next();
-				return new SegmentData(entry.getKey(), entry.getValue());
+				return new SegmentData(segId, entry.getKey(), entry.getValue());
 			}
 		};
 	}
@@ -161,8 +145,7 @@ public class HashTreesMemStore extends HashTreesBaseStore {
 	@Override
 	public void putSegmentHash(long treeId, int nodeId, ByteBuffer digest) {
 		HashTreeMemStore indPartition = getIndHTree(treeId);
-		ByteBuffer intDigest = ByteBuffer.wrap(digest.array());
-		indPartition.segmentHashes.put(nodeId, intDigest);
+		indPartition.segmentHashes.put(nodeId, digest.duplicate());
 	}
 
 	@Override

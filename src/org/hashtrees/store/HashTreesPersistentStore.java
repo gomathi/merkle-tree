@@ -175,7 +175,7 @@ public class HashTreesPersistentStore extends HashTreesBaseStore {
 		if (value != null) {
 			ByteBuffer intKeyBB = ByteBuffer.wrap(key.array());
 			ByteBuffer valueBB = ByteBuffer.wrap(value);
-			return new SegmentData(intKeyBB, valueBB);
+			return new SegmentData(segId, intKeyBB, valueBB);
 		}
 		return null;
 	}
@@ -191,7 +191,7 @@ public class HashTreesPersistentStore extends HashTreesBaseStore {
 		byte[] startKey = generateBaseKey(BaseKey.SEG_DATA, treeId);
 		DBIterator iterator = dbObj.iterator();
 		iterator.seek(startKey);
-		return new DataFilterableIterator<>(startKey, true,
+		return new DataFilterableIterator<>(startKey, false,
 				KVBYTES_TO_SEGDATA_CONVERTER, iterator);
 	}
 

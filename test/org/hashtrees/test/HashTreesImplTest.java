@@ -49,12 +49,12 @@ import org.junit.Test;
 
 public class HashTreesImplTest {
 
-	private static ByteBuffer generateBytesFrom(int... values) {
+	private static byte[] generateBytesFrom(int... values) {
 		byte[] result = new byte[values.length * ByteUtils.SIZEOF_INT];
 		ByteBuffer bb = ByteBuffer.wrap(result);
 		for (int value : values)
 			bb.putInt(value);
-		return bb;
+		return result;
 	}
 
 	private static ByteBuffer generateRandomKeyWithPrefix(int prefixValue) {
@@ -152,7 +152,6 @@ public class HashTreesImplTest {
 						false, TREE_ID_PROVIDER, SEG_ID_PROVIDER, store);
 				HashTrees testTree = components.hTree;
 				SimpleMemStore kvStore = components.store;
-				kvStore.registerHashTrees(null);
 
 				ByteBuffer expectedKey = generateRandomKeyWithPrefix(segId);
 				ByteBuffer expectedValue = ByteBuffer.wrap(randomBytes());
@@ -353,21 +352,19 @@ public class HashTreesImplTest {
 
 		try {
 			for (int j = 0; j <= 1; j++) {
-				HTreeComponents localHTreeComp = createHashTree(
-						DEFAULT_SEG_DATA_BLOCKS_COUNT, false, TREE_ID_PROVIDER,
-						SEG_ID_PROVIDER, stores[j]);
-				HTreeComponents remoteHTreeComp = createHashTree(
-						DEFAULT_SEG_DATA_BLOCKS_COUNT, false, TREE_ID_PROVIDER,
-						SEG_ID_PROVIDER, remoteStores[j]);
+				HTreeComponents localHTreeComp = createHashTree(4, false,
+						TREE_ID_PROVIDER, SEG_ID_PROVIDER, stores[j]);
+				HTreeComponents remoteHTreeComp = createHashTree(4, false,
+						TREE_ID_PROVIDER, SEG_ID_PROVIDER, remoteStores[j]);
 
 				for (int k = 0; k <= 1; k++) {
-					ByteBuffer key = generateBytesFrom(segId, k);
-					remoteHTreeComp.store.put(key.array(), randomBytes());
+					byte[] key = generateBytesFrom(segId, k);
+					remoteHTreeComp.store.put(key, randomBytes());
 				}
 
 				for (int k = 1; k <= 2; k++) {
-					ByteBuffer key = generateBytesFrom(segId, k);
-					localHTreeComp.store.put(key.array(), randomBytes());
+					byte[] key = generateBytesFrom(segId, k);
+					localHTreeComp.store.put(key, randomBytes());
 				}
 
 				localHTreeComp.hTree.rebuildHashTree(

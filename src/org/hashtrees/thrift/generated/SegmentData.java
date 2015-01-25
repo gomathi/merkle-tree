@@ -35,8 +35,9 @@ import org.slf4j.LoggerFactory;
 public class SegmentData implements org.apache.thrift.TBase<SegmentData, SegmentData._Fields>, java.io.Serializable, Cloneable {
   private static final org.apache.thrift.protocol.TStruct STRUCT_DESC = new org.apache.thrift.protocol.TStruct("SegmentData");
 
-  private static final org.apache.thrift.protocol.TField KEY_FIELD_DESC = new org.apache.thrift.protocol.TField("key", org.apache.thrift.protocol.TType.STRING, (short)1);
-  private static final org.apache.thrift.protocol.TField DIGEST_FIELD_DESC = new org.apache.thrift.protocol.TField("digest", org.apache.thrift.protocol.TType.STRING, (short)2);
+  private static final org.apache.thrift.protocol.TField SEG_ID_FIELD_DESC = new org.apache.thrift.protocol.TField("segId", org.apache.thrift.protocol.TType.I32, (short)1);
+  private static final org.apache.thrift.protocol.TField KEY_FIELD_DESC = new org.apache.thrift.protocol.TField("key", org.apache.thrift.protocol.TType.STRING, (short)2);
+  private static final org.apache.thrift.protocol.TField DIGEST_FIELD_DESC = new org.apache.thrift.protocol.TField("digest", org.apache.thrift.protocol.TType.STRING, (short)3);
 
   private static final Map<Class<? extends IScheme>, SchemeFactory> schemes = new HashMap<Class<? extends IScheme>, SchemeFactory>();
   static {
@@ -44,13 +45,15 @@ public class SegmentData implements org.apache.thrift.TBase<SegmentData, Segment
     schemes.put(TupleScheme.class, new SegmentDataTupleSchemeFactory());
   }
 
+  public int segId; // required
   public ByteBuffer key; // required
   public ByteBuffer digest; // required
 
   /** The set of fields this struct contains, along with convenience methods for finding and manipulating them. */
   public enum _Fields implements org.apache.thrift.TFieldIdEnum {
-    KEY((short)1, "key"),
-    DIGEST((short)2, "digest");
+    SEG_ID((short)1, "segId"),
+    KEY((short)2, "key"),
+    DIGEST((short)3, "digest");
 
     private static final Map<String, _Fields> byName = new HashMap<String, _Fields>();
 
@@ -65,9 +68,11 @@ public class SegmentData implements org.apache.thrift.TBase<SegmentData, Segment
      */
     public static _Fields findByThriftId(int fieldId) {
       switch(fieldId) {
-        case 1: // KEY
+        case 1: // SEG_ID
+          return SEG_ID;
+        case 2: // KEY
           return KEY;
-        case 2: // DIGEST
+        case 3: // DIGEST
           return DIGEST;
         default:
           return null;
@@ -109,9 +114,13 @@ public class SegmentData implements org.apache.thrift.TBase<SegmentData, Segment
   }
 
   // isset id assignments
+  private static final int __SEGID_ISSET_ID = 0;
+  private BitSet __isset_bit_vector = new BitSet(1);
   public static final Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> metaDataMap;
   static {
     Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> tmpMap = new EnumMap<_Fields, org.apache.thrift.meta_data.FieldMetaData>(_Fields.class);
+    tmpMap.put(_Fields.SEG_ID, new org.apache.thrift.meta_data.FieldMetaData("segId", org.apache.thrift.TFieldRequirementType.REQUIRED, 
+        new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.I32)));
     tmpMap.put(_Fields.KEY, new org.apache.thrift.meta_data.FieldMetaData("key", org.apache.thrift.TFieldRequirementType.REQUIRED, 
         new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING        , true)));
     tmpMap.put(_Fields.DIGEST, new org.apache.thrift.meta_data.FieldMetaData("digest", org.apache.thrift.TFieldRequirementType.REQUIRED, 
@@ -124,10 +133,13 @@ public class SegmentData implements org.apache.thrift.TBase<SegmentData, Segment
   }
 
   public SegmentData(
+    int segId,
     ByteBuffer key,
     ByteBuffer digest)
   {
     this();
+    this.segId = segId;
+    setSegIdIsSet(true);
     this.key = key;
     this.digest = digest;
   }
@@ -136,6 +148,9 @@ public class SegmentData implements org.apache.thrift.TBase<SegmentData, Segment
    * Performs a deep copy on <i>other</i>.
    */
   public SegmentData(SegmentData other) {
+    __isset_bit_vector.clear();
+    __isset_bit_vector.or(other.__isset_bit_vector);
+    this.segId = other.segId;
     if (other.isSetKey()) {
       this.key = org.apache.thrift.TBaseHelper.copyBinary(other.key);
 ;
@@ -152,8 +167,33 @@ public class SegmentData implements org.apache.thrift.TBase<SegmentData, Segment
 
   @Override
   public void clear() {
+    setSegIdIsSet(false);
+    this.segId = 0;
     this.key = null;
     this.digest = null;
+  }
+
+  public int getSegId() {
+    return this.segId;
+  }
+
+  public SegmentData setSegId(int segId) {
+    this.segId = segId;
+    setSegIdIsSet(true);
+    return this;
+  }
+
+  public void unsetSegId() {
+    __isset_bit_vector.clear(__SEGID_ISSET_ID);
+  }
+
+  /** Returns true if field segId is set (has been assigned a value) and false otherwise */
+  public boolean isSetSegId() {
+    return __isset_bit_vector.get(__SEGID_ISSET_ID);
+  }
+
+  public void setSegIdIsSet(boolean value) {
+    __isset_bit_vector.set(__SEGID_ISSET_ID, value);
   }
 
   public byte[] getKey() {
@@ -226,6 +266,14 @@ public class SegmentData implements org.apache.thrift.TBase<SegmentData, Segment
 
   public void setFieldValue(_Fields field, Object value) {
     switch (field) {
+    case SEG_ID:
+      if (value == null) {
+        unsetSegId();
+      } else {
+        setSegId((Integer)value);
+      }
+      break;
+
     case KEY:
       if (value == null) {
         unsetKey();
@@ -247,6 +295,9 @@ public class SegmentData implements org.apache.thrift.TBase<SegmentData, Segment
 
   public Object getFieldValue(_Fields field) {
     switch (field) {
+    case SEG_ID:
+      return Integer.valueOf(getSegId());
+
     case KEY:
       return getKey();
 
@@ -264,6 +315,8 @@ public class SegmentData implements org.apache.thrift.TBase<SegmentData, Segment
     }
 
     switch (field) {
+    case SEG_ID:
+      return isSetSegId();
     case KEY:
       return isSetKey();
     case DIGEST:
@@ -284,6 +337,15 @@ public class SegmentData implements org.apache.thrift.TBase<SegmentData, Segment
   public boolean equals(SegmentData that) {
     if (that == null)
       return false;
+
+    boolean this_present_segId = true;
+    boolean that_present_segId = true;
+    if (this_present_segId || that_present_segId) {
+      if (!(this_present_segId && that_present_segId))
+        return false;
+      if (this.segId != that.segId)
+        return false;
+    }
 
     boolean this_present_key = true && this.isSetKey();
     boolean that_present_key = true && that.isSetKey();
@@ -319,6 +381,16 @@ public class SegmentData implements org.apache.thrift.TBase<SegmentData, Segment
     int lastComparison = 0;
     SegmentData typedOther = (SegmentData)other;
 
+    lastComparison = Boolean.valueOf(isSetSegId()).compareTo(typedOther.isSetSegId());
+    if (lastComparison != 0) {
+      return lastComparison;
+    }
+    if (isSetSegId()) {
+      lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.segId, typedOther.segId);
+      if (lastComparison != 0) {
+        return lastComparison;
+      }
+    }
     lastComparison = Boolean.valueOf(isSetKey()).compareTo(typedOther.isSetKey());
     if (lastComparison != 0) {
       return lastComparison;
@@ -359,6 +431,10 @@ public class SegmentData implements org.apache.thrift.TBase<SegmentData, Segment
     StringBuilder sb = new StringBuilder("SegmentData(");
     boolean first = true;
 
+    sb.append("segId:");
+    sb.append(this.segId);
+    first = false;
+    if (!first) sb.append(", ");
     sb.append("key:");
     if (this.key == null) {
       sb.append("null");
@@ -380,6 +456,7 @@ public class SegmentData implements org.apache.thrift.TBase<SegmentData, Segment
 
   public void validate() throws org.apache.thrift.TException {
     // check for required fields
+    // alas, we cannot check 'segId' because it's a primitive and you chose the non-beans generator.
     if (key == null) {
       throw new org.apache.thrift.protocol.TProtocolException("Required field 'key' was not present! Struct: " + toString());
     }
@@ -398,6 +475,8 @@ public class SegmentData implements org.apache.thrift.TBase<SegmentData, Segment
 
   private void readObject(java.io.ObjectInputStream in) throws java.io.IOException, ClassNotFoundException {
     try {
+      // it doesn't seem like you should have to do this, but java serialization is wacky, and doesn't call the default constructor.
+      __isset_bit_vector = new BitSet(1);
       read(new org.apache.thrift.protocol.TCompactProtocol(new org.apache.thrift.transport.TIOStreamTransport(in)));
     } catch (org.apache.thrift.TException te) {
       throw new java.io.IOException(te);
@@ -422,7 +501,15 @@ public class SegmentData implements org.apache.thrift.TBase<SegmentData, Segment
           break;
         }
         switch (schemeField.id) {
-          case 1: // KEY
+          case 1: // SEG_ID
+            if (schemeField.type == org.apache.thrift.protocol.TType.I32) {
+              struct.segId = iprot.readI32();
+              struct.setSegIdIsSet(true);
+            } else { 
+              org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
+            }
+            break;
+          case 2: // KEY
             if (schemeField.type == org.apache.thrift.protocol.TType.STRING) {
               struct.key = iprot.readBinary();
               struct.setKeyIsSet(true);
@@ -430,7 +517,7 @@ public class SegmentData implements org.apache.thrift.TBase<SegmentData, Segment
               org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
             }
             break;
-          case 2: // DIGEST
+          case 3: // DIGEST
             if (schemeField.type == org.apache.thrift.protocol.TType.STRING) {
               struct.digest = iprot.readBinary();
               struct.setDigestIsSet(true);
@@ -446,6 +533,9 @@ public class SegmentData implements org.apache.thrift.TBase<SegmentData, Segment
       iprot.readStructEnd();
 
       // check for required fields of primitive type, which can't be checked in the validate method
+      if (!struct.isSetSegId()) {
+        throw new org.apache.thrift.protocol.TProtocolException("Required field 'segId' was not found in serialized data! Struct: " + toString());
+      }
       struct.validate();
     }
 
@@ -453,6 +543,9 @@ public class SegmentData implements org.apache.thrift.TBase<SegmentData, Segment
       struct.validate();
 
       oprot.writeStructBegin(STRUCT_DESC);
+      oprot.writeFieldBegin(SEG_ID_FIELD_DESC);
+      oprot.writeI32(struct.segId);
+      oprot.writeFieldEnd();
       if (struct.key != null) {
         oprot.writeFieldBegin(KEY_FIELD_DESC);
         oprot.writeBinary(struct.key);
@@ -480,6 +573,7 @@ public class SegmentData implements org.apache.thrift.TBase<SegmentData, Segment
     @Override
     public void write(org.apache.thrift.protocol.TProtocol prot, SegmentData struct) throws org.apache.thrift.TException {
       TTupleProtocol oprot = (TTupleProtocol) prot;
+      oprot.writeI32(struct.segId);
       oprot.writeBinary(struct.key);
       oprot.writeBinary(struct.digest);
     }
@@ -487,6 +581,8 @@ public class SegmentData implements org.apache.thrift.TBase<SegmentData, Segment
     @Override
     public void read(org.apache.thrift.protocol.TProtocol prot, SegmentData struct) throws org.apache.thrift.TException {
       TTupleProtocol iprot = (TTupleProtocol) prot;
+      struct.segId = iprot.readI32();
+      struct.setSegIdIsSet(true);
       struct.key = iprot.readBinary();
       struct.setKeyIsSet(true);
       struct.digest = iprot.readBinary();

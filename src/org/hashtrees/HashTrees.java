@@ -85,13 +85,13 @@ public interface HashTrees {
 			throws IOException;
 
 	/**
-	 * Deletes tree nodes from the hash tree, and the corresponding segments.
-	 * 
+	 * Deletes the given tree node.
 	 * 
 	 * @param treeId
-	 * @param nodeIds
+	 * @param nodeId
+	 * @throws IOException
 	 */
-	void deleteTreeNodes(long treeId, List<Integer> nodeIds) throws IOException;
+	void deleteTreeNode(long treeId, int nodeId) throws IOException;
 
 	/**
 	 * Adds the key, and digest of value to the segment block in HashTree.

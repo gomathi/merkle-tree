@@ -87,10 +87,9 @@ public class HashTreesRemoteClient implements HashTrees {
 	}
 
 	@Override
-	public void deleteTreeNodes(long treeId, List<Integer> nodeIds)
-			throws IOException {
+	public void deleteTreeNode(long treeId, int nodeId) throws IOException {
 		try {
-			remoteTree.deleteTreeNodes(treeId, nodeIds);
+			remoteTree.deleteTreeNode(treeId, nodeId);
 		} catch (TException e) {
 			throw new IOException(e);
 		}

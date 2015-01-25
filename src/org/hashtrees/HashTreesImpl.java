@@ -11,14 +11,11 @@ import static org.hashtrees.util.ByteUtils.sha1;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Queue;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -37,7 +34,6 @@ import org.hashtrees.thrift.generated.KeyValue;
 import org.hashtrees.thrift.generated.SegmentData;
 import org.hashtrees.thrift.generated.SegmentHash;
 import org.hashtrees.util.ByteUtils;
-import org.hashtrees.util.CollectionPeekingIterator;
 import org.hashtrees.util.LockedBy;
 import org.hashtrees.util.NonBlockingQueuingTask;
 import org.hashtrees.util.Pair;
@@ -198,46 +194,22 @@ public class HashTreesImpl implements HashTrees, Service {
 	@Override
 	public SyncDiffResult synch(long treeId, final HashTrees remoteTree,
 			SyncType syncType) throws IOException {
-
-		Collection<Integer> leafNodesToCheck = new ArrayList<Integer>();
-		Collection<Integer> missingNodes = new ArrayList<Integer>();
-		List<Integer> extrinsicNodes = new ArrayList<Integer>();
 		boolean doUpdate = (syncType == SyncType.UPDATE) ? true : false;
 
-		findDifferences(treeId, remoteTree, leafNodesToCheck, missingNodes,
-				extrinsicNodes);
-
-		if (leafNodesToCheck.isEmpty() && extrinsicNodes.isEmpty()
-				&& missingNodes.isEmpty())
-			return new SyncDiffResult(0, 0, 0);
-
-		Collection<Integer> segsToCheck = getSegmentIdsFromLeafIds(leafNodesToCheck);
-		int totKVUpdates = syncSegments(treeId, segsToCheck, remoteTree,
-				doUpdate);
-
-		if (doUpdate) {
-			updateRemoteTreeWithMissingSegments(treeId, missingNodes,
-					remoteTree);
-			remoteTree.deleteTreeNodes(treeId, extrinsicNodes);
-		}
-		return new SyncDiffResult(totKVUpdates, missingNodes.size(),
-				extrinsicNodes.size());
-	}
-
-	private void findDifferences(long treeId, HashTrees remoteTree,
-			Collection<Integer> nodesToCheck, Collection<Integer> missingNodes,
-			Collection<Integer> extrinsicNodes) throws IOException {
-		CollectionPeekingIterator<SegmentHash> localItr = null, remoteItr = null;
+		PeekingIterator<SegmentHash> localItr = null, remoteItr = null;
 		SegmentHash local, remote;
 
 		List<Integer> pQueue = new ArrayList<Integer>();
 		pQueue.add(ROOT_NODE);
+
+		int totKeyDifferences = 0, totExtrinsicSegments = 0;
+
 		while (!pQueue.isEmpty()) {
 
-			localItr = new CollectionPeekingIterator<SegmentHash>(
-					getSegmentHashes(treeId, pQueue));
-			remoteItr = new CollectionPeekingIterator<SegmentHash>(
-					remoteTree.getSegmentHashes(treeId, pQueue));
+			localItr = Iterators.peekingIterator(getSegmentHashes(treeId,
+					pQueue).iterator());
+			remoteItr = Iterators.peekingIterator(remoteTree.getSegmentHashes(
+					treeId, pQueue).iterator());
 			pQueue = new ArrayList<Integer>();
 
 			while (localItr.hasNext() || remoteItr.hasNext()) {
@@ -248,9 +220,11 @@ public class HashTreesImpl implements HashTrees, Service {
 
 				if (compareRes == 0) {
 					if (!Arrays.equals(local.getHash(), remote.getHash())) {
-						if (isLeafNode(local.getNodeId()))
-							nodesToCheck.add(local.getNodeId());
-						else
+						if (isLeafNode(local.getNodeId())) {
+							totKeyDifferences += syncSegment(treeId,
+									getSegmentIdFromLeafId(local.getNodeId()),
+									remoteTree, doUpdate);
+						} else
 							pQueue.addAll(getImmediateChildren(
 									local.getNodeId(), noOfChildren));
 
@@ -258,22 +232,19 @@ public class HashTreesImpl implements HashTrees, Service {
 					localItr.next();
 					remoteItr.next();
 				} else if (compareRes < 0) {
-					missingNodes.add(local.getNodeId());
+					totKeyDifferences += updateRemoteTreeWithMissingSegment(
+							treeId, local.getNodeId(), remoteTree, doUpdate);
 					localItr.next();
 				} else {
-					extrinsicNodes.add(remote.getNodeId());
+					if (doUpdate)
+						remoteTree.deleteTreeNode(treeId, remote.getNodeId());
 					remoteItr.next();
+					totExtrinsicSegments += 1;
 				}
 			}
 		}
-	}
 
-	private int syncSegments(long treeId, Collection<Integer> segIds,
-			HashTrees remoteTree, boolean doUpdate) throws IOException {
-		int totUpdates = 0;
-		for (int segId : segIds)
-			totUpdates += syncSegment(treeId, segId, remoteTree, doUpdate);
-		return totUpdates;
+		return new SyncDiffResult(totKeyDifferences, totExtrinsicSegments);
 	}
 
 	private int syncSegment(long treeId, int segId, HashTrees remoteTree,
@@ -323,18 +294,12 @@ public class HashTreesImpl implements HashTrees, Service {
 		return kvsForAddition.size() + keysForRemoval.size();
 	}
 
-	private void updateRemoteTreeWithMissingSegments(long treeId,
-			Collection<Integer> leafNodeIds, HashTrees remoteTree)
+	private int updateRemoteTreeWithMissingSegment(long treeId,
+			int rootMissingNodeId, HashTrees remoteTree, boolean doUpdate)
 			throws IOException {
-		for (int rootMissingNodeId : leafNodeIds)
-			updateRemoteTreeWithMissingSegment(treeId, rootMissingNodeId,
-					remoteTree);
-	}
-
-	private void updateRemoteTreeWithMissingSegment(long treeId,
-			int rootMissingNodeId, HashTrees remoteTree) throws IOException {
 		final List<KeyValue> keyValuePairs = new ArrayList<>();
 		int maxSizeToTransfer = 5000;
+		int totKeyUpdates = 0;
 		int leftMostNodeId = getSegmentIdFromLeafId(getLeftMostChildNode(
 				rootMissingNodeId, noOfChildren, height));
 		int rightMostNodeId = getSegmentIdFromLeafId(getRightMostChildNode(
@@ -346,12 +311,19 @@ public class HashTreesImpl implements HashTrees, Service {
 			keyValuePairs.add(new KeyValue(ByteBuffer.wrap(sd.getKey()),
 					ByteBuffer.wrap(store.get(sd.getKey()))));
 			if (keyValuePairs.size() > maxSizeToTransfer) {
-				remoteTree.sPut(keyValuePairs);
+				if (doUpdate)
+					remoteTree.sPut(keyValuePairs);
+				totKeyUpdates += keyValuePairs.size();
 				keyValuePairs.clear();
 			}
 		}
-		if (keyValuePairs.size() > 0)
-			remoteTree.sPut(keyValuePairs);
+		if (keyValuePairs.size() > 0) {
+			if (doUpdate)
+				remoteTree.sPut(keyValuePairs);
+			totKeyUpdates += keyValuePairs.size();
+			keyValuePairs.clear();
+		}
+		return totKeyUpdates;
 	}
 
 	@Override
@@ -525,14 +497,16 @@ public class HashTreesImpl implements HashTrees, Service {
 	}
 
 	@Override
-	public void deleteTreeNodes(long treeId, List<Integer> nodeIds)
-			throws IOException {
-		List<Integer> segIds = getSegmentIdsFromLeafIds(getAllLeafNodeIds(nodeIds));
-		for (int segId : segIds) {
-			Iterator<SegmentData> segDataItr = getSegment(treeId, segId)
-					.iterator();
-			while (segDataItr.hasNext())
-				store.delete(segDataItr.next().getKey());
+	public void deleteTreeNode(long treeId, int nodeId) throws IOException {
+		int leftMostNodeId = getSegmentIdFromLeafId(getLeftMostChildNode(
+				nodeId, noOfChildren, height));
+		int rightMostNodeId = getSegmentIdFromLeafId(getRightMostChildNode(
+				nodeId, noOfChildren, height));
+		Iterator<SegmentData> sdItr = htStore.getSegmentDataIterator(treeId,
+				leftMostNodeId, rightMostNodeId);
+		while (sdItr.hasNext()) {
+			SegmentData sd = sdItr.next();
+			store.delete(sd.getKey());
 		}
 	}
 
@@ -659,38 +633,6 @@ public class HashTreesImpl implements HashTrees, Service {
 
 	private int getSegmentIdFromLeafId(int leafNodeId) {
 		return leafNodeId - internalNodesCount;
-	}
-
-	private List<Integer> getSegmentIdsFromLeafIds(
-			final Collection<Integer> leafNodeIds) {
-		List<Integer> result = new ArrayList<Integer>(leafNodeIds.size());
-		for (Integer leafNodeId : leafNodeIds)
-			result.add(getSegmentIdFromLeafId(leafNodeId));
-		return result;
-	}
-
-	/**
-	 * Given a node id, finds all the leaves that can be reached from this node.
-	 * If the nodeId is a leaf node, then that will be returned as the result.
-	 * 
-	 * @param nodeId
-	 * @return, all ids of leaf nodes.
-	 */
-	private Collection<Integer> getAllLeafNodeIds(int nodeId) {
-		Queue<Integer> pQueue = new ArrayDeque<Integer>();
-		pQueue.add(nodeId);
-		while (pQueue.peek() < internalNodesCount) {
-			int cNodeId = pQueue.remove();
-			pQueue.addAll(getImmediateChildren(cNodeId, noOfChildren));
-		}
-		return pQueue;
-	}
-
-	private Collection<Integer> getAllLeafNodeIds(Collection<Integer> nodeIds) {
-		Collection<Integer> result = new ArrayList<Integer>();
-		for (int nodeId : nodeIds)
-			result.addAll(getAllLeafNodeIds(nodeId));
-		return result;
 	}
 
 	private boolean isLeafNode(int nodeId) {

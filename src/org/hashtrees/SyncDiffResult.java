@@ -1,18 +1,14 @@
 package org.hashtrees;
 
 public class SyncDiffResult {
-	public final int totKeyDifferences, totMissingSegments,
-			totExtrinsicSegments;
+	public final int totKeyDifferences, totExtrinsicSegments;
 
-	public SyncDiffResult(int totKeyDifferences, int totMissingSegments,
-			int totExtrinsicSegments) {
+	public SyncDiffResult(int totKeyDifferences, int totExtrinsicSegments) {
 		this.totKeyDifferences = totKeyDifferences;
-		this.totMissingSegments = totMissingSegments;
 		this.totExtrinsicSegments = totExtrinsicSegments;
 	}
 
 	public boolean isAnyUpdatesMade() {
-		return (totKeyDifferences > 0) || (totMissingSegments > 0)
-				|| (totExtrinsicSegments > 0);
+		return (totKeyDifferences > 0) || (totExtrinsicSegments > 0);
 	}
 }

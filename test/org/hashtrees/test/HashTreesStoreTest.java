@@ -115,9 +115,9 @@ public class HashTreesStoreTest {
 				List<SegmentData> list = new ArrayList<SegmentData>();
 				SegmentData sd;
 				for (int i = 0; i < 10; i++) {
-					sd = new SegmentData(ByteBuffer.wrap(("test" + i)
-							.getBytes()), ByteBuffer.wrap(("value" + i)
-							.getBytes()));
+					sd = new SegmentData(DEF_SEG_ID,
+							ByteBuffer.wrap(("test" + i).getBytes()),
+							ByteBuffer.wrap(("value" + i).getBytes()));
 					list.add(sd);
 					htStore.putSegmentData(DEF_TREE_ID, DEF_SEG_ID, sd.key,
 							sd.digest);

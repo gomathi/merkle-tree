@@ -89,13 +89,13 @@ public class HashTreesSyncInterface {
     public SegmentData getSegmentData(long treeId, int segId, ByteBuffer key) throws org.apache.thrift.TException;
 
     /**
-     * Deletes tree nodes from the hash tree, and the corresponding segments.
+     * Deletes the given node on remote tree.
      * 
      * 
      * @param treeId
-     * @param nodeIds
+     * @param nodeId
      */
-    public void deleteTreeNodes(long treeId, List<Integer> nodeIds) throws org.apache.thrift.TException;
+    public void deleteTreeNode(long treeId, int nodeId) throws org.apache.thrift.TException;
 
     /**
      * Requests a rebuild of the hashtree.
@@ -139,7 +139,7 @@ public class HashTreesSyncInterface {
 
     public void getSegmentData(long treeId, int segId, ByteBuffer key, org.apache.thrift.async.AsyncMethodCallback<AsyncClient.getSegmentData_call> resultHandler) throws org.apache.thrift.TException;
 
-    public void deleteTreeNodes(long treeId, List<Integer> nodeIds, org.apache.thrift.async.AsyncMethodCallback<AsyncClient.deleteTreeNodes_call> resultHandler) throws org.apache.thrift.TException;
+    public void deleteTreeNode(long treeId, int nodeId, org.apache.thrift.async.AsyncMethodCallback<AsyncClient.deleteTreeNode_call> resultHandler) throws org.apache.thrift.TException;
 
     public void submitRebuildRequest(RebuildHashTreeRequest request, org.apache.thrift.async.AsyncMethodCallback<AsyncClient.submitRebuildRequest_call> resultHandler) throws org.apache.thrift.TException;
 
@@ -306,24 +306,24 @@ public class HashTreesSyncInterface {
       throw new org.apache.thrift.TApplicationException(org.apache.thrift.TApplicationException.MISSING_RESULT, "getSegmentData failed: unknown result");
     }
 
-    public void deleteTreeNodes(long treeId, List<Integer> nodeIds) throws org.apache.thrift.TException
+    public void deleteTreeNode(long treeId, int nodeId) throws org.apache.thrift.TException
     {
-      send_deleteTreeNodes(treeId, nodeIds);
-      recv_deleteTreeNodes();
+      send_deleteTreeNode(treeId, nodeId);
+      recv_deleteTreeNode();
     }
 
-    public void send_deleteTreeNodes(long treeId, List<Integer> nodeIds) throws org.apache.thrift.TException
+    public void send_deleteTreeNode(long treeId, int nodeId) throws org.apache.thrift.TException
     {
-      deleteTreeNodes_args args = new deleteTreeNodes_args();
+      deleteTreeNode_args args = new deleteTreeNode_args();
       args.setTreeId(treeId);
-      args.setNodeIds(nodeIds);
-      sendBase("deleteTreeNodes", args);
+      args.setNodeId(nodeId);
+      sendBase("deleteTreeNode", args);
     }
 
-    public void recv_deleteTreeNodes() throws org.apache.thrift.TException
+    public void recv_deleteTreeNode() throws org.apache.thrift.TException
     {
-      deleteTreeNodes_result result = new deleteTreeNodes_result();
-      receiveBase(result, "deleteTreeNodes");
+      deleteTreeNode_result result = new deleteTreeNode_result();
+      receiveBase(result, "deleteTreeNode");
       return;
     }
 
@@ -615,27 +615,27 @@ public class HashTreesSyncInterface {
       }
     }
 
-    public void deleteTreeNodes(long treeId, List<Integer> nodeIds, org.apache.thrift.async.AsyncMethodCallback<deleteTreeNodes_call> resultHandler) throws org.apache.thrift.TException {
+    public void deleteTreeNode(long treeId, int nodeId, org.apache.thrift.async.AsyncMethodCallback<deleteTreeNode_call> resultHandler) throws org.apache.thrift.TException {
       checkReady();
-      deleteTreeNodes_call method_call = new deleteTreeNodes_call(treeId, nodeIds, resultHandler, this, ___protocolFactory, ___transport);
+      deleteTreeNode_call method_call = new deleteTreeNode_call(treeId, nodeId, resultHandler, this, ___protocolFactory, ___transport);
       this.___currentMethod = method_call;
       ___manager.call(method_call);
     }
 
-    public static class deleteTreeNodes_call extends org.apache.thrift.async.TAsyncMethodCall {
+    public static class deleteTreeNode_call extends org.apache.thrift.async.TAsyncMethodCall {
       private long treeId;
-      private List<Integer> nodeIds;
-      public deleteTreeNodes_call(long treeId, List<Integer> nodeIds, org.apache.thrift.async.AsyncMethodCallback<deleteTreeNodes_call> resultHandler, org.apache.thrift.async.TAsyncClient client, org.apache.thrift.protocol.TProtocolFactory protocolFactory, org.apache.thrift.transport.TNonblockingTransport transport) throws org.apache.thrift.TException {
+      private int nodeId;
+      public deleteTreeNode_call(long treeId, int nodeId, org.apache.thrift.async.AsyncMethodCallback<deleteTreeNode_call> resultHandler, org.apache.thrift.async.TAsyncClient client, org.apache.thrift.protocol.TProtocolFactory protocolFactory, org.apache.thrift.transport.TNonblockingTransport transport) throws org.apache.thrift.TException {
         super(client, protocolFactory, transport, resultHandler, false);
         this.treeId = treeId;
-        this.nodeIds = nodeIds;
+        this.nodeId = nodeId;
       }
 
       public void write_args(org.apache.thrift.protocol.TProtocol prot) throws org.apache.thrift.TException {
-        prot.writeMessageBegin(new org.apache.thrift.protocol.TMessage("deleteTreeNodes", org.apache.thrift.protocol.TMessageType.CALL, 0));
-        deleteTreeNodes_args args = new deleteTreeNodes_args();
+        prot.writeMessageBegin(new org.apache.thrift.protocol.TMessage("deleteTreeNode", org.apache.thrift.protocol.TMessageType.CALL, 0));
+        deleteTreeNode_args args = new deleteTreeNode_args();
         args.setTreeId(treeId);
-        args.setNodeIds(nodeIds);
+        args.setNodeId(nodeId);
         args.write(prot);
         prot.writeMessageEnd();
       }
@@ -646,7 +646,7 @@ public class HashTreesSyncInterface {
         }
         org.apache.thrift.transport.TMemoryInputTransport memoryTransport = new org.apache.thrift.transport.TMemoryInputTransport(getFrameBuffer().array());
         org.apache.thrift.protocol.TProtocol prot = client.getProtocolFactory().getProtocol(memoryTransport);
-        (new Client(prot)).recv_deleteTreeNodes();
+        (new Client(prot)).recv_deleteTreeNode();
       }
     }
 
@@ -765,7 +765,7 @@ public class HashTreesSyncInterface {
       processMap.put("getSegmentHash", new getSegmentHash());
       processMap.put("getSegment", new getSegment());
       processMap.put("getSegmentData", new getSegmentData());
-      processMap.put("deleteTreeNodes", new deleteTreeNodes());
+      processMap.put("deleteTreeNode", new deleteTreeNode());
       processMap.put("submitRebuildRequest", new submitRebuildRequest());
       processMap.put("submitRebuildResponse", new submitRebuildResponse());
       processMap.put("getServerNameListFor", new getServerNameListFor());
@@ -868,18 +868,18 @@ public class HashTreesSyncInterface {
       }
     }
 
-    private static class deleteTreeNodes<I extends Iface> extends org.apache.thrift.ProcessFunction<I, deleteTreeNodes_args> {
-      public deleteTreeNodes() {
-        super("deleteTreeNodes");
+    private static class deleteTreeNode<I extends Iface> extends org.apache.thrift.ProcessFunction<I, deleteTreeNode_args> {
+      public deleteTreeNode() {
+        super("deleteTreeNode");
       }
 
-      protected deleteTreeNodes_args getEmptyArgsInstance() {
-        return new deleteTreeNodes_args();
+      protected deleteTreeNode_args getEmptyArgsInstance() {
+        return new deleteTreeNode_args();
       }
 
-      protected deleteTreeNodes_result getResult(I iface, deleteTreeNodes_args args) throws org.apache.thrift.TException {
-        deleteTreeNodes_result result = new deleteTreeNodes_result();
-        iface.deleteTreeNodes(args.treeId, args.nodeIds);
+      protected deleteTreeNode_result getResult(I iface, deleteTreeNode_args args) throws org.apache.thrift.TException {
+        deleteTreeNode_result result = new deleteTreeNode_result();
+        iface.deleteTreeNode(args.treeId, args.nodeId);
         return result;
       }
     }
@@ -5711,25 +5711,25 @@ public class HashTreesSyncInterface {
 
   }
 
-  public static class deleteTreeNodes_args implements org.apache.thrift.TBase<deleteTreeNodes_args, deleteTreeNodes_args._Fields>, java.io.Serializable, Cloneable   {
-    private static final org.apache.thrift.protocol.TStruct STRUCT_DESC = new org.apache.thrift.protocol.TStruct("deleteTreeNodes_args");
+  public static class deleteTreeNode_args implements org.apache.thrift.TBase<deleteTreeNode_args, deleteTreeNode_args._Fields>, java.io.Serializable, Cloneable   {
+    private static final org.apache.thrift.protocol.TStruct STRUCT_DESC = new org.apache.thrift.protocol.TStruct("deleteTreeNode_args");
 
     private static final org.apache.thrift.protocol.TField TREE_ID_FIELD_DESC = new org.apache.thrift.protocol.TField("treeId", org.apache.thrift.protocol.TType.I64, (short)1);
-    private static final org.apache.thrift.protocol.TField NODE_IDS_FIELD_DESC = new org.apache.thrift.protocol.TField("nodeIds", org.apache.thrift.protocol.TType.LIST, (short)2);
+    private static final org.apache.thrift.protocol.TField NODE_ID_FIELD_DESC = new org.apache.thrift.protocol.TField("nodeId", org.apache.thrift.protocol.TType.I32, (short)2);
 
     private static final Map<Class<? extends IScheme>, SchemeFactory> schemes = new HashMap<Class<? extends IScheme>, SchemeFactory>();
     static {
-      schemes.put(StandardScheme.class, new deleteTreeNodes_argsStandardSchemeFactory());
-      schemes.put(TupleScheme.class, new deleteTreeNodes_argsTupleSchemeFactory());
+      schemes.put(StandardScheme.class, new deleteTreeNode_argsStandardSchemeFactory());
+      schemes.put(TupleScheme.class, new deleteTreeNode_argsTupleSchemeFactory());
     }
 
     public long treeId; // required
-    public List<Integer> nodeIds; // required
+    public int nodeId; // required
 
     /** The set of fields this struct contains, along with convenience methods for finding and manipulating them. */
     public enum _Fields implements org.apache.thrift.TFieldIdEnum {
       TREE_ID((short)1, "treeId"),
-      NODE_IDS((short)2, "nodeIds");
+      NODE_ID((short)2, "nodeId");
 
       private static final Map<String, _Fields> byName = new HashMap<String, _Fields>();
 
@@ -5746,8 +5746,8 @@ public class HashTreesSyncInterface {
         switch(fieldId) {
           case 1: // TREE_ID
             return TREE_ID;
-          case 2: // NODE_IDS
-            return NODE_IDS;
+          case 2: // NODE_ID
+            return NODE_ID;
           default:
             return null;
         }
@@ -5789,64 +5789,60 @@ public class HashTreesSyncInterface {
 
     // isset id assignments
     private static final int __TREEID_ISSET_ID = 0;
-    private BitSet __isset_bit_vector = new BitSet(1);
+    private static final int __NODEID_ISSET_ID = 1;
+    private BitSet __isset_bit_vector = new BitSet(2);
     public static final Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> metaDataMap;
     static {
       Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> tmpMap = new EnumMap<_Fields, org.apache.thrift.meta_data.FieldMetaData>(_Fields.class);
       tmpMap.put(_Fields.TREE_ID, new org.apache.thrift.meta_data.FieldMetaData("treeId", org.apache.thrift.TFieldRequirementType.DEFAULT, 
           new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.I64)));
-      tmpMap.put(_Fields.NODE_IDS, new org.apache.thrift.meta_data.FieldMetaData("nodeIds", org.apache.thrift.TFieldRequirementType.DEFAULT, 
-          new org.apache.thrift.meta_data.ListMetaData(org.apache.thrift.protocol.TType.LIST, 
-              new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.I32))));
+      tmpMap.put(_Fields.NODE_ID, new org.apache.thrift.meta_data.FieldMetaData("nodeId", org.apache.thrift.TFieldRequirementType.DEFAULT, 
+          new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.I32)));
       metaDataMap = Collections.unmodifiableMap(tmpMap);
-      org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(deleteTreeNodes_args.class, metaDataMap);
+      org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(deleteTreeNode_args.class, metaDataMap);
     }
 
-    public deleteTreeNodes_args() {
+    public deleteTreeNode_args() {
     }
 
-    public deleteTreeNodes_args(
+    public deleteTreeNode_args(
       long treeId,
-      List<Integer> nodeIds)
+      int nodeId)
     {
       this();
       this.treeId = treeId;
       setTreeIdIsSet(true);
-      this.nodeIds = nodeIds;
+      this.nodeId = nodeId;
+      setNodeIdIsSet(true);
     }
 
     /**
      * Performs a deep copy on <i>other</i>.
      */
-    public deleteTreeNodes_args(deleteTreeNodes_args other) {
+    public deleteTreeNode_args(deleteTreeNode_args other) {
       __isset_bit_vector.clear();
       __isset_bit_vector.or(other.__isset_bit_vector);
       this.treeId = other.treeId;
-      if (other.isSetNodeIds()) {
-        List<Integer> __this__nodeIds = new ArrayList<Integer>();
-        for (Integer other_element : other.nodeIds) {
-          __this__nodeIds.add(other_element);
-        }
-        this.nodeIds = __this__nodeIds;
-      }
+      this.nodeId = other.nodeId;
     }
 
-    public deleteTreeNodes_args deepCopy() {
-      return new deleteTreeNodes_args(this);
+    public deleteTreeNode_args deepCopy() {
+      return new deleteTreeNode_args(this);
     }
 
     @Override
     public void clear() {
       setTreeIdIsSet(false);
       this.treeId = 0;
-      this.nodeIds = null;
+      setNodeIdIsSet(false);
+      this.nodeId = 0;
     }
 
     public long getTreeId() {
       return this.treeId;
     }
 
-    public deleteTreeNodes_args setTreeId(long treeId) {
+    public deleteTreeNode_args setTreeId(long treeId) {
       this.treeId = treeId;
       setTreeIdIsSet(true);
       return this;
@@ -5865,43 +5861,27 @@ public class HashTreesSyncInterface {
       __isset_bit_vector.set(__TREEID_ISSET_ID, value);
     }
 
-    public int getNodeIdsSize() {
-      return (this.nodeIds == null) ? 0 : this.nodeIds.size();
+    public int getNodeId() {
+      return this.nodeId;
     }
 
-    public java.util.Iterator<Integer> getNodeIdsIterator() {
-      return (this.nodeIds == null) ? null : this.nodeIds.iterator();
-    }
-
-    public void addToNodeIds(int elem) {
-      if (this.nodeIds == null) {
-        this.nodeIds = new ArrayList<Integer>();
-      }
-      this.nodeIds.add(elem);
-    }
-
-    public List<Integer> getNodeIds() {
-      return this.nodeIds;
-    }
-
-    public deleteTreeNodes_args setNodeIds(List<Integer> nodeIds) {
-      this.nodeIds = nodeIds;
+    public deleteTreeNode_args setNodeId(int nodeId) {
+      this.nodeId = nodeId;
+      setNodeIdIsSet(true);
       return this;
     }
 
-    public void unsetNodeIds() {
-      this.nodeIds = null;
+    public void unsetNodeId() {
+      __isset_bit_vector.clear(__NODEID_ISSET_ID);
     }
 
-    /** Returns true if field nodeIds is set (has been assigned a value) and false otherwise */
-    public boolean isSetNodeIds() {
-      return this.nodeIds != null;
+    /** Returns true if field nodeId is set (has been assigned a value) and false otherwise */
+    public boolean isSetNodeId() {
+      return __isset_bit_vector.get(__NODEID_ISSET_ID);
     }
 
-    public void setNodeIdsIsSet(boolean value) {
-      if (!value) {
-        this.nodeIds = null;
-      }
+    public void setNodeIdIsSet(boolean value) {
+      __isset_bit_vector.set(__NODEID_ISSET_ID, value);
     }
 
     public void setFieldValue(_Fields field, Object value) {
@@ -5914,11 +5894,11 @@ public class HashTreesSyncInterface {
         }
         break;
 
-      case NODE_IDS:
+      case NODE_ID:
         if (value == null) {
-          unsetNodeIds();
+          unsetNodeId();
         } else {
-          setNodeIds((List<Integer>)value);
+          setNodeId((Integer)value);
         }
         break;
 
@@ -5930,8 +5910,8 @@ public class HashTreesSyncInterface {
       case TREE_ID:
         return Long.valueOf(getTreeId());
 
-      case NODE_IDS:
-        return getNodeIds();
+      case NODE_ID:
+        return Integer.valueOf(getNodeId());
 
       }
       throw new IllegalStateException();
@@ -5946,8 +5926,8 @@ public class HashTreesSyncInterface {
       switch (field) {
       case TREE_ID:
         return isSetTreeId();
-      case NODE_IDS:
-        return isSetNodeIds();
+      case NODE_ID:
+        return isSetNodeId();
       }
       throw new IllegalStateException();
     }
@@ -5956,12 +5936,12 @@ public class HashTreesSyncInterface {
     public boolean equals(Object that) {
       if (that == null)
         return false;
-      if (that instanceof deleteTreeNodes_args)
-        return this.equals((deleteTreeNodes_args)that);
+      if (that instanceof deleteTreeNode_args)
+        return this.equals((deleteTreeNode_args)that);
       return false;
     }
 
-    public boolean equals(deleteTreeNodes_args that) {
+    public boolean equals(deleteTreeNode_args that) {
       if (that == null)
         return false;
 
@@ -5974,12 +5954,12 @@ public class HashTreesSyncInterface {
           return false;
       }
 
-      boolean this_present_nodeIds = true && this.isSetNodeIds();
-      boolean that_present_nodeIds = true && that.isSetNodeIds();
-      if (this_present_nodeIds || that_present_nodeIds) {
-        if (!(this_present_nodeIds && that_present_nodeIds))
+      boolean this_present_nodeId = true;
+      boolean that_present_nodeId = true;
+      if (this_present_nodeId || that_present_nodeId) {
+        if (!(this_present_nodeId && that_present_nodeId))
           return false;
-        if (!this.nodeIds.equals(that.nodeIds))
+        if (this.nodeId != that.nodeId)
           return false;
       }
 
@@ -5991,13 +5971,13 @@ public class HashTreesSyncInterface {
       return 0;
     }
 
-    public int compareTo(deleteTreeNodes_args other) {
+    public int compareTo(deleteTreeNode_args other) {
       if (!getClass().equals(other.getClass())) {
         return getClass().getName().compareTo(other.getClass().getName());
       }
 
       int lastComparison = 0;
-      deleteTreeNodes_args typedOther = (deleteTreeNodes_args)other;
+      deleteTreeNode_args typedOther = (deleteTreeNode_args)other;
 
       lastComparison = Boolean.valueOf(isSetTreeId()).compareTo(typedOther.isSetTreeId());
       if (lastComparison != 0) {
@@ -6009,12 +5989,12 @@ public class HashTreesSyncInterface {
           return lastComparison;
         }
       }
-      lastComparison = Boolean.valueOf(isSetNodeIds()).compareTo(typedOther.isSetNodeIds());
+      lastComparison = Boolean.valueOf(isSetNodeId()).compareTo(typedOther.isSetNodeId());
       if (lastComparison != 0) {
         return lastComparison;
       }
-      if (isSetNodeIds()) {
-        lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.nodeIds, typedOther.nodeIds);
+      if (isSetNodeId()) {
+        lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.nodeId, typedOther.nodeId);
         if (lastComparison != 0) {
           return lastComparison;
         }
@@ -6036,19 +6016,15 @@ public class HashTreesSyncInterface {
 
     @Override
     public String toString() {
-      StringBuilder sb = new StringBuilder("deleteTreeNodes_args(");
+      StringBuilder sb = new StringBuilder("deleteTreeNode_args(");
       boolean first = true;
 
       sb.append("treeId:");
       sb.append(this.treeId);
       first = false;
       if (!first) sb.append(", ");
-      sb.append("nodeIds:");
-      if (this.nodeIds == null) {
-        sb.append("null");
-      } else {
-        sb.append(this.nodeIds);
-      }
+      sb.append("nodeId:");
+      sb.append(this.nodeId);
       first = false;
       sb.append(")");
       return sb.toString();
@@ -6068,21 +6044,23 @@ public class HashTreesSyncInterface {
 
     private void readObject(java.io.ObjectInputStream in) throws java.io.IOException, ClassNotFoundException {
       try {
+        // it doesn't seem like you should have to do this, but java serialization is wacky, and doesn't call the default constructor.
+        __isset_bit_vector = new BitSet(1);
         read(new org.apache.thrift.protocol.TCompactProtocol(new org.apache.thrift.transport.TIOStreamTransport(in)));
       } catch (org.apache.thrift.TException te) {
         throw new java.io.IOException(te);
       }
     }
 
-    private static class deleteTreeNodes_argsStandardSchemeFactory implements SchemeFactory {
-      public deleteTreeNodes_argsStandardScheme getScheme() {
-        return new deleteTreeNodes_argsStandardScheme();
+    private static class deleteTreeNode_argsStandardSchemeFactory implements SchemeFactory {
+      public deleteTreeNode_argsStandardScheme getScheme() {
+        return new deleteTreeNode_argsStandardScheme();
       }
     }
 
-    private static class deleteTreeNodes_argsStandardScheme extends StandardScheme<deleteTreeNodes_args> {
+    private static class deleteTreeNode_argsStandardScheme extends StandardScheme<deleteTreeNode_args> {
 
-      public void read(org.apache.thrift.protocol.TProtocol iprot, deleteTreeNodes_args struct) throws org.apache.thrift.TException {
+      public void read(org.apache.thrift.protocol.TProtocol iprot, deleteTreeNode_args struct) throws org.apache.thrift.TException {
         org.apache.thrift.protocol.TField schemeField;
         iprot.readStructBegin();
         while (true)
@@ -6100,20 +6078,10 @@ public class HashTreesSyncInterface {
                 org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
               }
               break;
-            case 2: // NODE_IDS
-              if (schemeField.type == org.apache.thrift.protocol.TType.LIST) {
-                {
-                  org.apache.thrift.protocol.TList _list40 = iprot.readListBegin();
-                  struct.nodeIds = new ArrayList<Integer>(_list40.size);
-                  for (int _i41 = 0; _i41 < _list40.size; ++_i41)
-                  {
-                    int _elem42; // required
-                    _elem42 = iprot.readI32();
-                    struct.nodeIds.add(_elem42);
-                  }
-                  iprot.readListEnd();
-                }
-                struct.setNodeIdsIsSet(true);
+            case 2: // NODE_ID
+              if (schemeField.type == org.apache.thrift.protocol.TType.I32) {
+                struct.nodeId = iprot.readI32();
+                struct.setNodeIdIsSet(true);
               } else { 
                 org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
               }
@@ -6129,66 +6097,51 @@ public class HashTreesSyncInterface {
         struct.validate();
       }
 
-      public void write(org.apache.thrift.protocol.TProtocol oprot, deleteTreeNodes_args struct) throws org.apache.thrift.TException {
+      public void write(org.apache.thrift.protocol.TProtocol oprot, deleteTreeNode_args struct) throws org.apache.thrift.TException {
         struct.validate();
 
         oprot.writeStructBegin(STRUCT_DESC);
         oprot.writeFieldBegin(TREE_ID_FIELD_DESC);
         oprot.writeI64(struct.treeId);
         oprot.writeFieldEnd();
-        if (struct.nodeIds != null) {
-          oprot.writeFieldBegin(NODE_IDS_FIELD_DESC);
-          {
-            oprot.writeListBegin(new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.I32, struct.nodeIds.size()));
-            for (int _iter43 : struct.nodeIds)
-            {
-              oprot.writeI32(_iter43);
-            }
-            oprot.writeListEnd();
-          }
-          oprot.writeFieldEnd();
-        }
+        oprot.writeFieldBegin(NODE_ID_FIELD_DESC);
+        oprot.writeI32(struct.nodeId);
+        oprot.writeFieldEnd();
         oprot.writeFieldStop();
         oprot.writeStructEnd();
       }
 
     }
 
-    private static class deleteTreeNodes_argsTupleSchemeFactory implements SchemeFactory {
-      public deleteTreeNodes_argsTupleScheme getScheme() {
-        return new deleteTreeNodes_argsTupleScheme();
+    private static class deleteTreeNode_argsTupleSchemeFactory implements SchemeFactory {
+      public deleteTreeNode_argsTupleScheme getScheme() {
+        return new deleteTreeNode_argsTupleScheme();
       }
     }
 
-    private static class deleteTreeNodes_argsTupleScheme extends TupleScheme<deleteTreeNodes_args> {
+    private static class deleteTreeNode_argsTupleScheme extends TupleScheme<deleteTreeNode_args> {
 
       @Override
-      public void write(org.apache.thrift.protocol.TProtocol prot, deleteTreeNodes_args struct) throws org.apache.thrift.TException {
+      public void write(org.apache.thrift.protocol.TProtocol prot, deleteTreeNode_args struct) throws org.apache.thrift.TException {
         TTupleProtocol oprot = (TTupleProtocol) prot;
         BitSet optionals = new BitSet();
         if (struct.isSetTreeId()) {
           optionals.set(0);
         }
-        if (struct.isSetNodeIds()) {
+        if (struct.isSetNodeId()) {
           optionals.set(1);
         }
         oprot.writeBitSet(optionals, 2);
         if (struct.isSetTreeId()) {
           oprot.writeI64(struct.treeId);
         }
-        if (struct.isSetNodeIds()) {
-          {
-            oprot.writeI32(struct.nodeIds.size());
-            for (int _iter44 : struct.nodeIds)
-            {
-              oprot.writeI32(_iter44);
-            }
-          }
+        if (struct.isSetNodeId()) {
+          oprot.writeI32(struct.nodeId);
         }
       }
 
       @Override
-      public void read(org.apache.thrift.protocol.TProtocol prot, deleteTreeNodes_args struct) throws org.apache.thrift.TException {
+      public void read(org.apache.thrift.protocol.TProtocol prot, deleteTreeNode_args struct) throws org.apache.thrift.TException {
         TTupleProtocol iprot = (TTupleProtocol) prot;
         BitSet incoming = iprot.readBitSet(2);
         if (incoming.get(0)) {
@@ -6196,31 +6149,22 @@ public class HashTreesSyncInterface {
           struct.setTreeIdIsSet(true);
         }
         if (incoming.get(1)) {
-          {
-            org.apache.thrift.protocol.TList _list45 = new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.I32, iprot.readI32());
-            struct.nodeIds = new ArrayList<Integer>(_list45.size);
-            for (int _i46 = 0; _i46 < _list45.size; ++_i46)
-            {
-              int _elem47; // required
-              _elem47 = iprot.readI32();
-              struct.nodeIds.add(_elem47);
-            }
-          }
-          struct.setNodeIdsIsSet(true);
+          struct.nodeId = iprot.readI32();
+          struct.setNodeIdIsSet(true);
         }
       }
     }
 
   }
 
-  public static class deleteTreeNodes_result implements org.apache.thrift.TBase<deleteTreeNodes_result, deleteTreeNodes_result._Fields>, java.io.Serializable, Cloneable   {
-    private static final org.apache.thrift.protocol.TStruct STRUCT_DESC = new org.apache.thrift.protocol.TStruct("deleteTreeNodes_result");
+  public static class deleteTreeNode_result implements org.apache.thrift.TBase<deleteTreeNode_result, deleteTreeNode_result._Fields>, java.io.Serializable, Cloneable   {
+    private static final org.apache.thrift.protocol.TStruct STRUCT_DESC = new org.apache.thrift.protocol.TStruct("deleteTreeNode_result");
 
 
     private static final Map<Class<? extends IScheme>, SchemeFactory> schemes = new HashMap<Class<? extends IScheme>, SchemeFactory>();
     static {
-      schemes.put(StandardScheme.class, new deleteTreeNodes_resultStandardSchemeFactory());
-      schemes.put(TupleScheme.class, new deleteTreeNodes_resultTupleSchemeFactory());
+      schemes.put(StandardScheme.class, new deleteTreeNode_resultStandardSchemeFactory());
+      schemes.put(TupleScheme.class, new deleteTreeNode_resultTupleSchemeFactory());
     }
 
 
@@ -6283,20 +6227,20 @@ public class HashTreesSyncInterface {
     static {
       Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> tmpMap = new EnumMap<_Fields, org.apache.thrift.meta_data.FieldMetaData>(_Fields.class);
       metaDataMap = Collections.unmodifiableMap(tmpMap);
-      org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(deleteTreeNodes_result.class, metaDataMap);
+      org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(deleteTreeNode_result.class, metaDataMap);
     }
 
-    public deleteTreeNodes_result() {
+    public deleteTreeNode_result() {
     }
 
     /**
      * Performs a deep copy on <i>other</i>.
      */
-    public deleteTreeNodes_result(deleteTreeNodes_result other) {
+    public deleteTreeNode_result(deleteTreeNode_result other) {
     }
 
-    public deleteTreeNodes_result deepCopy() {
-      return new deleteTreeNodes_result(this);
+    public deleteTreeNode_result deepCopy() {
+      return new deleteTreeNode_result(this);
     }
 
     @Override
@@ -6329,12 +6273,12 @@ public class HashTreesSyncInterface {
     public boolean equals(Object that) {
       if (that == null)
         return false;
-      if (that instanceof deleteTreeNodes_result)
-        return this.equals((deleteTreeNodes_result)that);
+      if (that instanceof deleteTreeNode_result)
+        return this.equals((deleteTreeNode_result)that);
       return false;
     }
 
-    public boolean equals(deleteTreeNodes_result that) {
+    public boolean equals(deleteTreeNode_result that) {
       if (that == null)
         return false;
 
@@ -6346,13 +6290,13 @@ public class HashTreesSyncInterface {
       return 0;
     }
 
-    public int compareTo(deleteTreeNodes_result other) {
+    public int compareTo(deleteTreeNode_result other) {
       if (!getClass().equals(other.getClass())) {
         return getClass().getName().compareTo(other.getClass().getName());
       }
 
       int lastComparison = 0;
-      deleteTreeNodes_result typedOther = (deleteTreeNodes_result)other;
+      deleteTreeNode_result typedOther = (deleteTreeNode_result)other;
 
       return 0;
     }
@@ -6371,7 +6315,7 @@ public class HashTreesSyncInterface {
 
     @Override
     public String toString() {
-      StringBuilder sb = new StringBuilder("deleteTreeNodes_result(");
+      StringBuilder sb = new StringBuilder("deleteTreeNode_result(");
       boolean first = true;
 
       sb.append(")");
@@ -6398,15 +6342,15 @@ public class HashTreesSyncInterface {
       }
     }
 
-    private static class deleteTreeNodes_resultStandardSchemeFactory implements SchemeFactory {
-      public deleteTreeNodes_resultStandardScheme getScheme() {
-        return new deleteTreeNodes_resultStandardScheme();
+    private static class deleteTreeNode_resultStandardSchemeFactory implements SchemeFactory {
+      public deleteTreeNode_resultStandardScheme getScheme() {
+        return new deleteTreeNode_resultStandardScheme();
       }
     }
 
-    private static class deleteTreeNodes_resultStandardScheme extends StandardScheme<deleteTreeNodes_result> {
+    private static class deleteTreeNode_resultStandardScheme extends StandardScheme<deleteTreeNode_result> {
 
-      public void read(org.apache.thrift.protocol.TProtocol iprot, deleteTreeNodes_result struct) throws org.apache.thrift.TException {
+      public void read(org.apache.thrift.protocol.TProtocol iprot, deleteTreeNode_result struct) throws org.apache.thrift.TException {
         org.apache.thrift.protocol.TField schemeField;
         iprot.readStructBegin();
         while (true)
@@ -6427,7 +6371,7 @@ public class HashTreesSyncInterface {
         struct.validate();
       }
 
-      public void write(org.apache.thrift.protocol.TProtocol oprot, deleteTreeNodes_result struct) throws org.apache.thrift.TException {
+      public void write(org.apache.thrift.protocol.TProtocol oprot, deleteTreeNode_result struct) throws org.apache.thrift.TException {
         struct.validate();
 
         oprot.writeStructBegin(STRUCT_DESC);
@@ -6437,21 +6381,21 @@ public class HashTreesSyncInterface {
 
     }
 
-    private static class deleteTreeNodes_resultTupleSchemeFactory implements SchemeFactory {
-      public deleteTreeNodes_resultTupleScheme getScheme() {
-        return new deleteTreeNodes_resultTupleScheme();
+    private static class deleteTreeNode_resultTupleSchemeFactory implements SchemeFactory {
+      public deleteTreeNode_resultTupleScheme getScheme() {
+        return new deleteTreeNode_resultTupleScheme();
       }
     }
 
-    private static class deleteTreeNodes_resultTupleScheme extends TupleScheme<deleteTreeNodes_result> {
+    private static class deleteTreeNode_resultTupleScheme extends TupleScheme<deleteTreeNode_result> {
 
       @Override
-      public void write(org.apache.thrift.protocol.TProtocol prot, deleteTreeNodes_result struct) throws org.apache.thrift.TException {
+      public void write(org.apache.thrift.protocol.TProtocol prot, deleteTreeNode_result struct) throws org.apache.thrift.TException {
         TTupleProtocol oprot = (TTupleProtocol) prot;
       }
 
       @Override
-      public void read(org.apache.thrift.protocol.TProtocol prot, deleteTreeNodes_result struct) throws org.apache.thrift.TException {
+      public void read(org.apache.thrift.protocol.TProtocol prot, deleteTreeNode_result struct) throws org.apache.thrift.TException {
         TTupleProtocol iprot = (TTupleProtocol) prot;
       }
     }
@@ -8316,14 +8260,14 @@ public class HashTreesSyncInterface {
             case 0: // SUCCESS
               if (schemeField.type == org.apache.thrift.protocol.TType.LIST) {
                 {
-                  org.apache.thrift.protocol.TList _list48 = iprot.readListBegin();
-                  struct.success = new ArrayList<ServerName>(_list48.size);
-                  for (int _i49 = 0; _i49 < _list48.size; ++_i49)
+                  org.apache.thrift.protocol.TList _list40 = iprot.readListBegin();
+                  struct.success = new ArrayList<ServerName>(_list40.size);
+                  for (int _i41 = 0; _i41 < _list40.size; ++_i41)
                   {
-                    ServerName _elem50; // required
-                    _elem50 = new ServerName();
-                    _elem50.read(iprot);
-                    struct.success.add(_elem50);
+                    ServerName _elem42; // required
+                    _elem42 = new ServerName();
+                    _elem42.read(iprot);
+                    struct.success.add(_elem42);
                   }
                   iprot.readListEnd();
                 }
@@ -8351,9 +8295,9 @@ public class HashTreesSyncInterface {
           oprot.writeFieldBegin(SUCCESS_FIELD_DESC);
           {
             oprot.writeListBegin(new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRUCT, struct.success.size()));
-            for (ServerName _iter51 : struct.success)
+            for (ServerName _iter43 : struct.success)
             {
-              _iter51.write(oprot);
+              _iter43.write(oprot);
             }
             oprot.writeListEnd();
           }
@@ -8384,9 +8328,9 @@ public class HashTreesSyncInterface {
         if (struct.isSetSuccess()) {
           {
             oprot.writeI32(struct.success.size());
-            for (ServerName _iter52 : struct.success)
+            for (ServerName _iter44 : struct.success)
             {
-              _iter52.write(oprot);
+              _iter44.write(oprot);
             }
           }
         }
@@ -8398,14 +8342,14 @@ public class HashTreesSyncInterface {
         BitSet incoming = iprot.readBitSet(1);
         if (incoming.get(0)) {
           {
-            org.apache.thrift.protocol.TList _list53 = new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRUCT, iprot.readI32());
-            struct.success = new ArrayList<ServerName>(_list53.size);
-            for (int _i54 = 0; _i54 < _list53.size; ++_i54)
+            org.apache.thrift.protocol.TList _list45 = new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRUCT, iprot.readI32());
+            struct.success = new ArrayList<ServerName>(_list45.size);
+            for (int _i46 = 0; _i46 < _list45.size; ++_i46)
             {
-              ServerName _elem55; // required
-              _elem55 = new ServerName();
-              _elem55.read(iprot);
-              struct.success.add(_elem55);
+              ServerName _elem47; // required
+              _elem47 = new ServerName();
+              _elem47.read(iprot);
+              struct.success.add(_elem47);
             }
           }
           struct.setSuccessIsSet(true);

@@ -138,8 +138,7 @@ public class HashTreesManager extends StoppableTask implements
 			throws IOException {
 		LOG.info("Rebuild request arrived : {} .", request);
 		try {
-			hashTrees.rebuildHashTree(request.treeId,
-					request.expFullRebuildTimeInt);
+			rebuildHashTree(request.treeId, request.expFullRebuildTimeInt);
 			HashTreesSyncInterface.Iface client = getHashTreeSyncClient(request.requester);
 			RebuildHashTreeResponse response = new RebuildHashTreeResponse(
 					localServer, request.treeId, request.tokenNo);
@@ -161,6 +160,7 @@ public class HashTreesManager extends StoppableTask implements
 
 							@Override
 							public Void call() throws IOException {
+								sendRebuildRequestToRemoteTrees(treeId);
 								rebuildHashTree(treeId, fullRebuildPeriod);
 								return null;
 							}
@@ -324,7 +324,6 @@ public class HashTreesManager extends StoppableTask implements
 				return null;
 			}
 		});
-		sendRebuildRequestToRemoteTrees(treeId);
 		Stopwatch watch = Stopwatch.createStarted();
 		hashTrees.rebuildHashTree(treeId, fullRebuildPeriod);
 		watch.stop();

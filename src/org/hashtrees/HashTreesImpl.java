@@ -351,17 +351,17 @@ public class HashTreesImpl implements HashTrees, Service {
 	}
 
 	@Override
-	public void rebuildHashTree(long treeId, long fullRebuildPeriod)
+	public int rebuildHashTree(long treeId, long fullRebuildPeriod)
 			throws IOException {
 		long lastFullRebuiltTime = htStore.getCompleteRebuiltTimestamp(treeId);
 		boolean fullRebuild = (lastFullRebuiltTime == 0) ? true
 				: ((fullRebuildPeriod < 0) ? false
 						: (System.currentTimeMillis() - lastFullRebuiltTime) > fullRebuildPeriod);
-		rebuildHashTree(treeId, fullRebuild);
+		return rebuildHashTree(treeId, fullRebuild);
 	}
 
 	@Override
-	public void rebuildHashTree(long treeId, boolean fullRebuild)
+	public int rebuildHashTree(long treeId, boolean fullRebuild)
 			throws IOException {
 		long buildBeginTS = System.currentTimeMillis();
 		if (fullRebuild)
@@ -373,6 +373,7 @@ public class HashTreesImpl implements HashTrees, Service {
 		htStore.unmarkSegments(treeId, dirtySegments);
 		if (fullRebuild)
 			htStore.setCompleteRebuiltTimestamp(treeId, buildBeginTS);
+		return dirtySegments.size();
 	}
 
 	/**
@@ -719,7 +720,7 @@ public class HashTreesImpl implements HashTrees, Service {
 		private final HashTreesIdProvider treeIdProvider;
 
 		private SegmentIdProvider segIdProvider;
-		private int noOfSegments = MAX_NO_OF_SEGMENTS,
+		private int noOfSegments = 1 << 17,
 				nonBlockingQueueSize = DEFAULT_NB_QUE_SIZE;
 		private boolean enabledNonBlockingCalls = true;
 
@@ -775,7 +776,7 @@ public class HashTreesImpl implements HashTrees, Service {
 		 * data. When a segment is marked as dirty, the rebuild process has to
 		 * read huge data unnecessarily.
 		 * 
-		 * Default value is 1 << 30.
+		 * Default value is 1 << 17. (More than 1 million).
 		 * 
 		 * @param noOfSegments
 		 *            , value should be a power of 2, otherwise it will be

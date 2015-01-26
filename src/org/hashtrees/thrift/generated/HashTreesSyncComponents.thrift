@@ -71,6 +71,7 @@ struct RebuildHashTreeResponse
 
 service HashTreesSyncInterface
 {
+	string ping();
 	
 	/**
      * Adds the (key,value) pair to the store. Intended to be used

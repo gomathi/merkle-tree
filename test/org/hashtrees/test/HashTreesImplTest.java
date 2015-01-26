@@ -35,8 +35,8 @@ import org.hashtrees.store.SimpleMemStore;
 import org.hashtrees.store.Store;
 import org.hashtrees.synch.EmptySyncListProvider;
 import org.hashtrees.synch.HashTreesManager;
+import org.hashtrees.synch.HashTreesRemoteClient;
 import org.hashtrees.synch.HashTreesSynchListProvider;
-import org.hashtrees.synch.HashTreesThriftClientProvider;
 import org.hashtrees.test.utils.HashTreesImplTestUtils;
 import org.hashtrees.test.utils.HashTreesImplTestUtils.HTreeComponents;
 import org.hashtrees.thrift.generated.SegmentData;
@@ -401,8 +401,8 @@ public class HashTreesImplTest {
 					.build();
 
 			hTreeManager.start();
-			HashTrees thriftClient = HashTreesThriftClientProvider
-					.getHashTreeRemoteClient(new ServerName("localhost",
+			HashTreesRemoteClient thriftClient = new HashTreesRemoteClient(
+					new ServerName("localhost",
 							HashTreesConstants.DEFAULT_HASH_TREE_SERVER_PORT_NO));
 
 			for (int i = 1; i <= DEFAULT_SEG_DATA_BLOCKS_COUNT; i++) {

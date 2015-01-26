@@ -124,4 +124,9 @@ public class HashTreesThriftServer implements HashTreesSyncInterface.Iface {
 	public List<ServerName> getServerNameListFor(long treeId) throws TException {
 		return syncListProvider.getServerNameListFor(treeId);
 	}
+
+	@Override
+	public String ping() throws TException {
+		return "hello";
+	}
 }

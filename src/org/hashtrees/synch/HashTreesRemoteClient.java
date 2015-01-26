@@ -4,15 +4,17 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.List;
 
-import org.apache.thrift.TException;
 import org.hashtrees.HashTrees;
 import org.hashtrees.HashTreesObserver;
 import org.hashtrees.SyncDiffResult;
 import org.hashtrees.SyncType;
 import org.hashtrees.thrift.generated.HashTreesSyncInterface;
 import org.hashtrees.thrift.generated.KeyValue;
+import org.hashtrees.thrift.generated.RebuildHashTreeRequest;
+import org.hashtrees.thrift.generated.RebuildHashTreeResponse;
 import org.hashtrees.thrift.generated.SegmentData;
 import org.hashtrees.thrift.generated.SegmentHash;
+import org.hashtrees.thrift.generated.ServerName;
 
 /**
  * A {@link HashTrees} implementation that wraps up
@@ -22,76 +24,130 @@ import org.hashtrees.thrift.generated.SegmentHash;
  */
 public class HashTreesRemoteClient implements HashTrees {
 
-	private final HashTreesSyncInterface.Iface remoteTree;
+	private final HTSyncClientPool clientPool;
 
-	public HashTreesRemoteClient(final HashTreesSyncInterface.Iface remoteTree) {
-		this.remoteTree = remoteTree;
+	public HashTreesRemoteClient(final ServerName sn) {
+		this.clientPool = HTSyncClientPool.getThriftClientPool(sn);
 	}
 
 	@Override
 	public void sPut(List<KeyValue> keyValuePairs) throws IOException {
+		HashTreesSyncInterface.Client remoteTree = null;
 		try {
+			remoteTree = clientPool.borrowObject();
 			remoteTree.sPut(keyValuePairs);
-		} catch (TException e) {
+		} catch (Exception e) {
 			throw new IOException(e);
+		} finally {
+			clientPool.returnObject(remoteTree);
 		}
 	}
 
 	@Override
 	public void sRemove(List<ByteBuffer> keys) throws IOException {
+		HashTreesSyncInterface.Client remoteTree = null;
 		try {
+			remoteTree = clientPool.borrowObject();
 			remoteTree.sRemove(keys);
-		} catch (TException e) {
+		} catch (Exception e) {
 			throw new IOException(e);
+		} finally {
+			clientPool.returnObject(remoteTree);
 		}
 	}
 
 	@Override
 	public List<SegmentHash> getSegmentHashes(long treeId, List<Integer> nodeIds)
 			throws IOException {
+		HashTreesSyncInterface.Client remoteTree = null;
 		try {
+			remoteTree = clientPool.borrowObject();
 			return remoteTree.getSegmentHashes(treeId, nodeIds);
-		} catch (TException e) {
+		} catch (Exception e) {
 			throw new IOException(e);
+		} finally {
+			clientPool.returnObject(remoteTree);
 		}
 	}
 
 	@Override
 	public SegmentHash getSegmentHash(long treeId, int nodeId)
 			throws IOException {
+		HashTreesSyncInterface.Client remoteTree = null;
 		try {
+			remoteTree = clientPool.borrowObject();
 			return remoteTree.getSegmentHash(treeId, nodeId);
-		} catch (TException e) {
+		} catch (Exception e) {
 			throw new IOException(e);
+		} finally {
+			clientPool.returnObject(remoteTree);
 		}
 	}
 
 	@Override
 	public List<SegmentData> getSegment(long treeId, int segId)
 			throws IOException {
+		HashTreesSyncInterface.Client remoteTree = null;
 		try {
+			remoteTree = clientPool.borrowObject();
 			return remoteTree.getSegment(treeId, segId);
-		} catch (TException e) {
+		} catch (Exception e) {
 			throw new IOException(e);
+		} finally {
+			clientPool.returnObject(remoteTree);
 		}
 	}
 
 	@Override
 	public SegmentData getSegmentData(long treeId, int segId, ByteBuffer key)
 			throws IOException {
+		HashTreesSyncInterface.Client remoteTree = null;
 		try {
+			remoteTree = clientPool.borrowObject();
 			return remoteTree.getSegmentData(treeId, segId, key);
-		} catch (TException e) {
+		} catch (Exception e) {
 			throw new IOException(e);
+		} finally {
+			clientPool.returnObject(remoteTree);
 		}
 	}
 
 	@Override
 	public void deleteTreeNode(long treeId, int nodeId) throws IOException {
+		HashTreesSyncInterface.Client remoteTree = null;
 		try {
+			remoteTree = clientPool.borrowObject();
 			remoteTree.deleteTreeNode(treeId, nodeId);
-		} catch (TException e) {
+		} catch (Exception e) {
 			throw new IOException(e);
+		} finally {
+			clientPool.returnObject(remoteTree);
+		}
+	}
+
+	public void submitRebuildResponse(RebuildHashTreeResponse response)
+			throws IOException {
+		HashTreesSyncInterface.Client remoteTree = null;
+		try {
+			remoteTree = clientPool.borrowObject();
+			remoteTree.submitRebuildResponse(response);
+		} catch (Exception e) {
+			throw new IOException(e);
+		} finally {
+			clientPool.returnObject(remoteTree);
+		}
+	}
+
+	public void submitRebuildRequest(RebuildHashTreeRequest request)
+			throws IOException {
+		HashTreesSyncInterface.Client remoteTree = null;
+		try {
+			remoteTree = clientPool.borrowObject();
+			remoteTree.submitRebuildRequest(request);
+		} catch (Exception e) {
+			throw new IOException(e);
+		} finally {
+			clientPool.returnObject(remoteTree);
 		}
 	}
 
@@ -106,13 +162,13 @@ public class HashTreesRemoteClient implements HashTrees {
 	}
 
 	@Override
-	public void rebuildHashTree(long treeId, long fullRebuildPeriod)
+	public int rebuildHashTree(long treeId, long fullRebuildPeriod)
 			throws IOException {
 		throw new IOException("Remote tree does not support this operation.");
 	}
 
 	@Override
-	public void rebuildHashTree(long treeId, boolean fullRebuild)
+	public int rebuildHashTree(long treeId, boolean fullRebuild)
 			throws IOException {
 		throw new IOException("Remote tree does not support this operation.");
 	}
@@ -130,14 +186,12 @@ public class HashTreesRemoteClient implements HashTrees {
 	}
 
 	@Override
-	public void addObserver(HashTreesObserver observer) {
-		throw new RuntimeException(
-				"Remote tree does not support this operation.");
+	public void addObserver(HashTreesObserver observer) throws IOException {
+		throw new IOException("Remote tree does not support this operation.");
 	}
 
 	@Override
-	public void removeObserver(HashTreesObserver observer) {
-		throw new RuntimeException(
-				"Remote tree does not support this operation.");
+	public void removeObserver(HashTreesObserver observer) throws IOException {
+		throw new IOException("Remote tree does not support this operation.");
 	}
 }

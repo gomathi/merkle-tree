@@ -63,13 +63,14 @@ public class HashTreesImplTestObj extends HashTreesImpl {
 	}
 
 	@Override
-	public void rebuildHashTree(long treeId, boolean fullRebuild)
+	public int rebuildHashTree(long treeId, boolean fullRebuild)
 			throws IOException {
-		super.rebuildHashTree(treeId, fullRebuild);
+		int dirtySegsCount = super.rebuildHashTree(treeId, fullRebuild);
 		if (!fullRebuild)
 			events.add(HTSynchEvent.UPDATE_SEGMENT);
 		else
 			events.add(HTSynchEvent.UPDATE_FULL_TREE);
+		return dirtySegsCount;
 	}
 
 }

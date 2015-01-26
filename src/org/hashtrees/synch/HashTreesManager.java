@@ -24,7 +24,6 @@ import org.hashtrees.HashTrees;
 import org.hashtrees.HashTreesIdProvider;
 import org.hashtrees.SyncDiffResult;
 import org.hashtrees.SyncType;
-import org.hashtrees.thrift.generated.HashTreesSyncInterface;
 import org.hashtrees.thrift.generated.RebuildHashTreeRequest;
 import org.hashtrees.thrift.generated.RebuildHashTreeResponse;
 import org.hashtrees.thrift.generated.ServerName;
@@ -86,7 +85,7 @@ public class HashTreesManager extends StoppableTask implements
 	private final SyncType syncType;
 
 	private final ConcurrentLinkedQueue<HashTreesManagerObserver> observers = new ConcurrentLinkedQueue<>();
-	private final ConcurrentSkipListMap<ServerName, HashTreesSyncInterface.Iface> servers = new ConcurrentSkipListMap<>();
+	private final ConcurrentSkipListMap<ServerName, HashTreesRemoteClient> servers = new ConcurrentSkipListMap<>();
 	private final ConcurrentMap<Pair<ServerName, Long>, Pair<Long, Boolean>> remoteTreeAndLastBuildReqTS = new ConcurrentHashMap<>();
 	private final ConcurrentMap<Pair<ServerName, Long>, Long> remoteTreeAndLastSyncedTS = new ConcurrentHashMap<>();
 
@@ -139,7 +138,7 @@ public class HashTreesManager extends StoppableTask implements
 		LOG.info("Rebuild request arrived : {} .", request);
 		try {
 			rebuildHashTree(request.treeId, request.expFullRebuildTimeInt);
-			HashTreesSyncInterface.Iface client = getHashTreeSyncClient(request.requester);
+			HashTreesRemoteClient client = getHashTreeSyncClient(request.requester);
 			RebuildHashTreeResponse response = new RebuildHashTreeResponse(
 					localServer, request.treeId, request.tokenNo);
 			client.submitRebuildResponse(response);
@@ -195,7 +194,7 @@ public class HashTreesManager extends StoppableTask implements
 			Pair<ServerName, Long> serverNameWTreeId = Pair.create(sn, treeId);
 			try {
 				long buildReqTS = System.currentTimeMillis();
-				HashTreesSyncInterface.Iface client = getHashTreeSyncClient(sn);
+				HashTreesRemoteClient client = getHashTreeSyncClient(sn);
 				remoteTreeAndLastSyncedTS.putIfAbsent(serverNameWTreeId,
 						buildReqTS);
 				remoteTreeAndLastBuildReqTS.put(serverNameWTreeId,
@@ -203,7 +202,7 @@ public class HashTreesManager extends StoppableTask implements
 				RebuildHashTreeRequest request = new RebuildHashTreeRequest(
 						localServer, treeId, buildReqTS, fullRebuildPeriod);
 				client.submitRebuildRequest(request);
-			} catch (TException e) {
+			} catch (TException | IOException e) {
 				LOG.error("Unable to send rebuild notification to {} - {}",
 						serverNameWTreeId, e.getMessage(), e);
 			}
@@ -325,8 +324,10 @@ public class HashTreesManager extends StoppableTask implements
 			}
 		});
 		Stopwatch watch = Stopwatch.createStarted();
-		hashTrees.rebuildHashTree(treeId, fullRebuildPeriod);
+		int dirtySegsCount = hashTrees.rebuildHashTree(treeId,
+				fullRebuildPeriod);
 		watch.stop();
+		LOG.info("Total no of dirty segments : {} ", dirtySegsCount);
 		LOG.info("Time taken for rebuilding (treeId: {}) (in ms) :", treeId,
 				watch.elapsed(TimeUnit.MILLISECONDS));
 		notifyObservers(new Function<HashTreesManagerObserver, Void>() {
@@ -357,9 +358,9 @@ public class HashTreesManager extends StoppableTask implements
 				});
 				LOG.info("Syncing {}.", hostNameAndTreeId);
 				Stopwatch watch = Stopwatch.createStarted();
-				HashTreesSyncInterface.Iface remoteSyncClient = getHashTreeSyncClient(sn);
+				HashTreesRemoteClient remoteSyncClient = getHashTreeSyncClient(sn);
 				SyncDiffResult result = hashTrees.synch(treeId,
-						new HashTreesRemoteClient(remoteSyncClient), syncType);
+						remoteSyncClient, syncType);
 				LOG.info("Synch result for {} - {}", hostNameAndTreeId, result);
 				watch.stop();
 				LOG.info("Time taken for syncing ({}) (in ms) : {}",
@@ -383,12 +384,11 @@ public class HashTreesManager extends StoppableTask implements
 		}
 	}
 
-	private HashTreesSyncInterface.Iface getHashTreeSyncClient(ServerName sn)
+	private HashTreesRemoteClient getHashTreeSyncClient(ServerName sn)
 			throws TTransportException {
-		HashTreesSyncInterface.Iface client = servers.get(sn);
+		HashTreesRemoteClient client = servers.get(sn);
 		if (client == null) {
-			servers.putIfAbsent(sn,
-					HashTreesThriftClientProvider.getThriftHashTreeClient(sn));
+			servers.putIfAbsent(sn, new HashTreesRemoteClient(sn));
 			client = servers.get(sn);
 		}
 		return client;

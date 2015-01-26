@@ -68,15 +68,15 @@ public class MockHashTrees implements HashTrees {
 	}
 
 	@Override
-	public void rebuildHashTree(long treeId, long fullRebuildPeriod)
+	public int rebuildHashTree(long treeId, long fullRebuildPeriod)
 			throws IOException {
-
+		return 0;
 	}
 
 	@Override
-	public void rebuildHashTree(long treeId, boolean fullRebuild)
+	public int rebuildHashTree(long treeId, boolean fullRebuild)
 			throws IOException {
-
+		return 0;
 	}
 
 	@Override

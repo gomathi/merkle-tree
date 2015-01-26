@@ -144,9 +144,9 @@ public interface HashTrees {
 	 *            updated. If there is no information about when was the last
 	 *            time the tree was fully rebuilt, then a full rebuild will be
 	 *            triggered. A negative value indicates disabling full rebuild.
+	 * @return, returns how many dirty segments are marked before the rebuild.
 	 */
-	void rebuildHashTree(long treeId, long fullRebuildPeriod)
-			throws IOException;
+	int rebuildHashTree(long treeId, long fullRebuildPeriod) throws IOException;
 
 	/**
 	 * Similar to {@link #rebuildHashTree(long, long)}, except that allows to
@@ -154,9 +154,10 @@ public interface HashTrees {
 	 * 
 	 * @param treeId
 	 * @param fullRebuild
+	 * @return, returns how many dirty segments are marked before the rebuild.
 	 * @throws IOException
 	 */
-	void rebuildHashTree(long treeId, boolean fullRebuild) throws IOException;
+	int rebuildHashTree(long treeId, boolean fullRebuild) throws IOException;
 
 	void addObserver(HashTreesObserver observer) throws IOException;
 

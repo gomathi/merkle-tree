@@ -1,4 +1,4 @@
-package org.hashtrees.synch;
+package org.hashtrees.manager;
 
 import java.util.Collections;
 import java.util.List;

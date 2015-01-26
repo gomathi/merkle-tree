@@ -1,4 +1,4 @@
-package org.hashtrees.synch;
+package org.hashtrees.manager;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -24,10 +24,23 @@ import org.hashtrees.thrift.generated.ServerName;
  */
 public class HashTreesRemoteClient implements HashTrees {
 
-	private final HTSyncClientPool clientPool;
+	private final HashTreesClientPool clientPool;
 
 	public HashTreesRemoteClient(final ServerName sn) {
-		this.clientPool = HTSyncClientPool.getThriftClientPool(sn);
+		this.clientPool = HashTreesClientPool.getThriftClientPool(sn);
+	}
+
+	public String ping() throws IOException {
+		HashTreesSyncInterface.Client remoteTree = null;
+		try {
+			remoteTree = clientPool.borrowObject();
+			return remoteTree.ping();
+		} catch (Exception e) {
+			throw new IOException(e);
+		} finally {
+			if (remoteTree != null)
+				clientPool.returnObject(remoteTree);
+		}
 	}
 
 	@Override
@@ -39,7 +52,8 @@ public class HashTreesRemoteClient implements HashTrees {
 		} catch (Exception e) {
 			throw new IOException(e);
 		} finally {
-			clientPool.returnObject(remoteTree);
+			if (remoteTree != null)
+				clientPool.returnObject(remoteTree);
 		}
 	}
 
@@ -52,7 +66,8 @@ public class HashTreesRemoteClient implements HashTrees {
 		} catch (Exception e) {
 			throw new IOException(e);
 		} finally {
-			clientPool.returnObject(remoteTree);
+			if (remoteTree != null)
+				clientPool.returnObject(remoteTree);
 		}
 	}
 
@@ -66,7 +81,8 @@ public class HashTreesRemoteClient implements HashTrees {
 		} catch (Exception e) {
 			throw new IOException(e);
 		} finally {
-			clientPool.returnObject(remoteTree);
+			if (remoteTree != null)
+				clientPool.returnObject(remoteTree);
 		}
 	}
 
@@ -80,7 +96,8 @@ public class HashTreesRemoteClient implements HashTrees {
 		} catch (Exception e) {
 			throw new IOException(e);
 		} finally {
-			clientPool.returnObject(remoteTree);
+			if (remoteTree != null)
+				clientPool.returnObject(remoteTree);
 		}
 	}
 
@@ -94,7 +111,8 @@ public class HashTreesRemoteClient implements HashTrees {
 		} catch (Exception e) {
 			throw new IOException(e);
 		} finally {
-			clientPool.returnObject(remoteTree);
+			if (remoteTree != null)
+				clientPool.returnObject(remoteTree);
 		}
 	}
 
@@ -108,7 +126,8 @@ public class HashTreesRemoteClient implements HashTrees {
 		} catch (Exception e) {
 			throw new IOException(e);
 		} finally {
-			clientPool.returnObject(remoteTree);
+			if (remoteTree != null)
+				clientPool.returnObject(remoteTree);
 		}
 	}
 
@@ -121,7 +140,8 @@ public class HashTreesRemoteClient implements HashTrees {
 		} catch (Exception e) {
 			throw new IOException(e);
 		} finally {
-			clientPool.returnObject(remoteTree);
+			if (remoteTree != null)
+				clientPool.returnObject(remoteTree);
 		}
 	}
 
@@ -134,7 +154,8 @@ public class HashTreesRemoteClient implements HashTrees {
 		} catch (Exception e) {
 			throw new IOException(e);
 		} finally {
-			clientPool.returnObject(remoteTree);
+			if (remoteTree != null)
+				clientPool.returnObject(remoteTree);
 		}
 	}
 
@@ -147,7 +168,8 @@ public class HashTreesRemoteClient implements HashTrees {
 		} catch (Exception e) {
 			throw new IOException(e);
 		} finally {
-			clientPool.returnObject(remoteTree);
+			if (remoteTree != null)
+				clientPool.returnObject(remoteTree);
 		}
 	}
 

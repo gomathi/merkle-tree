@@ -1,7 +1,7 @@
 package org.hashtrees.usage;
 
 import org.hashtrees.HashTrees;
-import org.hashtrees.synch.HashTreesManager;
+import org.hashtrees.manager.HashTreesManager;
 
 /**
  * This class provides an example how to build an instance of

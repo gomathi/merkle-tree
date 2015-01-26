@@ -3,7 +3,7 @@ package org.hashtrees;
 import java.nio.ByteBuffer;
 import java.util.Iterator;
 
-import org.hashtrees.synch.HashTreesManager;
+import org.hashtrees.manager.HashTreesManager;
 
 /**
  * There can be multiple hash trees. Given a key we need to know which hash tree

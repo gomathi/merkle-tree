@@ -1,10 +1,11 @@
-package org.hashtrees.synch;
+package org.hashtrees.manager;
 
 import org.apache.commons.pool2.BasePooledObjectFactory;
 import org.apache.commons.pool2.PooledObject;
 import org.apache.commons.pool2.PooledObjectFactory;
 import org.apache.commons.pool2.impl.DefaultPooledObject;
 import org.apache.commons.pool2.impl.GenericObjectPool;
+import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
 import org.apache.thrift.TException;
 import org.apache.thrift.protocol.TBinaryProtocol;
 import org.apache.thrift.protocol.TProtocol;
@@ -14,16 +15,23 @@ import org.hashtrees.thrift.generated.HashTreesSyncInterface;
 import org.hashtrees.thrift.generated.HashTreesSyncInterface.Client;
 import org.hashtrees.thrift.generated.ServerName;
 
-public class HTSyncClientPool extends
+public class HashTreesClientPool extends
 		GenericObjectPool<HashTreesSyncInterface.Client> {
 
-	public HTSyncClientPool(
-			PooledObjectFactory<HashTreesSyncInterface.Client> factory) {
-		super(factory);
+	private static final GenericObjectPoolConfig POOL_CONFIG;
+
+	static {
+		POOL_CONFIG = new GenericObjectPoolConfig();
+		POOL_CONFIG.setTestOnReturn(true);
 	}
 
-	public static HTSyncClientPool getThriftClientPool(ServerName sn) {
-		return new HTSyncClientPool(new PooledObjectFactoryProvider(sn));
+	public HashTreesClientPool(
+			PooledObjectFactory<HashTreesSyncInterface.Client> factory) {
+		super(factory, POOL_CONFIG);
+	}
+
+	public static HashTreesClientPool getThriftClientPool(ServerName sn) {
+		return new HashTreesClientPool(new PooledObjectFactoryProvider(sn));
 	}
 
 	private static class PooledObjectFactoryProvider extends

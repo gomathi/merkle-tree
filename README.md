@@ -44,7 +44,7 @@ In the following design I will use the term HashTree instead of Merkle-tree. Bot
 There are two main components, 
 
 1. HashTrees (which manages queueing up insertions/deletions, rebuilding the tree, and synch another remote tree on request). I have provided an example class [HashTreesUsage.java] (https://github.com/gomathi/merkle-tree/blob/master/src/org/hashtrees/usage/HashTreesUsage.java) in using HashTrees.
-2. HashTreesManager(which schedules rebuild/synch actions, and authorizes whether sync can happen from a tree to another tree). I will be documenting on using this class at [HashTreesManagerUsage.java] (https://github.com/gomathi/merkle-tree/blob/master/src/org/hashtrees/usage/HashTreesManagerUsage.java)
+2. HashTreesManager(which schedules rebuild/synch actions, and authorizes whether sync can happen from a tree to another tree). Read this class [HashTreesManagerUsage.java] (https://github.com/gomathi/merkle-tree/blob/master/src/org/hashtrees/usage/HashTreesManagerUsage.java) to understand how to use HashTreesManager.
 
 ###### Implementation
 

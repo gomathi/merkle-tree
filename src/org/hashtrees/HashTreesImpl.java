@@ -18,7 +18,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
-import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.CountDownLatch;
 
@@ -41,7 +40,6 @@ import org.hashtrees.util.Service;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Function;
 import com.google.common.collect.Iterators;
 import com.google.common.collect.PeekingIterator;
 
@@ -95,7 +93,7 @@ public class HashTreesImpl implements HashTrees, Service {
 	private final Object nonBlockingCallsLock = new Object();
 	@LockedBy("nonBlockingCallsLock")
 	private volatile NonBlockingHTDataUpdater bgDataUpdater;
-	private final ConcurrentLinkedQueue<HashTreesObserver> observers = new ConcurrentLinkedQueue<>();
+	private final HashTreesObserverNotifier notifier = new HashTreesObserverNotifier();
 
 	public HashTreesImpl(int noOfSegments, boolean enabledNonBlockingCalls,
 			int nonBlockingQueueSize, final HashTreesIdProvider treeIdProvider,
@@ -132,26 +130,13 @@ public class HashTreesImpl implements HashTrees, Service {
 
 	private void hPutInternal(final ByteBuffer key, final ByteBuffer value)
 			throws IOException {
+		notifier.preHPut(key, value);
 		long treeId = treeIdProvider.getTreeId(key.array());
 		int segId = segIdProvider.getSegmentId(key.array());
 		ByteBuffer digest = ByteBuffer.wrap(sha1(value.array()));
 		htStore.setDirtySegment(treeId, segId);
 		htStore.putSegmentData(treeId, segId, key, digest);
-		notifyObservers(new Function<HashTreesObserver, Void>() {
-
-			@Override
-			public Void apply(HashTreesObserver input) {
-				input.postHPut(key, value);
-				return null;
-			}
-		});
-	}
-
-	private void notifyObservers(Function<HashTreesObserver, Void> function) {
-		Iterator<Void> itr = Iterators
-				.transform(observers.iterator(), function);
-		while (itr.hasNext())
-			itr.next();
+		notifier.postHPut(key, value);
 	}
 
 	@Override
@@ -171,18 +156,12 @@ public class HashTreesImpl implements HashTrees, Service {
 	}
 
 	private void hRemoveInternal(final ByteBuffer key) throws IOException {
+		notifier.preHRemove(key);
 		long treeId = treeIdProvider.getTreeId(key.array());
 		int segId = segIdProvider.getSegmentId(key.array());
 		htStore.setDirtySegment(treeId, segId);
 		htStore.deleteSegmentData(treeId, segId, key);
-		notifyObservers(new Function<HashTreesObserver, Void>() {
-
-			@Override
-			public Void apply(HashTreesObserver input) {
-				input.postHRemove(key);
-				return null;
-			}
-		});
+		notifier.postHRemove(key);
 	}
 
 	@Override
@@ -363,6 +342,7 @@ public class HashTreesImpl implements HashTrees, Service {
 	@Override
 	public int rebuildHashTree(long treeId, boolean fullRebuild)
 			throws IOException {
+		notifier.preRebuild(treeId, fullRebuild);
 		long buildBeginTS = System.currentTimeMillis();
 		if (fullRebuild)
 			rebuildCompleteTree(treeId);
@@ -373,6 +353,7 @@ public class HashTreesImpl implements HashTrees, Service {
 		htStore.unmarkSegments(treeId, dirtySegments);
 		if (fullRebuild)
 			htStore.setCompleteRebuiltTimestamp(treeId, buildBeginTS);
+		notifier.postRebuild(treeId, fullRebuild);
 		return dirtySegments.size();
 	}
 
@@ -487,14 +468,18 @@ public class HashTreesImpl implements HashTrees, Service {
 
 	@Override
 	public void sPut(final List<KeyValue> keyValuePairs) throws IOException {
+		notifier.preSPut(keyValuePairs);
 		for (KeyValue keyValuePair : keyValuePairs)
 			store.put(keyValuePair.getKey(), keyValuePair.getValue());
+		notifier.postSPut(keyValuePairs);
 	}
 
 	@Override
 	public void sRemove(final List<ByteBuffer> keys) throws IOException {
+		notifier.preSRemove(keys);
 		for (ByteBuffer key : keys)
 			store.delete(key.array());
+		notifier.postSRemove(keys);
 	}
 
 	@Override
@@ -554,14 +539,12 @@ public class HashTreesImpl implements HashTrees, Service {
 
 	@Override
 	public void addObserver(HashTreesObserver observer) {
-		assert (observer != null);
-		observers.add(observer);
+		notifier.addObserver(observer);
 	}
 
 	@Override
 	public void removeObserver(HashTreesObserver observer) {
-		assert (observer != null);
-		observers.remove(observer);
+		notifier.removeObserver(observer);
 	}
 
 	private static int compareSegNodeIds(SegmentHash left, SegmentHash right) {

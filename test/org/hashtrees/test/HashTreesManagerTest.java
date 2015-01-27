@@ -16,6 +16,7 @@ import java.util.concurrent.atomic.AtomicIntegerArray;
 
 import junit.framework.Assert;
 
+import org.hashtrees.SyncDiffResult;
 import org.hashtrees.SyncType;
 import org.hashtrees.manager.EmptySyncListProvider;
 import org.hashtrees.manager.HashTreesManager;
@@ -201,33 +202,22 @@ public class HashTreesManagerTest {
 				"localhost", 8999, new MockHashTrees(), TREE_ID_PROVIDER,
 				new EmptySyncListProvider()).build();
 
-		final AtomicIntegerArray receivedCalls = new AtomicIntegerArray(4);
-		final CountDownLatch receivedCallsLatch = new CountDownLatch(4);
+		final AtomicIntegerArray receivedCalls = new AtomicIntegerArray(2);
+		final CountDownLatch receivedCallsLatch = new CountDownLatch(2);
 
 		try {
 			localManager.addObserver(new HashTreesManagerObserver() {
 
 				@Override
-				public void preRebuild(long treeId) {
+				public void preSync(long treeId, ServerName remoteServerName) {
 					receivedCalls.set(0, 1);
 					receivedCallsLatch.countDown();
 				}
 
 				@Override
-				public void postRebuild(long treeId) {
+				public void postSync(long treeId, ServerName remoteServerName,
+						SyncDiffResult result) {
 					receivedCalls.set(1, 1);
-					receivedCallsLatch.countDown();
-				}
-
-				@Override
-				public void preSync(long treeId, ServerName remoteServerName) {
-					receivedCalls.set(2, 1);
-					receivedCallsLatch.countDown();
-				}
-
-				@Override
-				public void postSync(long treeId, ServerName remoteServerName) {
-					receivedCalls.set(3, 1);
 					receivedCallsLatch.countDown();
 				}
 
@@ -236,7 +226,7 @@ public class HashTreesManagerTest {
 			remoteManager.start();
 			localManager.start();
 			receivedCallsLatch.await(10, TimeUnit.SECONDS);
-			for (int i = 0; i < 4; i++)
+			for (int i = 0; i < 2; i++)
 				Assert.assertEquals(1, receivedCalls.get(i));
 		} finally {
 			remoteManager.stop();

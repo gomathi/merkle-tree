@@ -38,6 +38,7 @@ import org.hashtrees.store.SimpleMemStore;
 import org.hashtrees.store.Store;
 import org.hashtrees.test.utils.HashTreesImplTestUtils;
 import org.hashtrees.test.utils.HashTreesImplTestUtils.HTreeComponents;
+import org.hashtrees.thrift.generated.KeyValue;
 import org.hashtrees.thrift.generated.SegmentData;
 import org.hashtrees.thrift.generated.SegmentHash;
 import org.hashtrees.thrift.generated.ServerName;
@@ -522,23 +523,75 @@ public class HashTreesImplTest {
 		HashTreesImpl hashTrees = new HashTreesImpl.Builder(store,
 				TREE_ID_PROVIDER, htStore).setEnabledNonBlockingCalls(false)
 				.build();
-		final AtomicIntegerArray receivedCalls = new AtomicIntegerArray(2);
+		final AtomicIntegerArray receivedCalls = new AtomicIntegerArray(10);
 		hashTrees.addObserver(new HashTreesObserver() {
 
 			@Override
-			public void postHRemove(ByteBuffer key) {
+			public void preSPut(List<KeyValue> keyValuePairs) {
 				receivedCalls.set(0, 1);
 			}
 
 			@Override
-			public void postHPut(ByteBuffer key, ByteBuffer value) {
+			public void postSPut(List<KeyValue> keyValuePairs) {
 				receivedCalls.set(1, 1);
+			}
+
+			@Override
+			public void preSRemove(List<ByteBuffer> keys) {
+				receivedCalls.set(2, 1);
+			}
+
+			@Override
+			public void postSRemove(List<ByteBuffer> keys) {
+				receivedCalls.set(3, 1);
+			}
+
+			@Override
+			public void preHPut(ByteBuffer key, ByteBuffer value) {
+				receivedCalls.set(4, 1);
+			}
+
+			@Override
+			public void postHPut(ByteBuffer key, ByteBuffer value) {
+				receivedCalls.set(5, 1);
+			}
+
+			@Override
+			public void preHRemove(ByteBuffer key) {
+				receivedCalls.set(6, 1);
+			}
+
+			@Override
+			public void postHRemove(ByteBuffer key) {
+				receivedCalls.set(7, 1);
+			}
+
+			@Override
+			public void preRebuild(long treeId, boolean isFullRebuild) {
+				Assert.assertTrue(isFullRebuild);
+				receivedCalls.set(8, 1);
+			}
+
+			@Override
+			public void postRebuild(long treeId, boolean isFullRebuild) {
+				Assert.assertTrue(isFullRebuild);
+				receivedCalls.set(9, 1);
 			}
 		});
 
 		hashTrees.hPut(randomByteBuffer(), randomByteBuffer());
+		hashTrees.rebuildHashTree(SimpleTreeIdProvider.TREE_ID, true);
 		hashTrees.hRemove(randomByteBuffer());
-		for (int i = 0; i < 2; i++)
+		List<KeyValue> kvPairsList = new ArrayList<>();
+		List<ByteBuffer> keys = new ArrayList<>();
+		for (int i = 0; i < 1; i++) {
+			kvPairsList
+					.add(new KeyValue(randomByteBuffer(), randomByteBuffer()));
+			keys.add(randomByteBuffer());
+		}
+		hashTrees.sPut(kvPairsList);
+		hashTrees.sRemove(keys);
+		for (int i = 0; i < 10; i++)
 			Assert.assertEquals(1, receivedCalls.get(i));
 	}
 }

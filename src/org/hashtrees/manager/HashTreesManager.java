@@ -84,7 +84,7 @@ public class HashTreesManager extends StoppableTask implements
 	private final HashTreesSynchAuthenticator authenticator;
 	private final SyncType syncType;
 
-	private final ConcurrentLinkedQueue<HashTreesManagerObserver> observers = new ConcurrentLinkedQueue<>();
+	private final HashTreesManagerObserverNotifier notifier = new HashTreesManagerObserverNotifier();
 	private final ConcurrentSkipListMap<ServerName, HashTreesRemoteClient> servers = new ConcurrentSkipListMap<>();
 	private final ConcurrentMap<Pair<ServerName, Long>, Pair<Long, Boolean>> remoteTreeAndLastBuildReqTS = new ConcurrentHashMap<>();
 	private final ConcurrentMap<Pair<ServerName, Long>, Long> remoteTreeAndLastSyncedTS = new ConcurrentHashMap<>();
@@ -314,30 +314,13 @@ public class HashTreesManager extends StoppableTask implements
 
 	private void rebuildHashTree(final long treeId, long fullRebuildPeriod)
 			throws IOException {
-
-		notifyObservers(new Function<HashTreesManagerObserver, Void>() {
-
-			@Override
-			public Void apply(HashTreesManagerObserver htmObserver) {
-				htmObserver.preRebuild(treeId);
-				return null;
-			}
-		});
 		Stopwatch watch = Stopwatch.createStarted();
 		int dirtySegsCount = hashTrees.rebuildHashTree(treeId,
 				fullRebuildPeriod);
 		watch.stop();
 		LOG.info("Total no of dirty segments : {} ", dirtySegsCount);
-		LOG.info("Time taken for rebuilding (treeId: {}) (in ms) :", treeId,
+		LOG.info("Time taken for rebuilding (treeId: {}) (in ms) : {}", treeId,
 				watch.elapsed(TimeUnit.MILLISECONDS));
-		notifyObservers(new Function<HashTreesManagerObserver, Void>() {
-
-			@Override
-			public Void apply(HashTreesManagerObserver htmObserver) {
-				htmObserver.postRebuild(treeId);
-				return null;
-			}
-		});
 	}
 
 	public void synch(final ServerName sn, final long treeId,
@@ -348,14 +331,7 @@ public class HashTreesManager extends StoppableTask implements
 		Pair<ServerName, Long> hostNameAndTreeId = Pair.create(sn, treeId);
 		if (synchAllowed) {
 			try {
-				notifyObservers(new Function<HashTreesManagerObserver, Void>() {
-
-					@Override
-					public Void apply(HashTreesManagerObserver input) {
-						input.preSync(treeId, sn);
-						return null;
-					}
-				});
+				notifier.preSync(treeId, sn);
 				LOG.info("Syncing {}.", hostNameAndTreeId);
 				Stopwatch watch = Stopwatch.createStarted();
 				HashTreesRemoteClient remoteSyncClient = getHashTreeSyncClient(sn);
@@ -366,14 +342,7 @@ public class HashTreesManager extends StoppableTask implements
 				LOG.info("Time taken for syncing ({}) (in ms) : {}",
 						hostNameAndTreeId, watch.elapsed(TimeUnit.MILLISECONDS));
 				LOG.info("Syncing {} complete.", hostNameAndTreeId);
-				notifyObservers(new Function<HashTreesManagerObserver, Void>() {
-
-					@Override
-					public Void apply(HashTreesManagerObserver htmObserver) {
-						htmObserver.postSync(treeId, sn);
-						return null;
-					}
-				});
+				notifier.postSync(treeId, sn, result);
 			} catch (TException e) {
 				LOG.error("Unable to synch remote hash tree server {} : {}",
 						hostNameAndTreeId, e);
@@ -395,19 +364,11 @@ public class HashTreesManager extends StoppableTask implements
 	}
 
 	public void addObserver(HashTreesManagerObserver observer) {
-		observers.add(observer);
+		notifier.addObserver(observer);
 	}
 
 	public void removeObserver(HashTreesManagerObserver observer) {
-		observers.remove(observer);
-	}
-
-	private void notifyObservers(
-			Function<HashTreesManagerObserver, Void> function) {
-		Iterator<Void> itr = Iterators
-				.transform(observers.iterator(), function);
-		while (itr.hasNext())
-			itr.next();
+		notifier.removeObserver(observer);
 	}
 
 	@Override

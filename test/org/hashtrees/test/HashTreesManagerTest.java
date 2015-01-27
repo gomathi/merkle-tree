@@ -16,7 +16,6 @@ import java.util.concurrent.atomic.AtomicIntegerArray;
 
 import junit.framework.Assert;
 
-import org.hashtrees.HashTreesConstants;
 import org.hashtrees.SyncType;
 import org.hashtrees.manager.EmptySyncListProvider;
 import org.hashtrees.manager.HashTreesManager;

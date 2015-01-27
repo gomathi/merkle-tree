@@ -23,7 +23,6 @@ import java.util.concurrent.atomic.AtomicIntegerArray;
 import org.apache.commons.codec.binary.Hex;
 import org.apache.thrift.transport.TTransportException;
 import org.hashtrees.HashTrees;
-import org.hashtrees.HashTreesConstants;
 import org.hashtrees.HashTreesImpl;
 import org.hashtrees.HashTreesObserver;
 import org.hashtrees.SimpleTreeIdProvider;

@@ -1,4 +1,4 @@
-package org.hashtrees;
+package org.hashtrees.test;
 
 public class HashTreesConstants {
 

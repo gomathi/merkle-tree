@@ -15,7 +15,8 @@
  * KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations
  * under the License.
- */package org.hashtrees.utils.test;
+ */
+package org.hashtrees.utils.test;
 
 import java.util.ArrayList;
 import java.util.Iterator;

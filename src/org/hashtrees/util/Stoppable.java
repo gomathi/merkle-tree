@@ -15,7 +15,8 @@
  * KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations
  * under the License.
- */package org.hashtrees.util;
+ */
+package org.hashtrees.util;
 
 /**
  * Indicates a class that accepts a stop signal, and stops performing a task, or

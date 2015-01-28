@@ -22,8 +22,21 @@ import org.hashtrees.thrift.generated.ServerName;
 
 public interface HashTreesManagerObserver {
 
+	/**
+	 * {@link HashTreesManager} calls this before initiating syncing a
+	 * particular server.
+	 * 
+	 * @param treeId
+	 * @param remoteServerName
+	 */
 	void preSync(long treeId, ServerName remoteServerName);
 
+	/**
+	 * 
+	 * @param treeId
+	 * @param remoteServerName
+	 * @param result
+	 */
 	void postSync(long treeId, ServerName remoteServerName,
-			SyncDiffResult result);
+			SyncDiffResult result, boolean synced);
 }

@@ -15,7 +15,8 @@
  * KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations
  * under the License.
- */package org.hashtrees.test;
+ */
+package org.hashtrees.test;
 
 import static org.hashtrees.test.utils.HashTreesImplTestUtils.DEFAULT_SEG_DATA_BLOCKS_COUNT;
 import static org.hashtrees.test.utils.HashTreesImplTestUtils.DEFAULT_TREE_ID;

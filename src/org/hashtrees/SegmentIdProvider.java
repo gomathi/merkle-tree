@@ -15,8 +15,8 @@
  * KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations
  * under the License.
- */package org.hashtrees;
-
+ */
+package org.hashtrees;
 
 /**
  * A segment is a leaf block in a hashtree. Which segment should be used for a

@@ -15,7 +15,8 @@
  * KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations
  * under the License.
- */package org.hashtrees.store;
+ */
+package org.hashtrees.store;
 
 import static org.hashtrees.store.ByteKeyValueConverter.KVBYTES_TO_SEGDATA_CONVERTER;
 import static org.hashtrees.store.ByteKeyValueConverter.KVBYTES_TO_SEGID_CONVERTER;

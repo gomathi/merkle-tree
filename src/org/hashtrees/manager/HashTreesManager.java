@@ -347,22 +347,25 @@ public class HashTreesManager extends StoppableTask implements
 				localServer, sn) : true;
 		Pair<ServerName, Long> hostNameAndTreeId = Pair.create(sn, treeId);
 		if (synchAllowed) {
+			boolean synced = false;
+			SyncDiffResult result = null;
+			notifier.preSync(treeId, sn);
 			try {
-				notifier.preSync(treeId, sn);
 				LOG.info("Syncing {}.", hostNameAndTreeId);
 				Stopwatch watch = Stopwatch.createStarted();
 				HashTreesRemoteClient remoteSyncClient = getHashTreeSyncClient(sn);
-				SyncDiffResult result = hashTrees.synch(treeId,
-						remoteSyncClient, syncType);
+				result = hashTrees.synch(treeId, remoteSyncClient, syncType);
 				LOG.info("Synch result for {} - {}", hostNameAndTreeId, result);
 				watch.stop();
 				LOG.info("Time taken for syncing ({}) (in ms) : {}",
 						hostNameAndTreeId, watch.elapsed(TimeUnit.MILLISECONDS));
 				LOG.info("Syncing {} complete.", hostNameAndTreeId);
-				notifier.postSync(treeId, sn, result);
+				synced = true;
 			} catch (TException e) {
 				LOG.error("Unable to synch remote hash tree server {} : {}",
 						hostNameAndTreeId, e);
+			} finally {
+				notifier.postSync(treeId, sn, result, synced);
 			}
 		} else {
 			LOG.error("Synch is not allowed between {} and {}", localServer, sn);

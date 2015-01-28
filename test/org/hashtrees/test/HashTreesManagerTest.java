@@ -233,7 +233,7 @@ public class HashTreesManagerTest {
 
 				@Override
 				public void postSync(long treeId, ServerName remoteServerName,
-						SyncDiffResult result) {
+						SyncDiffResult result, boolean synced) {
 					receivedCalls.set(1, 1);
 					receivedCallsLatch.countDown();
 				}

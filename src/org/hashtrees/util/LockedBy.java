@@ -15,7 +15,8 @@
  * KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations
  * under the License.
- */package org.hashtrees.util;
+ */
+package org.hashtrees.util;
 
 /**
  * Indicates the lock that protects a given variable

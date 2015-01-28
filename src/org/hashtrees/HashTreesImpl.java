@@ -15,7 +15,8 @@
  * KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations
  * under the License.
- */package org.hashtrees;
+ */
+package org.hashtrees;
 
 import static org.hashtrees.TreeUtils.getImmediateChildren;
 import static org.hashtrees.TreeUtils.getLeftMostChildNode;

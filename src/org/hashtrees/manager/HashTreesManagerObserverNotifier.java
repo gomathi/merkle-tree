@@ -60,12 +60,12 @@ public class HashTreesManagerObserverNotifier implements
 
 	@Override
 	public void postSync(final long treeId, final ServerName remoteServerName,
-			final SyncDiffResult result) {
+			final SyncDiffResult result, final boolean synced) {
 		notifyObservers(new Function<HashTreesManagerObserver, Void>() {
 
 			@Override
 			public Void apply(HashTreesManagerObserver input) {
-				input.postSync(treeId, remoteServerName, result);
+				input.postSync(treeId, remoteServerName, result, synced);
 				return null;
 			}
 		});

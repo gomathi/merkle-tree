@@ -15,7 +15,8 @@
  * KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations
  * under the License.
- */package org.hashtrees.test.utils;
+ */
+package org.hashtrees.test.utils;
 
 import static org.hashtrees.test.utils.HashTreesImplTestUtils.TREE_ID_PROVIDER;
 

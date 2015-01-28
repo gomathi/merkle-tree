@@ -32,10 +32,13 @@ public interface HashTreesManagerObserver {
 	void preSync(long treeId, ServerName remoteServerName);
 
 	/**
+	 * On finishing up syncing a server with the treeId, manager calls this
+	 * function. It also informs whether sync was successful or failure.
 	 * 
 	 * @param treeId
 	 * @param remoteServerName
 	 * @param result
+	 * @param synced
 	 */
 	void postSync(long treeId, ServerName remoteServerName,
 			SyncDiffResult result, boolean synced);

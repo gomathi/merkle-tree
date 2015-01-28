@@ -16,31 +16,35 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.hashtrees.manager;
+package org.hashtrees;
 
-import org.hashtrees.SyncDiffResult;
-import org.hashtrees.thrift.generated.ServerName;
-
-public interface HashTreesManagerObserver {
+/**
+ * If two {@link HashTrees#rebuildHashTree(long, boolean)} of a same hashtree
+ * are happening at the same time, then there can be race conditions, the result
+ * will be unexpected. To avoid {@link HashTreesImpl} uses this instance to
+ * maintain the locks.
+ * 
+ * {@link HashTreesImpl#rebuildHashTree(long, boolean)},
+ * {@link HashTreesImpl#synch(long, HashTrees)}
+ * {@link HashTreesImpl#synch(long, HashTrees, SyncType)} are using this
+ * instance to perform the operations.
+ * 
+ */
+public interface LockProvider {
 
 	/**
-	 * {@link HashTreesManager} calls this before initiating syncing a
-	 * particular server.
+	 * Tries to acquire the lock, and returns true/false to indicate
+	 * success/failure.
 	 * 
 	 * @param treeId
-	 * @param remoteServerName
+	 * @return
 	 */
-	void preSync(long treeId, ServerName remoteServerName);
+	boolean acquireLock(long treeId);
 
 	/**
-	 * On finishing up syncing a server with the treeId, manager calls this
-	 * function. It also informs whether sync was successful or failure.
+	 * Releases the previously acquired lock.
 	 * 
 	 * @param treeId
-	 * @param remoteServerName
-	 * @param result
-	 * @param synced
 	 */
-	void postSync(long treeId, ServerName remoteServerName,
-			SyncDiffResult result, boolean synced);
+	void releaseLock(long treeId);
 }

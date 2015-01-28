@@ -54,6 +54,7 @@ import org.hashtrees.store.HashTreesPersistentStore;
 import org.hashtrees.store.HashTreesStore;
 import org.hashtrees.store.SimpleMemStore;
 import org.hashtrees.store.Store;
+import org.hashtrees.test.utils.HashTreesConstants;
 import org.hashtrees.test.utils.HashTreesImplTestUtils;
 import org.hashtrees.test.utils.HashTreesImplTestUtils.HTreeComponents;
 import org.hashtrees.thrift.generated.KeyValue;

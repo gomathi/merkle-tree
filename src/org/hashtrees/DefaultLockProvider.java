@@ -16,10 +16,32 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.hashtrees.test;
+package org.hashtrees;
 
-public class HashTreesConstants {
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.locks.ReentrantLock;
 
-	public static final int DEFAULT_HASH_TREE_SERVER_PORT_NO = 4554;
-	public static final String DEFAULT_STORE_FILE_PATH = "/tmp/hashtree.db";
+public class DefaultLockProvider implements LockProvider {
+
+	private final ConcurrentHashMap<Long, ReentrantLock> internalLocks = new ConcurrentHashMap<>();
+
+	private ReentrantLock getLock(long treeId) {
+		if (!internalLocks.contains(treeId)) {
+			internalLocks.putIfAbsent(treeId, new ReentrantLock());
+		}
+		return internalLocks.get(treeId);
+	}
+
+	@Override
+	public boolean acquireLock(long treeId) {
+		ReentrantLock lock = getLock(treeId);
+		return lock.tryLock();
+	}
+
+	@Override
+	public void releaseLock(long treeId) {
+		ReentrantLock lock = getLock(treeId);
+		lock.unlock();
+	}
+
 }

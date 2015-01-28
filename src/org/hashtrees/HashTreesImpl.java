@@ -112,11 +112,13 @@ public class HashTreesImpl implements HashTrees, Service {
 	@LockedBy("nonBlockingCallsLock")
 	private volatile NonBlockingHTDataUpdater bgDataUpdater;
 	private final HashTreesObserverNotifier notifier = new HashTreesObserverNotifier();
+	private final LockProvider lockProvider;
 
 	public HashTreesImpl(int noOfSegments, boolean enabledNonBlockingCalls,
 			int nonBlockingQueueSize, final HashTreesIdProvider treeIdProvider,
 			final SegmentIdProvider segIdProvider,
-			final HashTreesStore htStore, final Store store) {
+			final HashTreesStore htStore, final Store store,
+			final LockProvider lockProvider) {
 		this.noOfChildren = BINARY_TREE;
 		this.segmentsCount = getValidSegmentsCount(noOfSegments);
 		this.enabledNonBlockingCalls = enabledNonBlockingCalls;
@@ -127,6 +129,7 @@ public class HashTreesImpl implements HashTrees, Service {
 		this.segIdProvider = segIdProvider;
 		this.htStore = htStore;
 		this.store = store;
+		this.lockProvider = lockProvider;
 	}
 
 	@Override
@@ -191,57 +194,68 @@ public class HashTreesImpl implements HashTrees, Service {
 	@Override
 	public SyncDiffResult synch(long treeId, final HashTrees remoteTree,
 			SyncType syncType) throws IOException {
-		boolean doUpdate = (syncType == SyncType.UPDATE) ? true : false;
+		if (lockProvider.acquireLock(treeId)) {
+			try {
+				boolean doUpdate = (syncType == SyncType.UPDATE) ? true : false;
 
-		PeekingIterator<SegmentHash> localItr = null, remoteItr = null;
-		SegmentHash local, remote;
+				PeekingIterator<SegmentHash> localItr = null, remoteItr = null;
+				SegmentHash local, remote;
 
-		List<Integer> pQueue = new ArrayList<Integer>();
-		pQueue.add(ROOT_NODE);
+				List<Integer> pQueue = new ArrayList<Integer>();
+				pQueue.add(ROOT_NODE);
 
-		int totKeyDifferences = 0, totExtrinsicSegments = 0;
+				int totKeyDifferences = 0, totExtrinsicSegments = 0;
 
-		while (!pQueue.isEmpty()) {
+				while (!pQueue.isEmpty()) {
 
-			localItr = Iterators.peekingIterator(getSegmentHashes(treeId,
-					pQueue).iterator());
-			remoteItr = Iterators.peekingIterator(remoteTree.getSegmentHashes(
-					treeId, pQueue).iterator());
-			pQueue = new ArrayList<Integer>();
+					localItr = Iterators.peekingIterator(getSegmentHashes(
+							treeId, pQueue).iterator());
+					remoteItr = Iterators.peekingIterator(remoteTree
+							.getSegmentHashes(treeId, pQueue).iterator());
+					pQueue = new ArrayList<Integer>();
 
-			while (localItr.hasNext() || remoteItr.hasNext()) {
-				local = localItr.hasNext() ? localItr.peek() : null;
-				remote = remoteItr.hasNext() ? remoteItr.peek() : null;
+					while (localItr.hasNext() || remoteItr.hasNext()) {
+						local = localItr.hasNext() ? localItr.peek() : null;
+						remote = remoteItr.hasNext() ? remoteItr.peek() : null;
 
-				int compareRes = compareSegNodeIds(local, remote);
+						int compareRes = compareSegNodeIds(local, remote);
 
-				if (compareRes == 0) {
-					if (!Arrays.equals(local.getHash(), remote.getHash())) {
-						if (isLeafNode(local.getNodeId())) {
-							totKeyDifferences += syncSegment(treeId,
-									getSegmentIdFromLeafId(local.getNodeId()),
-									remoteTree, doUpdate);
-						} else
-							pQueue.addAll(getImmediateChildren(
-									local.getNodeId(), noOfChildren));
+						if (compareRes == 0) {
+							if (!Arrays.equals(local.getHash(),
+									remote.getHash())) {
+								if (isLeafNode(local.getNodeId())) {
+									totKeyDifferences += syncSegment(treeId,
+											getSegmentIdFromLeafId(local
+													.getNodeId()), remoteTree,
+											doUpdate);
+								} else
+									pQueue.addAll(getImmediateChildren(
+											local.getNodeId(), noOfChildren));
 
+							}
+							localItr.next();
+							remoteItr.next();
+						} else if (compareRes < 0) {
+							totKeyDifferences += updateRemoteTreeWithMissingSegment(
+									treeId, local.getNodeId(), remoteTree,
+									doUpdate);
+							localItr.next();
+						} else {
+							if (doUpdate)
+								remoteTree.deleteTreeNode(treeId,
+										remote.getNodeId());
+							remoteItr.next();
+							totExtrinsicSegments += 1;
+						}
 					}
-					localItr.next();
-					remoteItr.next();
-				} else if (compareRes < 0) {
-					totKeyDifferences += updateRemoteTreeWithMissingSegment(
-							treeId, local.getNodeId(), remoteTree, doUpdate);
-					localItr.next();
-				} else {
-					if (doUpdate)
-						remoteTree.deleteTreeNode(treeId, remote.getNodeId());
-					remoteItr.next();
-					totExtrinsicSegments += 1;
 				}
+				return new SyncDiffResult(totKeyDifferences,
+						totExtrinsicSegments);
+			} finally {
+				lockProvider.releaseLock(treeId);
 			}
 		}
-
-		return new SyncDiffResult(totKeyDifferences, totExtrinsicSegments);
+		return new SyncDiffResult(0, 0);
 	}
 
 	private int syncSegment(long treeId, int segId, HashTrees remoteTree,
@@ -360,19 +374,26 @@ public class HashTreesImpl implements HashTrees, Service {
 	@Override
 	public int rebuildHashTree(long treeId, boolean fullRebuild)
 			throws IOException {
-		notifier.preRebuild(treeId, fullRebuild);
-		long buildBeginTS = System.currentTimeMillis();
-		if (fullRebuild)
-			rebuildCompleteTree(treeId);
-		List<Integer> dirtySegments = htStore.getDirtySegments(treeId);
-		htStore.markSegments(treeId, dirtySegments);
-		List<Integer> dirtyNodes = rebuildLeaves(treeId, dirtySegments);
-		rebuildInternalNodes(treeId, dirtyNodes);
-		htStore.unmarkSegments(treeId, dirtySegments);
-		if (fullRebuild)
-			htStore.setCompleteRebuiltTimestamp(treeId, buildBeginTS);
-		notifier.postRebuild(treeId, fullRebuild);
-		return dirtySegments.size();
+		if (lockProvider.acquireLock(treeId)) {
+			try {
+				notifier.preRebuild(treeId, fullRebuild);
+				long buildBeginTS = System.currentTimeMillis();
+				if (fullRebuild)
+					rebuildCompleteTree(treeId);
+				List<Integer> dirtySegments = htStore.getDirtySegments(treeId);
+				htStore.markSegments(treeId, dirtySegments);
+				List<Integer> dirtyNodes = rebuildLeaves(treeId, dirtySegments);
+				rebuildInternalNodes(treeId, dirtyNodes);
+				htStore.unmarkSegments(treeId, dirtySegments);
+				if (fullRebuild)
+					htStore.setCompleteRebuiltTimestamp(treeId, buildBeginTS);
+				notifier.postRebuild(treeId, fullRebuild);
+				return dirtySegments.size();
+			} finally {
+				lockProvider.releaseLock(treeId);
+			}
+		}
+		return 0;
 	}
 
 	/**
@@ -724,6 +745,7 @@ public class HashTreesImpl implements HashTrees, Service {
 		private int noOfSegments = 1 << 17,
 				nonBlockingQueueSize = DEFAULT_NB_QUE_SIZE;
 		private boolean enabledNonBlockingCalls = true;
+		private LockProvider lockProvider;
 
 		public Builder(Store store, HashTreesIdProvider treeIdProvider,
 				HashTreesStore htStore) {
@@ -817,12 +839,27 @@ public class HashTreesImpl implements HashTrees, Service {
 			return this;
 		}
 
+		/**
+		 * Sets a lock provider to use. By default this uses
+		 * {@link DefaultLockProvider}.
+		 * 
+		 * @param lockProvider
+		 * @return
+		 */
+		public Builder setLockProvider(LockProvider lockProvider) {
+			assert (lockProvider != null);
+			this.lockProvider = lockProvider;
+			return this;
+		}
+
 		public HashTreesImpl build() {
 			if (segIdProvider == null)
 				segIdProvider = new ModuloSegIdProvider(noOfSegments);
+			if (lockProvider == null)
+				lockProvider = new DefaultLockProvider();
 			return new HashTreesImpl(noOfSegments, enabledNonBlockingCalls,
 					nonBlockingQueueSize, treeIdProvider, segIdProvider,
-					htStore, store);
+					htStore, store, lockProvider);
 		}
 	}
 }

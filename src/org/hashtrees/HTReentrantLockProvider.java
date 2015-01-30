@@ -21,7 +21,12 @@ package org.hashtrees;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.ReentrantLock;
 
-public class DefaultLockProvider implements LockProvider {
+/**
+ * Maintains set of reentrant locks for each treeId. Requires the caller to call
+ * {@link #acquireLock(long)} before using {@link #releaseLock(long)}.
+ * 
+ */
+public class HTReentrantLockProvider implements LockProvider {
 
 	private final ConcurrentHashMap<Long, ReentrantLock> internalLocks = new ConcurrentHashMap<>();
 

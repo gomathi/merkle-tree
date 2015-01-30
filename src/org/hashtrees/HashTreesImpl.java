@@ -841,7 +841,7 @@ public class HashTreesImpl implements HashTrees, Service {
 
 		/**
 		 * Sets a lock provider to use. By default this uses
-		 * {@link DefaultLockProvider}.
+		 * {@link HTReentrantLockProvider}.
 		 * 
 		 * @param lockProvider
 		 * @return
@@ -856,7 +856,7 @@ public class HashTreesImpl implements HashTrees, Service {
 			if (segIdProvider == null)
 				segIdProvider = new ModuloSegIdProvider(noOfSegments);
 			if (lockProvider == null)
-				lockProvider = new DefaultLockProvider();
+				lockProvider = new HTReentrantLockProvider();
 			return new HashTreesImpl(noOfSegments, enabledNonBlockingCalls,
 					nonBlockingQueueSize, treeIdProvider, segIdProvider,
 					htStore, store, lockProvider);

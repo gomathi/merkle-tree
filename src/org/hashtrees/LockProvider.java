@@ -45,6 +45,8 @@ public interface LockProvider {
 	 * Releases the previously acquired lock.
 	 * 
 	 * @param treeId
+	 * @throws IllegalMonitorStateException
+	 *             if there was no previous call to {@link #acquireLock(long)}
 	 */
 	void releaseLock(long treeId);
 }

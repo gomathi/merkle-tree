@@ -25,7 +25,7 @@ import java.nio.ByteBuffer;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
 
-import org.hashtrees.DefaultLockProvider;
+import org.hashtrees.HTReentrantLockProvider;
 import org.hashtrees.HashTrees;
 import org.hashtrees.HashTreesImpl;
 import org.hashtrees.ModuloSegIdProvider;
@@ -49,7 +49,7 @@ public class HashTreesImplTestObj extends HashTreesImpl {
 			BlockingQueue<HTSynchEvent> events) {
 		super(noOfSegments, enabledNonBlockingCalls, nbQueSize,
 				TREE_ID_PROVIDER, new ModuloSegIdProvider(noOfSegments),
-				htStore, store, new DefaultLockProvider());
+				htStore, store, new HTReentrantLockProvider());
 		this.events = events;
 	}
 

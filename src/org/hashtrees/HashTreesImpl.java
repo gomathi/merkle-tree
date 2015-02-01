@@ -278,16 +278,19 @@ public class HashTreesImpl implements HashTrees, Service {
 			if (compRes == 0) {
 				if (!Arrays.equals(local.getDigest(), remote.getDigest())) {
 					ByteBuffer key = ByteBuffer.wrap(local.getKey());
-					ByteBuffer value = ByteBuffer
-							.wrap(store.get(local.getKey()));
-					kvsForAddition.add(new KeyValue(key, value));
+					byte[] value = store.get(local.getKey());
+					if (value != null)
+						kvsForAddition.add(new KeyValue(key, ByteBuffer
+								.wrap(value)));
 				}
 				localDataItr.next();
 				remoteDataItr.next();
 			} else if (compRes < 0) {
 				ByteBuffer key = ByteBuffer.wrap(local.getKey());
-				ByteBuffer value = ByteBuffer.wrap(store.get(local.getKey()));
-				kvsForAddition.add(new KeyValue(key, value));
+				byte[] value = store.get(local.getKey());
+				if (value != null)
+					kvsForAddition
+							.add(new KeyValue(key, ByteBuffer.wrap(value)));
 				localDataItr.next();
 			} else {
 				keysForRemoval.add(ByteBuffer.wrap(remote.getKey()));
@@ -319,8 +322,10 @@ public class HashTreesImpl implements HashTrees, Service {
 				leftMostNodeId, rightMostNodeId);
 		while (sdItr.hasNext()) {
 			SegmentData sd = sdItr.next();
-			keyValuePairs.add(new KeyValue(ByteBuffer.wrap(sd.getKey()),
-					ByteBuffer.wrap(store.get(sd.getKey()))));
+			byte[] value = store.get(sd.getKey());
+			if (value != null)
+				keyValuePairs.add(new KeyValue(ByteBuffer.wrap(sd.getKey()),
+						ByteBuffer.wrap(value)));
 			if (keyValuePairs.size() > maxSizeToTransfer) {
 				if (doUpdate)
 					remoteTree.sPut(keyValuePairs);
@@ -374,13 +379,14 @@ public class HashTreesImpl implements HashTrees, Service {
 	@Override
 	public int rebuildHashTree(long treeId, boolean fullRebuild)
 			throws IOException {
+		List<Integer> dirtySegments = null;
 		if (lockProvider.acquireLock(treeId)) {
 			try {
 				notifier.preRebuild(treeId, fullRebuild);
 				long buildBeginTS = System.currentTimeMillis();
 				if (fullRebuild)
 					rebuildCompleteTree(treeId);
-				List<Integer> dirtySegments = htStore.getDirtySegments(treeId);
+				dirtySegments = htStore.getDirtySegments(treeId);
 				htStore.markSegments(treeId, dirtySegments);
 				List<Integer> dirtyNodes = rebuildLeaves(treeId, dirtySegments);
 				rebuildInternalNodes(treeId, dirtyNodes);
@@ -389,6 +395,9 @@ public class HashTreesImpl implements HashTrees, Service {
 					htStore.setCompleteRebuiltTimestamp(treeId, buildBeginTS);
 				notifier.postRebuild(treeId, fullRebuild);
 				return dirtySegments.size();
+			} catch (HashTreesCustomRuntimeException e) {
+				if (dirtySegments != null)
+					htStore.markSegments(treeId, dirtySegments);
 			} finally {
 				lockProvider.releaseLock(treeId);
 			}

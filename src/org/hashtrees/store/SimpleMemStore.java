@@ -27,6 +27,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import com.google.common.base.Function;
 import com.google.common.collect.Iterators;
+import com.google.common.collect.Maps;
 
 /**
  * In memory implementation of {@link Store}. Intended to be used in unit tests.
@@ -97,30 +98,9 @@ public class SimpleMemStore extends BaseStore {
 							@Override
 							public Entry<byte[], byte[]> apply(
 									final Entry<ByteBuffer, ByteBuffer> input) {
-								return new Entry<byte[], byte[]>() {
-
-									@Override
-									public byte[] setValue(byte[] value) {
-										throw new UnsupportedOperationException();
-									}
-
-									@Override
-									public byte[] getValue() {
-										byte[] value = new byte[input
-												.getValue().remaining()];
-										input.getValue().duplicate().get(value);
-										return value;
-									}
-
-									@Override
-									public byte[] getKey() {
-										byte[] key = new byte[input.getKey()
-												.remaining()];
-										input.getKey().duplicate().get(key);
-										return key;
-									}
-								};
-							}
+								return Maps.immutableEntry(input.getKey()
+										.array(), input.getValue().array());
+							};
 						});
 	}
 

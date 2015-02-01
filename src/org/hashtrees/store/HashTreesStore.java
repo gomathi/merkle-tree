@@ -25,6 +25,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import org.hashtrees.HashTrees;
+import org.hashtrees.HashTreesCustomRuntimeException;
 import org.hashtrees.thrift.generated.SegmentData;
 import org.hashtrees.thrift.generated.SegmentHash;
 import org.hashtrees.util.Service;
@@ -75,6 +76,10 @@ public interface HashTreesStore extends Service {
 	/**
 	 * Returns an iterator to read all the segment data of the given tree id.
 	 * 
+	 * Note: Iterator implementations should throw
+	 * {@link HashTreesCustomRuntimeException} so that failure cases can be
+	 * handled properly by {@link HashTrees}
+	 * 
 	 * @param treeId
 	 * @return
 	 */
@@ -84,6 +89,10 @@ public interface HashTreesStore extends Service {
 	/**
 	 * Returns an iterator to read all the segment data of the given tree id,
 	 * and starting from a given segId and to segId.
+	 * 
+	 * Note: Iterator implementations should throw
+	 * {@link HashTreesCustomRuntimeException} so that failure cases can be
+	 * handled properly by {@link HashTrees}
 	 * 
 	 * @param treeId
 	 * @param fromSegId

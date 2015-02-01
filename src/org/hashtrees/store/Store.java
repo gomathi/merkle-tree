@@ -23,6 +23,7 @@ import java.util.Iterator;
 import java.util.Map;
 
 import org.hashtrees.HashTrees;
+import org.hashtrees.HashTreesCustomRuntimeException;
 
 /**
  * There could be cases where actual store is missing (key,value) pairs, or
@@ -66,6 +67,10 @@ public interface Store {
 	 * This should return only (key,value) that are belonging to treeId. Used by
 	 * {@link HashTrees#rebuildHashTree(long, boolean)} while rebuilding a
 	 * specific hashtree.
+	 * 
+	 * Note: Iterator implementations should throw
+	 * {@link HashTreesCustomRuntimeException} so that failure cases can be
+	 * handled properly by {@link HashTrees}
 	 * 
 	 * @param treeId
 	 * @return

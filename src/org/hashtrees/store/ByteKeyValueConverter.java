@@ -44,6 +44,10 @@ import com.google.common.base.Function;
  */
 public class ByteKeyValueConverter {
 
+	// Ensuring non instantiability
+	private ByteKeyValueConverter() {
+	}
+
 	public static final int LEN_BASEKEY_AND_TREEID = BaseKey.LENGTH
 			+ ByteUtils.SIZEOF_LONG;
 

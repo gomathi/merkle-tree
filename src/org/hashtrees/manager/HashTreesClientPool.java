@@ -33,7 +33,7 @@ import org.hashtrees.thrift.generated.HashTreesSyncInterface;
 import org.hashtrees.thrift.generated.HashTreesSyncInterface.Client;
 import org.hashtrees.thrift.generated.ServerName;
 
-public class HashTreesClientPool extends
+class HashTreesClientPool extends
 		GenericObjectPool<HashTreesSyncInterface.Client> {
 
 	private static final GenericObjectPoolConfig POOL_CONFIG;

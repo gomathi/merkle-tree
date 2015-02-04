@@ -37,7 +37,7 @@ import org.hashtrees.thrift.generated.ServerName;
  * {@link HashTreesSyncInterface.Iface}. This is used by Thrift server.
  * 
  */
-public class HashTreesThriftServer implements HashTreesSyncInterface.Iface {
+class HashTreesThriftServer implements HashTreesSyncInterface.Iface {
 
 	private final HashTrees hashTrees;
 	private final HashTreesSyncCallsObserver syncCallsObserver;

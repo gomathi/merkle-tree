@@ -36,7 +36,7 @@ import org.junit.Test;
 
 import com.google.common.base.Function;
 
-public class DataFilterableIteratorTest {
+class DataFilterableIteratorTest {
 
 	private static final byte[] EMPTY_BYTE_ARRAY = new byte[0];
 

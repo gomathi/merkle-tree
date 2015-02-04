@@ -31,7 +31,11 @@ import org.hashtrees.thrift.generated.KeyValue;
 import org.hashtrees.thrift.generated.SegmentData;
 import org.hashtrees.thrift.generated.SegmentHash;
 
-// Dummy HashTrees
+/**
+ * Defined to use in unit testing. Subclasses can override only the methods that
+ * is interested in.
+ * 
+ */
 public class MockHashTrees implements HashTrees {
 
 	@Override

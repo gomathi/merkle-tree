@@ -33,7 +33,7 @@ import com.google.common.collect.Iterators;
  * about certain events.
  * 
  */
-public class HashTreesObserverNotifier implements HashTreesObserver {
+class HashTreesObserverNotifier implements HashTreesObserver {
 
 	private final ConcurrentLinkedQueue<HashTreesObserver> observers;
 

@@ -23,6 +23,11 @@ import java.security.NoSuchAlgorithmException;
 
 public class ByteUtils {
 
+	// ensuring non instantiability
+	private ByteUtils() {
+
+	}
+
 	/**
 	 * Size of boolean in bytes
 	 */

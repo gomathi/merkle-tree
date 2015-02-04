@@ -29,7 +29,7 @@ import org.hashtrees.util.NonBlockingQueuingTask;
 import org.hashtrees.util.NonBlockingQueuingTask.QueuingTaskIsStoppedException;
 import org.junit.Test;
 
-public class NonBlockingQueuingTaskTest {
+class NonBlockingQueuingTaskTest {
 
 	@Test
 	public void testEnqueOperations() throws InterruptedException {

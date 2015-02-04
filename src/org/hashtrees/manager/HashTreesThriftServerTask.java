@@ -39,7 +39,7 @@ import org.slf4j.LoggerFactory;
  * 
  */
 @ThreadSafe
-public class HashTreesThriftServerTask extends StoppableTask {
+class HashTreesThriftServerTask extends StoppableTask {
 
 	private final static Logger LOG = LoggerFactory
 			.getLogger(HashTreesThriftServerTask.class.getName());

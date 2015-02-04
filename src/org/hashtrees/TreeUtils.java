@@ -24,6 +24,13 @@ import java.util.List;
 public class TreeUtils {
 
 	/**
+	 * Ensuring non-instantiability
+	 */
+	private TreeUtils() {
+
+	}
+
+	/**
 	 * Finds the count of internal nodes, given the height of the tree.
 	 * 
 	 * @param h

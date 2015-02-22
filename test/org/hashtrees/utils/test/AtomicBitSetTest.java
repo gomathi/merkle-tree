@@ -25,7 +25,10 @@ import org.hashtrees.util.AtomicBitSet;
 import org.junit.Assert;
 import org.junit.Test;
 
-class AtomicBitSetTest {
+public class AtomicBitSetTest {
+
+	public AtomicBitSetTest() {
+	}
 
 	@Test
 	public void testGetBit() {

@@ -284,6 +284,11 @@ public class HashTreesManager extends StoppableTask implements
 					}
 				}
 			}
+
+			@Override
+			public void remove() {
+				throw new UnsupportedOperationException();
+			}
 		};
 
 		Iterator<Callable<Void>> syncTasks = Iterators.transform(

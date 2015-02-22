@@ -66,7 +66,7 @@ import org.hashtrees.util.NonBlockingQueuingTask.QueueReachedMaxCapacityExceptio
 import org.junit.Assert;
 import org.junit.Test;
 
-class HashTreesImplTest {
+public class HashTreesImplTest {
 
 	private static byte[] generateBytesFrom(int... values) {
 		byte[] result = new byte[values.length * ByteUtils.SIZEOF_INT];

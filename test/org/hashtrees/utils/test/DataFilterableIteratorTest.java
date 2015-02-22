@@ -36,7 +36,7 @@ import org.junit.Test;
 
 import com.google.common.base.Function;
 
-class DataFilterableIteratorTest {
+public class DataFilterableIteratorTest {
 
 	private static final byte[] EMPTY_BYTE_ARRAY = new byte[0];
 
@@ -145,6 +145,11 @@ class DataFilterableIteratorTest {
 					}
 				});
 			}
+		}
+
+		@Override
+		public void remove() {
+			throw new UnsupportedOperationException();
 		}
 	}
 

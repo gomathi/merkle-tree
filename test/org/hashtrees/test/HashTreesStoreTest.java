@@ -36,7 +36,7 @@ import org.hashtrees.util.ByteUtils;
 import org.junit.Assert;
 import org.junit.Test;
 
-class HashTreesStoreTest {
+public class HashTreesStoreTest {
 
 	private static final int DEF_TREE_ID = 1;
 	private static final int DEF_SEG_ID = 0;

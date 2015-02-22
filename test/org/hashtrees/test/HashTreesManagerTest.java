@@ -53,7 +53,7 @@ import org.hashtrees.test.utils.MockHashTrees;
 import org.hashtrees.thrift.generated.ServerName;
 import org.junit.Test;
 
-class HashTreesManagerTest {
+public class HashTreesManagerTest {
 
 	private static void waitForTheEvent(BlockingQueue<HTSynchEvent> events,
 			HTSynchEvent expectedEvent, long maxWaitTime)

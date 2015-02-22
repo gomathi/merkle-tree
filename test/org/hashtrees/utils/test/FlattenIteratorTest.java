@@ -10,7 +10,7 @@ import junit.framework.Assert;
 import org.hashtrees.util.FlattenIterator;
 import org.junit.Test;
 
-class FlattenIteratorTest {
+public class FlattenIteratorTest {
 
 	@Test
 	public void testFlattenIteratorWithEmptyIterators() {

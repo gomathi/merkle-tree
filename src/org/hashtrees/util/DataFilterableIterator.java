@@ -90,4 +90,9 @@ public class DataFilterableIterator<T> implements Iterator<T> {
 			dataQueue.add(converter.apply(entry));
 		}
 	}
+
+	@Override
+	public void remove() {
+		throw new UnsupportedOperationException();
+	}
 }

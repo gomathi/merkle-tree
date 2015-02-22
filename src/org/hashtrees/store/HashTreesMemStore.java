@@ -157,6 +157,11 @@ public class HashTreesMemStore extends HashTreesBaseStore {
 				Map.Entry<ByteBuffer, ByteBuffer> entry = itr.next();
 				return new SegmentData(segId, entry.getKey(), entry.getValue());
 			}
+
+			@Override
+			public void remove() {
+				throw new UnsupportedOperationException();
+			}
 		};
 	}
 

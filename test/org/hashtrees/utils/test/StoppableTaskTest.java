@@ -26,7 +26,7 @@ import org.hashtrees.util.StoppableTask;
 import org.junit.Assert;
 import org.junit.Test;
 
-class StoppableTaskTest {
+public class StoppableTaskTest {
 
 	private static class StoppableTaskTestImpl extends StoppableTask {
 

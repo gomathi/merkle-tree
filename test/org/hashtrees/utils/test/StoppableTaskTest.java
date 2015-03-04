@@ -20,7 +20,6 @@ package org.hashtrees.utils.test;
 
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.hashtrees.util.StoppableTask;
 import org.junit.Assert;
@@ -115,9 +114,6 @@ public class StoppableTaskTest {
 	public void testStoppableTaskWithCallbackOnStop()
 			throws InterruptedException {
 		final CountDownLatch latch = new CountDownLatch(1);
-		final CountDownLatch listenerAddedLatch = new CountDownLatch(1);
-		final CountDownLatch listenerLatch = new CountDownLatch(1);
-		final AtomicBoolean stopped = new AtomicBoolean();
 		final StoppableTask task = new StoppableTask() {
 
 			@Override
@@ -130,24 +126,22 @@ public class StoppableTaskTest {
 			}
 		};
 		new Thread(task).start();
+
+		final CountDownLatch listenerLatch = new CountDownLatch(1);
 		Runnable stopListenerTask = new Runnable() {
 
 			@Override
 			public void run() {
 				task.stopAsync(listenerLatch);
-				listenerAddedLatch.countDown();
 				try {
 					listenerLatch.await();
 				} catch (InterruptedException e) {
 					Assert.fail(e.getMessage());
 				}
-				stopped.set(true);
 			}
 		};
 		new Thread(stopListenerTask).start();
-		listenerAddedLatch.await();
 		latch.countDown();
-		listenerLatch.await(10000, TimeUnit.MILLISECONDS);
-		Assert.assertTrue(stopped.get());
+		Assert.assertTrue(listenerLatch.await(20000, TimeUnit.MILLISECONDS));
 	}
 }
